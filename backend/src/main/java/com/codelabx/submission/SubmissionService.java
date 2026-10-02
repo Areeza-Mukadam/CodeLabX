@@ -65,10 +65,12 @@ public class SubmissionService {
         return toView(submission);
     }
 
+    @Transactional(readOnly = true)
     public List<SubmissionView> forStudent(UserAccount student) {
         return submissions.findByStudentIdOrderBySubmittedAtDesc(student.getId()).stream().map(this::toView).toList();
     }
 
+    @Transactional(readOnly = true)
     public List<SubmissionListItem> forTeacher() {
         return submissions.findAllByOrderBySubmittedAtDesc().stream().map(s -> {
             var evaluation = evaluations.findBySubmissionId(s.getId()).orElse(null);
@@ -88,6 +90,7 @@ public class SubmissionService {
         }).toList();
     }
 
+    @Transactional(readOnly = true)
     public SubmissionDetail detail(Long id) {
         Submission s = submissions.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Submission not found."));

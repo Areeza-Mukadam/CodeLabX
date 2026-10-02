@@ -5,6 +5,8 @@ import tools.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.MediaType;
+import org.springframework.http.HttpHeaders;
+import org.springframework.web.client.RestClientResponseException;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
@@ -23,17 +25,20 @@ public class ExternalApiCodeExecutionService implements CodeExecutionService {
     private final String javaVersion;
     private final String pythonVersion;
     private final int timeoutMs;
+    private final String authorization;
 
     public ExternalApiCodeExecutionService(
             @Value("${codelabx.execution.piston.url}") String pistonUrl,
             @Value("${codelabx.execution.piston.java-version}") String javaVersion,
             @Value("${codelabx.execution.piston.python-version}") String pythonVersion,
             @Value("${codelabx.execution.timeout-ms}") int timeoutMs,
+            @Value("${codelabx.execution.piston.authorization:}") String authorization,
             ObjectMapper objectMapper
     ) {
         this.javaVersion = javaVersion;
         this.pythonVersion = pythonVersion;
         this.timeoutMs = timeoutMs;
+        this.authorization = authorization;
         this.objectMapper = objectMapper;
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
         factory.setConnectTimeout(Duration.ofSeconds(8));
@@ -45,7 +50,7 @@ public class ExternalApiCodeExecutionService implements CodeExecutionService {
     }
 
     @Override
-    public ExecutionResult execute(CodeLanguage language, String source) {
+    public ExecutionResult execute(CodeLanguage language, String source, String stdin) {
         if (source == null || source.isBlank()) {
             return ExecutionResult.malformed("Source code is required.");
         }
@@ -68,6 +73,7 @@ public class ExternalApiCodeExecutionService implements CodeExecutionService {
                 "language", lang,
                 "version", version,
                 "files", List.of(Map.of("name", fileName, "content", source)),
+                "stdin", stdin == null ? "" : stdin,
                 "run_timeout", timeoutMs
         );
 
@@ -75,13 +81,24 @@ public class ExternalApiCodeExecutionService implements CodeExecutionService {
         try {
             String body = restClient.post()
                     .contentType(MediaType.APPLICATION_JSON)
+                    .headers(headers -> {
+                        if (authorization != null && !authorization.isBlank()) {
+                            headers.set(HttpHeaders.AUTHORIZATION, authorization);
+                        }
+                    })
                     .body(payload)
                     .retrieve()
                     .body(String.class);
             long elapsed = System.currentTimeMillis() - started;
             return mapPiston(body, elapsed);
+        } catch (RestClientResponseException ex) {
+            int status = ex.getStatusCode().value();
+            if (status == 401 || status == 403) {
+                return ExecutionResult.unavailable("The Piston execution provider requires authorization. Configure a Piston token or a local Piston service.");
+            }
+            return ExecutionResult.unavailable("The Piston execution provider returned HTTP " + status + ". Please check its configuration.");
         } catch (RestClientException ex) {
-            return ExecutionResult.unavailable("Code execution service unavailable. Please try again.");
+            return ExecutionResult.unavailable("Cannot reach the configured code execution provider. Check that it is running and try again.");
         } catch (Exception ex) {
             return ExecutionResult.apiFailure("Code execution service unavailable. Please try again.");
         }

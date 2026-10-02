@@ -7,4 +7,5 @@ import java.util.List;
 public interface PracticalRepository extends JpaRepository<Practical, Long> {
     List<Practical> findByStatusOrderByCreatedAtDesc(PracticalStatus status);
     List<Practical> findAllByOrderByUpdatedAtDesc();
+    java.util.Optional<Practical> findByTitleIgnoreCase(String title);
 }

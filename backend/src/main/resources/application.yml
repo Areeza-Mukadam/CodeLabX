@@ -2,7 +2,7 @@ spring:
   application:
     name: CodeLabX
   profiles:
-    active: ${SPRING_PROFILES_ACTIVE:h2}
+    active: ${SPRING_PROFILES_ACTIVE:postgres}
   jpa:
     hibernate:
       ddl-auto: update
@@ -22,9 +22,10 @@ codelabx:
     provider: ${CODE_EXECUTION_PROVIDER:piston}
     timeout-ms: ${CODE_EXECUTION_TIMEOUT_MS:12000}
     piston:
-      url: ${PISTON_API_URL:https://emkc.org/api/v2/piston/execute}
-      java-version: ${PISTON_JAVA_VERSION:15.0.2}
-      python-version: ${PISTON_PYTHON_VERSION:3.10.0}
+      url: ${PISTON_API_URL:http://127.0.0.1:2000/api/v2/execute}
+      authorization: ${PISTON_AUTHORIZATION:}
+      java-version: ${PISTON_JAVA_VERSION:17.x}
+      python-version: ${PISTON_PYTHON_VERSION:3.x}
     judge0:
       url: ${JUDGE0_API_URL:}
       api-key: ${JUDGE0_API_KEY:}
@@ -34,26 +35,11 @@ codelabx:
 spring:
   config:
     activate:
-      on-profile: h2
-  datasource:
-    url: jdbc:h2:file:./data/codelabx;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
-    driver-class-name: org.h2.Driver
-    username: sa
-    password:
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
-
----
-spring:
-  config:
-    activate:
       on-profile: postgres
   datasource:
     url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:codelabx}
     username: ${POSTGRES_USER:codelabx}
-    password: ${POSTGRES_PASSWORD:change-me}
+    password: ${POSTGRES_PASSWORD:codelabx-local}
     driver-class-name: org.postgresql.Driver
   jpa:
     properties:

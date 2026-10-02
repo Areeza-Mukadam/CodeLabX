@@ -2,5 +2,6 @@ package com.codelabx.user;
 
 public enum Role {
     STUDENT,
-    TEACHER
+    TEACHER,
+    ADMIN
 }

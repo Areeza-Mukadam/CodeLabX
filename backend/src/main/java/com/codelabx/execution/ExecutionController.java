@@ -27,6 +27,6 @@ public class ExecutionController {
         }
         if (request.practicalId() == null) return ExecutionResult.malformed("practicalId is required.");
         progressService.assertStepUnlocked(user, request.practicalId(), PracticalStep.CODE);
-        return codeExecutionService.execute(request.language(), request.source());
+        return codeExecutionService.execute(request.language(), request.source(), request.stdin());
     }
 }

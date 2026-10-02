@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class PracticalService {
@@ -56,10 +57,11 @@ public class PracticalService {
     }
 
     @Transactional(readOnly = true)
-    public List<PracticalSummary> listAssignedToStudent(UserAccount student) {
+    public List<PracticalSummary> listAssignedToStudent(UserAccount student, Integer semester) {
         return assignments.findByStudentId(student.getId()).stream()
                 .map(PracticalAssignment::getPractical)
                 .filter(p -> p.getStatus() == PracticalStatus.PUBLISHED)
+                .filter(p -> semester == null || Objects.equals(p.getSemester(), semester))
                 .map(p -> {
                     var prog = progress.findByStudentIdAndPracticalId(student.getId(), p.getId()).orElse(null);
                     int completed = prog == null || prog.getCompletedSteps().isBlank()
@@ -67,7 +69,7 @@ public class PracticalService {
                             : prog.getCompletedSteps().split(",").length;
                     int percent = (int) Math.round(completed * 100.0 / 6.0);
                     String progressStatus = prog == null ? "NOT_STARTED" : prog.getStatus().name();
-                    return new PracticalSummary(p.getId(), p.getTitle(), p.getDescription(), progressStatus, p.getUpdatedAt(), 0, completed, percent, progressStatus);
+                    return new PracticalSummary(p.getId(), p.getTitle(), p.getSubject(), p.getSemester(), p.getDescription(), progressStatus, p.getUpdatedAt(), 0, completed, percent, progressStatus);
                 })
                 .toList();
     }
@@ -159,6 +161,8 @@ public class PracticalService {
 
     private void apply(Practical practical, PracticalUpsertRequest request) {
         practical.setTitle(request.title());
+        practical.setSubject(request.subject().trim());
+        practical.setSemester(request.semester());
         practical.setDescription(nvl(request.description()));
         practical.setAim(nvl(request.aim()));
         practical.setTheory(nvl(request.theory()));
@@ -205,7 +209,7 @@ public class PracticalService {
                 .toList();
         List<VivaQuestionView> viva = List.of();
         return new PracticalDetail(
-                practical.getId(), practical.getTitle(), practical.getDescription(), practical.getAim(),
+                practical.getId(), practical.getTitle(), practical.getSubject(), practical.getSemester(), practical.getDescription(), practical.getAim(),
                 practical.getTheory(), practical.getAlgorithm(), practical.getCodeInstructions(),
                 practical.getConclusion(), practical.getJavaStarterCode(), practical.getPythonStarterCode(),
                 practical.getStatus(), practical.getCreatedAt(), practical.getUpdatedAt(), questions, viva
@@ -225,7 +229,7 @@ public class PracticalService {
                 .map(a -> a.getStudent().getId())
                 .toList();
         return new PracticalTeacherDetail(
-                practical.getId(), practical.getTitle(), practical.getDescription(), practical.getAim(),
+                practical.getId(), practical.getTitle(), practical.getSubject(), practical.getSemester(), practical.getDescription(), practical.getAim(),
                 practical.getTheory(), practical.getAlgorithm(), practical.getCodeInstructions(),
                 practical.getConclusion(), practical.getJavaStarterCode(), practical.getPythonStarterCode(),
                 practical.getStatus(), practical.getCreatedAt(), practical.getUpdatedAt(), questions, viva, assigned

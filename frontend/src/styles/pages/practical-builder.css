@@ -1,0 +1,125 @@
+.builder-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 260px;
+  gap: 17px;
+  align-items: start;
+}
+.builder-form {
+  display: grid;
+  gap: 12px;
+}
+.form-section {
+  padding: 17px;
+}
+.form-section > .eyebrow {
+  display: block;
+  margin-bottom: 14px;
+}
+.field-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.field-grid label {
+  margin: 0;
+}
+.builder-form label {
+  margin: 12px 0;
+}
+.builder-form label > span {
+  color: var(--text);
+}
+.builder-form textarea {
+  resize: vertical;
+  line-height: 1.55;
+}
+.builder-form .code-textarea {
+  font: 11px/1.6 var(--mono);
+}
+.builder-aside {
+  position: sticky;
+  top: 75px;
+}
+.checkline {
+  font-size: 10px;
+  color: var(--text);
+  margin-top: 11px;
+}
+.inline-question {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.inline-question > span {
+  font: 10px var(--mono);
+  color: var(--muted);
+  width: 24px;
+}
+.inline-question input {
+  margin: 0 !important;
+}
+.inline-question .mark-input {
+  width: 68px;
+}
+.student-picker {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+.student-picker label {
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  padding: 9px;
+  border-radius: 4px;
+  margin: 0 !important;
+}
+.student-picker input {
+  width: auto;
+}
+.student-picker span {
+  display: grid;
+  gap: 3px;
+  color: var(--text);
+}
+.student-picker small {
+  font: 9px var(--mono);
+  color: var(--muted);
+}
+.builder-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+  padding: 12px 0;
+}
+.viva-entry {
+  display: grid;
+  gap: 6px;
+  border-top: 1px solid var(--line);
+  padding: 11px 0;
+}
+.viva-entry > b {
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--text);
+}
+.viva-entry small {
+  font: 9px var(--mono);
+  color: var(--muted);
+}
+.viva-entry input {
+  width: 75px !important;
+}
+@media (max-width: 760px) {
+  .field-grid {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 760px) {
+  .student-picker {
+    grid-template-columns: 1fr;
+  }
+}

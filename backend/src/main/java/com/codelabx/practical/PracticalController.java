@@ -20,11 +20,11 @@ public class PracticalController {
     }
 
     @GetMapping
-    public List<PracticalSummary> mine(@AuthenticationPrincipal UserAccount user) {
+    public List<PracticalSummary> mine(@RequestParam(required = false) Integer semester, @AuthenticationPrincipal UserAccount user) {
         if (user.getRole().name().equals("TEACHER")) {
             return practicalService.listForTeacher();
         }
-        return practicalService.listAssignedToStudent(user);
+        return practicalService.listAssignedToStudent(user, semester);
     }
 
     @GetMapping("/{id}")

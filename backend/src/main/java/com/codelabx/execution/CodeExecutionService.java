@@ -6,5 +6,5 @@ package com.codelabx.execution;
  * without changing POST /api/execution/run or the student editor.
  */
 public interface CodeExecutionService {
-    ExecutionResult execute(CodeLanguage language, String source);
+    ExecutionResult execute(CodeLanguage language, String source, String stdin);
 }

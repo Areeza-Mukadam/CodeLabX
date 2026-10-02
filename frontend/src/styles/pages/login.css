@@ -1,0 +1,177 @@
+.login-page {
+  background: var(--palette-cloud);
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: minmax(350px, 1fr) minmax(390px, 520px);
+  max-width: 1240px;
+  margin: auto;
+  padding: 30px 6vw;
+  gap: 8vw;
+  align-items: center;
+}
+.login-brand {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.76), rgba(255, 255, 255, 0.88)),
+    url("../../assets/tcet-campus.png");
+  background-size: cover;
+  background-position: center;
+  padding: 28px;
+  border-radius: 12px;
+  min-height: 70vh;
+  display: flex;
+  flex-direction: column;
+}
+.tcet-logo {
+  display: block;
+  width: 160px;
+  height: auto;
+  object-fit: contain;
+}
+.login-copy {
+  margin: auto 0;
+}
+.login-copy h1 {
+  font: 700 clamp(40px, 5vw, 60px)/1.08 var(--heading);
+  letter-spacing: -2px;
+  margin: 18px 0;
+}
+.login-copy p {
+  color: var(--palette-red);
+  max-width: 370px;
+  font-size: 15px;
+  line-height: 1.6;
+}
+.login-foot {
+  font: 10px var(--mono);
+  letter-spacing: 1.3px;
+  color: var(--palette-blue);
+}
+.login-form {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: var(--palette-cloud);
+  padding: 33px;
+  border-radius: 7px;
+}
+.login-form::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: url("../../assets/tcet-watermark.png") center 58% / 76% auto
+    no-repeat;
+  opacity: 0.2;
+  pointer-events: none;
+}
+.login-form h2 {
+  font: 700 25px var(--heading);
+  margin: 9px 0 5px;
+}
+.login-form > p {
+  font-size: 12px;
+  margin-bottom: 27px;
+}
+.login-form label,
+.builder-form label,
+.review-side label {
+  display: grid;
+  gap: 7px;
+  color: var(--palette-blue);
+  font-size: 11px;
+  margin: 16px 0;
+}
+.login-form input,
+.builder-form input,
+.builder-form textarea,
+.review-side input,
+.review-side textarea,
+.question-card textarea,
+.field-label textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--palette-cloud);
+  color: var(--palette-blue);
+  padding: 10px 11px;
+  outline: none;
+  font-size: 12px;
+}
+.login-form input:focus,
+.builder-form input:focus,
+.builder-form textarea:focus,
+.review-side input:focus,
+.review-side textarea:focus {
+  border-color: var(--palette-red);
+}
+.demo-box {
+  display: grid;
+  gap: 5px;
+  border-top: 1px solid var(--line);
+  padding-top: 16px;
+  margin-top: 22px;
+  color: var(--palette-blue);
+  font-size: 11px;
+}
+.demo-box b {
+  color: var(--palette-blue);
+  font-size: 11px;
+  margin-bottom: 2px;
+}
+.demo-box small {
+  color: var(--text);
+  font: 10px var(--mono);
+}
+.login-role-switch {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+  margin-bottom: 12px;
+}
+.login-role-switch button {
+  border: 1px solid var(--palette-red);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--palette-red);
+  padding: 9px 7px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.login-role-switch button:hover,
+.login-role-switch button.selected {
+  background: var(--palette-red);
+  color: var(--palette-white);
+}
+@media (max-width: 760px) {
+  .login-page {
+    grid-template-columns: 1fr;
+    gap: 15px;
+    padding: 24px;
+  }
+}
+@media (max-width: 760px) {
+  .login-brand {
+    min-height: 190px;
+  }
+}
+@media (max-width: 760px) {
+  .login-copy {
+    margin: 28px 0 10px;
+  }
+}
+@media (max-width: 760px) {
+  .login-copy h1 {
+    font-size: 38px;
+  }
+}
+@media (max-width: 760px) {
+  .login-foot {
+    display: none;
+  }
+}
+@media (max-width: 760px) {
+  .login-form {
+    padding: 23px;
+  }
+}

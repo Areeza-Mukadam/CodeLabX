@@ -23,7 +23,7 @@ CodeExecutionService
 
 ## Persistence
 
-JPA entities map to PostgreSQL. A local `h2` profile uses file-backed H2 in PostgreSQL mode for machines without a database server.
+JPA entities map to PostgreSQL, the default runtime database. Local development uses the PostgreSQL container in `compose.yaml` with a named data volume. H2 is limited to automated tests. Submitted code, output, student/practical links, timestamps, progress, and evaluations are stored in PostgreSQL; teachers retrieve submissions from `GET /api/teacher/submissions` and review them in the teacher dashboard.
 
 ## Auth
 

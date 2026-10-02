@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 @ConditionalOnProperty(name = "codelabx.execution.provider", havingValue = "mock")
 public class MockCodeExecutionService implements CodeExecutionService {
     @Override
-    public ExecutionResult execute(CodeLanguage language, String source) {
+    public ExecutionResult execute(CodeLanguage language, String source, String stdin) {
         if (source == null || source.isBlank()) {
             return ExecutionResult.malformed("Source code is required.");
         }

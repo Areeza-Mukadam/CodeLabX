@@ -3,6 +3,8 @@ package com.codelabx.practical.dto;
 import com.codelabx.practical.Practical;
 import com.codelabx.practical.PracticalStatus;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 
 import java.time.Instant;
 import java.util.List;
@@ -15,6 +17,8 @@ public class PracticalDtos {
 
     public record PracticalUpsertRequest(
             @NotBlank String title,
+            @NotBlank String subject,
+            @Min(1) @Max(8) Integer semester,
             String description,
             String aim,
             String theory,
@@ -38,6 +42,8 @@ public class PracticalDtos {
     public record PracticalSummary(
             Long id,
             String title,
+            String subject,
+            Integer semester,
             String description,
             String status,
             Instant updatedAt,
@@ -50,6 +56,8 @@ public class PracticalDtos {
     public record PracticalDetail(
             Long id,
             String title,
+            String subject,
+            Integer semester,
             String description,
             String aim,
             String theory,
@@ -68,6 +76,8 @@ public class PracticalDtos {
     public record PracticalTeacherDetail(
             Long id,
             String title,
+            String subject,
+            Integer semester,
             String description,
             String aim,
             String theory,
@@ -85,6 +95,6 @@ public class PracticalDtos {
     ) {}
 
     public static PracticalSummary toSummary(Practical p, int assigned, int completed) {
-        return new PracticalSummary(p.getId(), p.getTitle(), p.getDescription(), p.getStatus().name(), p.getUpdatedAt(), assigned, completed, 0, "");
+        return new PracticalSummary(p.getId(), p.getTitle(), p.getSubject(), p.getSemester(), p.getDescription(), p.getStatus().name(), p.getUpdatedAt(), assigned, completed, 0, "");
     }
 }

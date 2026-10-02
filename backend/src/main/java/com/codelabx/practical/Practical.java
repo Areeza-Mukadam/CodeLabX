@@ -16,6 +16,11 @@ public class Practical {
     @Column(nullable = false)
     private String title;
 
+    @Column(length = 120)
+    private String subject;
+
+    private Integer semester;
+
     @Column(length = 4000)
     private String description;
 
@@ -70,6 +75,10 @@ public class Practical {
     public void setId(Long id) { this.id = id; }
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
+    public String getSubject() { return subject; }
+    public void setSubject(String subject) { this.subject = subject; }
+    public Integer getSemester() { return semester; }
+    public void setSemester(Integer semester) { this.semester = semester; }
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
     public String getAim() { return aim; }

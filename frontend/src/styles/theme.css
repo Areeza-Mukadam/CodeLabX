@@ -1,0 +1,31 @@
+:root {
+  --palette-white: #ffffff;
+  --palette-blue-light: #a0c0e0;
+  --palette-blue: #4060a0;
+  --palette-cloud: #e0e0e0;
+  --palette-blue-muted: #80a0c0;
+  --palette-red: #c02040;
+  --bg: var(--palette-white);
+  --panel: color-mix(
+    in srgb,
+    var(--palette-blue-light) 12%,
+    var(--palette-white)
+  );
+  --panel2: color-mix(in srgb, var(--palette-cloud) 65%, var(--palette-white));
+  --line: color-mix(
+    in srgb,
+    var(--palette-blue-muted) 45%,
+    var(--palette-white)
+  );
+  --muted: var(--palette-blue);
+  --text: var(--palette-blue);
+  --blue: var(--palette-blue);
+  --green: var(--palette-blue-muted);
+  --amber: var(--palette-red);
+  --sans: "DM Sans", sans-serif;
+  --heading: Manrope, sans-serif;
+  --mono: "DM Mono", monospace;
+}
+#root {
+  min-height: 100vh;
+}

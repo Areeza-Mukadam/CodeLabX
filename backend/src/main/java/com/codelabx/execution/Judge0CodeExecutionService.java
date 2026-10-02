@@ -43,7 +43,7 @@ public class Judge0CodeExecutionService implements CodeExecutionService {
     private final String apiHost;
 
     @Override
-    public ExecutionResult execute(CodeLanguage language, String source) {
+    public ExecutionResult execute(CodeLanguage language, String source, String stdin) {
         if (source == null || source.isBlank()) {
             return ExecutionResult.malformed("Source code is required.");
         }
@@ -55,6 +55,7 @@ public class Judge0CodeExecutionService implements CodeExecutionService {
         Map<String, Object> payload = Map.of(
                 "language_id", languageId,
                 "source_code", encoded,
+                "stdin", Base64.getEncoder().encodeToString((stdin == null ? "" : stdin).getBytes(StandardCharsets.UTF_8)),
                 "base64_encoded", true
         );
         long started = System.currentTimeMillis();

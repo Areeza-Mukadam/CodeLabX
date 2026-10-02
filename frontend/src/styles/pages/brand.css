@@ -1,0 +1,42 @@
+.brand {
+  height: 41px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font: 700 15px var(--heading);
+  letter-spacing: 0.1px;
+}
+.brand-mark {
+  height: 32px;
+  width: 32px;
+  border: 1px solid var(--palette-blue);
+  border-radius: 7px;
+  display: grid;
+  place-content: center;
+  font: 700 17px var(--mono);
+  color: var(--text);
+}
+.brand-mark span,
+.brand-x {
+  color: var(--blue);
+}
+.brand small {
+  display: block;
+  font: 500 8px var(--mono);
+  letter-spacing: 1.25px;
+  color: var(--muted);
+  margin-top: 1px;
+}
+@media (max-width: 760px) {
+  .sidebar .brand {
+    justify-content: center;
+  }
+}
+@media (max-width: 760px) {
+  .sidebar .brand > span:last-child,
+  .workspace-label,
+  .nav-link:not(:first-child),
+  .nav-link {
+    font-size: 0;
+  }
+}
