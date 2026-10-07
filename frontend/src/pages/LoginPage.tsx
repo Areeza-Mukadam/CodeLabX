@@ -15,7 +15,6 @@ const roleDetails: Record<
     tab: string;
     eyebrow: string;
     title: string;
-    description: string;
     email: string;
   }
 > = {
@@ -23,24 +22,18 @@ const roleDetails: Record<
     tab: "Student",
     eyebrow: "STUDENT PORTAL",
     title: "Your next practical starts here.",
-    description:
-      "Work through each lab step, write your solution, and track your progress.",
     email: "student@tcetmumbai.in",
   },
   faculty: {
     tab: "Faculty",
     eyebrow: "FACULTY PORTAL",
     title: "Prepare the lab. Guide the work.",
-    description:
-      "Create practicals, follow submissions, and review student assessments.",
     email: "teacher@tcetmumbai.in",
   },
   admin: {
     tab: "Admin",
     eyebrow: "ADMIN CONSOLE",
     title: "Manage your CodeLabX workspace.",
-    description:
-      "Administrator access is reserved for institution-level account and workspace management.",
     email: "admin@tcetmumbai.in",
   },
 };
@@ -96,60 +89,26 @@ export function LoginPage() {
 
   return (
     <main className={`login-page role-${role}`}>
+      <img
+        className="tcet-logo login-logo"
+        src={tcetLogo}
+        alt="Thakur College of Engineering and Technology"
+      />
       <section className="login-brand">
-        <img
-          className="tcet-logo"
-          src={tcetLogo}
-          alt="Thakur College of Engineering and Technology"
-        />
         <div className="login-copy">
           <span className="eyebrow">{details.eyebrow}</span>
           <h1>{details.title}</h1>
-          <p>{details.description}</p>
           <div className="login-benefits">
             {role === "student" && (
               <>
-                <span>
-                  01 <b>Learn in sequence</b>
-                </span>
-                <br />
-                <span>
-                  02 <b>Build and run code</b>
-                </span>
-                <br />
-                <span>
-                  03 <b>Track your submissions</b>
-                </span>
               </>
             )}
             {role === "faculty" && (
               <>
-                <span>
-                  01 <b>Build practical modules</b>
-                </span>
-                <br />
-                <span>
-                  02 <b>Assign and monitor work</b>
-                </span>
-                <br />
-                <span>
-                  03 <b>Review and assess</b>
-                </span>
               </>
             )}
             {role === "admin" && (
               <>
-                <span>
-                  01 <b>Workspace settings</b>
-                </span>
-                <br />
-                <span>
-                  02 <b>Account administration</b>
-                </span>
-                <br />
-                <span>
-                  03 <b>Institution oversight</b>
-                </span>
               </>
             )}
           </div>

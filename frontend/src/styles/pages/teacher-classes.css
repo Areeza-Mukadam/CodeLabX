@@ -1,0 +1,177 @@
+.teacher-class-page {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.teacher-flow-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.teacher-flow-steps li {
+  padding: 0.55rem 0.85rem;
+  border: 1px solid var(--border, #dce2ec);
+  border-radius: 999px;
+  color: var(--muted, #667085);
+  background: var(--surface, #fff);
+  font-size: 0.85rem;
+}
+
+.teacher-flow-steps li.current,
+.teacher-flow-steps li.complete {
+  border-color: var(--primary, #c02040);
+  color: var(--primary, #c02040);
+  background: color-mix(in srgb, var(--primary, #c02040) 8%, white);
+}
+
+.teacher-flow-section {
+  min-width: 0;
+  padding: clamp(1rem, 2vw, 1.5rem);
+  border: 1px solid var(--border, #dce2ec);
+  border-radius: 1rem;
+  background: var(--surface, #fff);
+  box-shadow: 0 8px 24px rgb(16 24 40 / 4%);
+}
+
+.teacher-flow-section .section-heading {
+  margin-bottom: 1.1rem;
+}
+
+.teacher-choice-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr));
+  gap: 0.85rem;
+}
+
+.teacher-choice,
+.teacher-class-option {
+  display: grid;
+  gap: 0.5rem;
+  padding: 1rem;
+  border: 1px solid var(--border, #dce2ec);
+  border-radius: 0.8rem;
+  color: inherit;
+  background: var(--surface, #fff);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 140ms ease, box-shadow 140ms ease, transform 140ms ease;
+}
+
+.teacher-choice:hover,
+.teacher-class-option:hover,
+.teacher-student-row:hover {
+  border-color: var(--primary, #c02040);
+  box-shadow: 0 5px 16px rgb(192 32 64 / 10%);
+  transform: translateY(-1px);
+}
+
+.teacher-choice.selected,
+.teacher-class-option.selected,
+.teacher-student-row.selected {
+  border-color: var(--primary, #c02040);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary, #c02040) 16%, transparent);
+}
+
+.teacher-choice b {
+  font-size: 1rem;
+}
+
+.teacher-choice small,
+.teacher-student-info small {
+  color: var(--muted, #667085);
+}
+
+.teacher-class-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.teacher-class-option {
+  min-width: 105px;
+  place-items: center;
+  text-align: center;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.teacher-student-list {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.teacher-student-row {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  width: 100%;
+  padding: 0.8rem 1rem;
+  border: 1px solid var(--border, #dce2ec);
+  border-radius: 0.8rem;
+  color: inherit;
+  background: var(--surface, #fff);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 140ms ease, box-shadow 140ms ease, transform 140ms ease;
+}
+
+.teacher-student-avatar {
+  display: grid;
+  flex: 0 0 2.6rem;
+  width: 2.6rem;
+  height: 2.6rem;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--primary, #c02040);
+  background: color-mix(in srgb, var(--primary, #c02040) 10%, white);
+  font-weight: 700;
+}
+
+.teacher-student-info {
+  display: grid;
+  flex: 1;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.teacher-student-info small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.teacher-student-class {
+  padding: 0.3rem 0.55rem;
+  border-radius: 999px;
+  background: var(--surface-muted, #f3f5f9);
+  font-size: 0.8rem;
+}
+
+.teacher-student-arrow {
+  color: var(--primary, #c02040);
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.teacher-change {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+@media (max-width: 640px) {
+  .teacher-student-row {
+    flex-wrap: wrap;
+  }
+
+  .teacher-student-info {
+    flex-basis: calc(100% - 4rem);
+  }
+
+  .teacher-student-arrow {
+    margin-left: auto;
+  }
+}

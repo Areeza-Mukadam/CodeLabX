@@ -1,5 +1,7 @@
 .login-page {
-  background: var(--palette-cloud);
+  position: relative;
+  isolation: isolate;
+  background: transparent;
   min-height: 100vh;
   display: grid;
   grid-template-columns: minmax(350px, 1fr) minmax(390px, 520px);
@@ -9,12 +11,20 @@
   gap: 8vw;
   align-items: center;
 }
-.login-brand {
+.login-page::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
   background-image:
-    linear-gradient(rgba(255, 255, 255, 0.76), rgba(255, 255, 255, 0.88)),
+    linear-gradient(rgba(255, 255, 255, 0.46), rgba(255, 255, 255, 0.46)),
     url("../../assets/tcet-campus.png");
   background-size: cover;
   background-position: center;
+}
+.login-brand {
+  /*background: rgba(255, 255, 255, 0.58);*/
+  backdrop-filter: blur(3px);
   padding: 28px;
   border-radius: 12px;
   min-height: 70vh;
@@ -23,9 +33,16 @@
 }
 .tcet-logo {
   display: block;
-  width: 160px;
+  width: 100px;
   height: auto;
   object-fit: contain;
+}
+.login-logo {
+  position: fixed;
+  top: 18px;
+  left: 20px;
+  z-index: 10;
+  max-height: 86px;
 }
 .login-copy {
   margin: auto 0;
@@ -51,9 +68,11 @@
   isolation: isolate;
   overflow: hidden;
   border: 1px solid var(--line);
-  background: var(--palette-cloud);
+  background: rgba(255, 255, 255, 0.50);
+  backdrop-filter: blur(10px);
   padding: 33px;
   border-radius: 7px;
+  box-shadow: 0 18px 55px rgba(25, 44, 75, 0.18);
 }
 .login-form::before {
   content: "";
@@ -79,7 +98,7 @@
   display: grid;
   gap: 7px;
   color: var(--palette-blue);
-  font-size: 11px;
+  font-size: 16px;
   margin: 16px 0;
 }
 .login-form input,
@@ -135,7 +154,7 @@
   background: transparent;
   color: var(--palette-red);
   padding: 9px 7px;
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 600;
 }
 .login-role-switch button:hover,
@@ -147,7 +166,13 @@
   .login-page {
     grid-template-columns: 1fr;
     gap: 15px;
-    padding: 24px;
+    padding: 96px 24px 24px;
+  }
+  .login-logo {
+    top: 12px;
+    left: 14px;
+    width: 88px;
+    max-height: 76px;
   }
 }
 @media (max-width: 760px) {

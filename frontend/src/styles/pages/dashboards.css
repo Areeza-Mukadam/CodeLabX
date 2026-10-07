@@ -86,7 +86,7 @@
   justify-content: space-between;
 }
 .course-number {
-  font: 10px var(--mono);
+  font: 15px var(--mono);
   letter-spacing: 0.8px;
   color: var(--muted);
 }
@@ -110,7 +110,7 @@
   border-color: var(--line);
 }
 .practical-card h3 {
-  font: 600 17px var(--heading);
+  font: 650 17px var(--heading);
   margin: 19px 0 5px;
 }
 .practical-card > p {
