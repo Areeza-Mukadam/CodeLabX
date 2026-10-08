@@ -1,0 +1,29 @@
+.brand {
+  min-height: 68px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+}
+.brand-logo {
+  display: block;
+  width: 78px;
+  max-height: 76px;
+  object-fit: contain;
+  object-position: left top;
+}
+@media (max-width: 760px) {
+  .sidebar .brand {
+    min-height: 42px;
+    justify-content: center;
+    align-items: center;
+  }
+  .sidebar .brand-logo {
+    width: 38px;
+    max-height: 42px;
+  }
+  .workspace-label,
+  .nav-link:not(:first-child),
+  .nav-link {
+    font-size: 0;
+  }
+}
