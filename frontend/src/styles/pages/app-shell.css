@@ -89,6 +89,13 @@
   font: 10px var(--mono);
   color: var(--muted);
 }
+.user-chip .user-email {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 8px;
+}
 .icon-button {
   border: 0;
   color: var(--muted);

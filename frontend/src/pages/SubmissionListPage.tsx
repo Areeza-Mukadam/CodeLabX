@@ -21,7 +21,11 @@ export function SubmissionListPage() {
             Review student code and record practical marks.
           </p>
         </div>
-        <button className="button secondary" onClick={() => void refresh()} disabled={loading}>
+        <button
+          className="button secondary"
+          onClick={() => void refresh()}
+          disabled={loading}
+        >
           {loading ? "Refreshing…" : "Refresh submissions"}
         </button>
       </div>

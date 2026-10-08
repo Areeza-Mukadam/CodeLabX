@@ -9,6 +9,26 @@ import type { Detail, Progress } from "../types";
 import { steps } from "../types";
 import { humanStatus, statusClass } from "../utils/formatters";
 
+const starterForLanguage = (language: string, practical: Detail) => {
+  switch (language) {
+    case "JAVA":
+      return practical.javaStarterCode;
+    case "PYTHON":
+      return practical.pythonStarterCode;
+    case "SQL":
+      return "SELECT 'Hello from SQLite' AS message;";
+    case "ASSEMBLY":
+      return "section .text\nglobal _start\n_start:\n    mov rax, 60\n    xor rdi, rdi\n    syscall\n";
+    default:
+      return practical.javaStarterCode;
+  }
+};
+
+const monacoLanguage = (language: string) => {
+  if (language === "ASSEMBLY") return "plaintext";
+  return language.toLowerCase();
+};
+
 export function PracticalLabPage() {
   const { id } = useParams(),
     practicalId = Number(id),
@@ -36,10 +56,7 @@ export function PracticalLabPage() {
       setStep(prog.data.currentStep);
       setAnswers(prog.data.practiceAnswers || {});
       setLanguage(prog.data.draftLanguage || initialLanguage);
-      setCode(
-        prog.data.draftCode ||
-          (initialLanguage === "PYTHON" ? p.pythonStarterCode : p.javaStarterCode),
-      );
+      setCode(prog.data.draftCode || starterForLanguage(initialLanguage, p));
       setConclusion(prog.data.conclusionText || "");
     }
   }, [prog.data, p]);
@@ -129,7 +146,11 @@ export function PracticalLabPage() {
       );
     } catch (e) {
       setRunState("UNAVAILABLE");
-      setTerminal(e instanceof Error ? e.message : "Code execution failed. Please try again.");
+      setTerminal(
+        e instanceof Error
+          ? e.message
+          : "Code execution failed. Please try again.",
+      );
     } finally {
       setBusy(false);
     }
@@ -284,27 +305,19 @@ export function PracticalLabPage() {
                         onChange={(e) => {
                           const v = e.target.value;
                           setLanguage(v);
-                          setCode(
-                            v === "JAVA"
-                              ? p.javaStarterCode
-                              : p.pythonStarterCode,
-                          );
+                          setCode(starterForLanguage(v, p));
                         }}
                       >
                         <option value="JAVA">Java</option>
                         <option value="PYTHON">Python</option>
+                        <option value="SQL">SQL (SQLite)</option>
+                        <option value="ASSEMBLY">Assembly (NASM)</option>
                       </select>
                     </label>
                     <div className="editor-actions">
                       <button
                         className="button secondary compact"
-                        onClick={() =>
-                          setCode(
-                            language === "JAVA"
-                              ? p.javaStarterCode
-                              : p.pythonStarterCode,
-                          )
-                        }
+                        onClick={() => setCode(starterForLanguage(language, p))}
                       >
                         Reset
                       </button>
@@ -341,7 +354,7 @@ export function PracticalLabPage() {
                   >
                     <Editor
                       height="360px"
-                      language={language === "JAVA" ? "java" : "python"}
+                      language={monacoLanguage(language)}
                       theme="vs-dark"
                       value={code}
                       onChange={(v) => setCode(v || "")}
@@ -359,7 +372,8 @@ export function PracticalLabPage() {
                     />
                   </div>
                   <label className="editor-stdin-label">
-                    Program input <span className="muted">(one value per line)</span>
+                    Program input{" "}
+                    <span className="muted">(one value per line)</span>
                     <textarea
                       className="editor-stdin"
                       value={stdin}

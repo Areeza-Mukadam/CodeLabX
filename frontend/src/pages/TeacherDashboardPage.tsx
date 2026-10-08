@@ -175,17 +175,38 @@ export function TeacherDashboardPage() {
             Choose a subject and class to find a student’s practical work.
           </p>
         </div>
-        <Link className="button primary" to="/teacher/practicals/new">
-          ＋ Create practical
-        </Link>
+        <div className="teacher-create-actions">
+          <Link
+            className="button primary"
+            to="/teacher/practicals/new?mode=upload"
+          >
+            📄 Upload & Make Practical
+          </Link>
+          <Link
+            className="button secondary"
+            to="/teacher/practicals/new?mode=manual"
+          >
+            ＋ Manual Generator
+          </Link>
+        </div>
       </div>
 
       <ol className="teacher-flow-steps" aria-label="Submission search steps">
-        <li className={!selectedSubject ? "current" : "complete"}>1. Subject</li>
-        <li className={selectedClass ? "complete" : selectedSubject ? "current" : ""}>
+        <li className={!selectedSubject ? "current" : "complete"}>
+          1. Subject
+        </li>
+        <li
+          className={
+            selectedClass ? "complete" : selectedSubject ? "current" : ""
+          }
+        >
           2. Class
         </li>
-        <li className={selectedStudent ? "current" : selectedClass ? "current" : ""}>
+        <li
+          className={
+            selectedStudent ? "current" : selectedClass ? "current" : ""
+          }
+        >
           3. Student
         </li>
         <li className={selectedStudent ? "current" : ""}>4. Submissions</li>
@@ -209,7 +230,10 @@ export function TeacherDashboardPage() {
         {subjectsLoading ? (
           <Loading />
         ) : subjectError ? (
-          <ErrorBox message={subjectError} retry={() => window.location.reload()} />
+          <ErrorBox
+            message={subjectError}
+            retry={() => window.location.reload()}
+          />
         ) : subjects.length ? (
           <div className="teacher-choice-grid">
             {subjects.map((subject) => {
@@ -231,7 +255,10 @@ export function TeacherDashboardPage() {
             })}
           </div>
         ) : (
-          <Empty title="No subjects available" text="Published practical subjects will appear here." />
+          <Empty
+            title="No subjects available"
+            text="Published practical subjects will appear here."
+          />
         )}
       </section>
 
@@ -239,14 +266,19 @@ export function TeacherDashboardPage() {
         <section className="teacher-flow-section">
           <div className="section-heading">
             <div>
-              <span className="eyebrow">STEP 2 · {selectedSubject.subject}</span>
+              <span className="eyebrow">
+                STEP 2 · {selectedSubject.subject}
+              </span>
               <h2>Select the class</h2>
             </div>
           </div>
           {classesLoading ? (
             <Loading />
           ) : classError ? (
-            <ErrorBox message={classError} retry={() => chooseSubject(selectedSubject)} />
+            <ErrorBox
+              message={classError}
+              retry={() => chooseSubject(selectedSubject)}
+            />
           ) : classes.length ? (
             <div className="teacher-class-options">
               {classes.map((classSection) => (
@@ -280,7 +312,10 @@ export function TeacherDashboardPage() {
           {studentsLoading ? (
             <Loading />
           ) : studentError ? (
-            <ErrorBox message={studentError} retry={() => chooseClass(selectedClass)} />
+            <ErrorBox
+              message={studentError}
+              retry={() => chooseClass(selectedClass)}
+            />
           ) : students.length ? (
             <div className="teacher-student-list">
               {students.map((student) => (
@@ -301,13 +336,20 @@ export function TeacherDashboardPage() {
                     <b>{student.name}</b>
                     <small>{student.email}</small>
                   </span>
-                  <span className="teacher-student-class">{student.classSection}</span>
-                  <span className="teacher-student-arrow">View submissions →</span>
+                  <span className="teacher-student-class">
+                    {student.classSection}
+                  </span>
+                  <span className="teacher-student-arrow">
+                    View submissions →
+                  </span>
                 </button>
               ))}
             </div>
           ) : (
-            <Empty title="No students in this class" text="Student accounts assigned to this section will appear here." />
+            <Empty
+              title="No students in this class"
+              text="Student accounts assigned to this section will appear here."
+            />
           )}
         </section>
       )}
@@ -326,7 +368,10 @@ export function TeacherDashboardPage() {
           {submissionsLoading ? (
             <Loading />
           ) : submissionsError ? (
-            <ErrorBox message={submissionsError} retry={() => void chooseStudent(selectedStudent)} />
+            <ErrorBox
+              message={submissionsError}
+              retry={() => void chooseStudent(selectedStudent)}
+            />
           ) : studentSubmissions.length ? (
             <div className="table-wrap">
               <table>
@@ -343,17 +388,24 @@ export function TeacherDashboardPage() {
                 <tbody>
                   {studentSubmissions.map((submission) => (
                     <tr key={submission.id}>
-                      <td><b>{submission.practicalTitle}</b></td>
+                      <td>
+                        <b>{submission.practicalTitle}</b>
+                      </td>
                       <td>{submission.language}</td>
                       <td>{date(submission.submittedAt)}</td>
                       <td>
-                        <span className={`status ${submission.evaluated ? "done" : "active"}`}>
+                        <span
+                          className={`status ${submission.evaluated ? "done" : "active"}`}
+                        >
                           {submission.evaluated ? "Evaluated" : "Needs review"}
                         </span>
                       </td>
                       <td>{submission.totalMarks ?? "—"}</td>
                       <td>
-                        <Link className="text-link" to={`/teacher/submissions/${submission.id}`}>
+                        <Link
+                          className="text-link"
+                          to={`/teacher/submissions/${submission.id}`}
+                        >
                           Review →
                         </Link>
                       </td>

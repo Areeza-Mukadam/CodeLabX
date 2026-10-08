@@ -4,10 +4,12 @@ const API = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
 export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
   const token = useAuth.getState().token;
+  const multipart =
+    typeof FormData !== "undefined" && init.body instanceof FormData;
   const response = await fetch(`${API}/api${path}`, {
     ...init,
     headers: {
-      "Content-Type": "application/json",
+      ...(!multipart ? { "Content-Type": "application/json" } : {}),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...init.headers,
     },

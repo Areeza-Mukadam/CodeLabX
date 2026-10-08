@@ -3,6 +3,11 @@ export type User = {
   name: string;
   email: string;
   role: "STUDENT" | "TEACHER" | "ADMIN";
+  classSection?: string | null;
+  division?: string | null;
+  cohort?: string | null;
+  department?: string | null;
+  rollNo?: string | null;
 };
 
 export type Practical = {

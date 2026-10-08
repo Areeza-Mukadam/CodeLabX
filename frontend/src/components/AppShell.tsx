@@ -64,8 +64,9 @@ export function AppShell() {
                   ? "Teacher"
                   : user?.role === "ADMIN"
                     ? "Administrator"
-                    : "Student"}
+                    : `Student${user?.classSection ? ` · ${user.classSection}` : ""}`}
               </small>
+              <small className="user-email">{user?.email}</small>
             </div>
             <button className="icon-button" title="Sign out" onClick={logout}>
               ↗
