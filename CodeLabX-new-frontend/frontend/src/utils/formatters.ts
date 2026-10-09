@@ -1,5 +1,7 @@
 export function humanStatus(x: string) {
-  return x === "SUBMITTED"
+  return x === "LATE"
+    ? "Late"
+    : x === "SUBMITTED"
     ? "Submitted"
     : x === "EVALUATED"
       ? "Evaluated"
@@ -14,6 +16,8 @@ export function humanStatus(x: string) {
 export function statusClass(x: string) {
   return x === "SUBMITTED" || x === "EVALUATED"
     ? "done"
+    : x === "LATE"
+      ? "draft"
     : x === "DRAFT"
       ? "draft"
       : "active";

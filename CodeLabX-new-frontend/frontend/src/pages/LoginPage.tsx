@@ -41,6 +41,11 @@ const roleDetails: Record<
 
 const studentPresets = [
   {
+    label: "Inzamam Khan (TE-B · Roll 13)",
+    email: "inzamam.khan.te.b@tcetmumbai.in",
+    division: "TE-B",
+  },
+  {
     label: "Areeza Mukadam (SE-B)",
     email: "student@tcetmumbai.in",
     division: "SE-B",

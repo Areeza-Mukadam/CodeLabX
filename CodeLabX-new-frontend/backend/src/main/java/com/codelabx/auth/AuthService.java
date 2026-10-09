@@ -21,7 +21,16 @@ public class AuthService {
     }
 
     public AuthResponse login(LoginRequest request) {
-        UserAccount user = users.findByEmailIgnoreCase(request.email().trim())
+        String reqEmail = request.email() != null ? request.email().trim() : "";
+        UserAccount user = users.findByEmailIgnoreCase(reqEmail)
+                .or(() -> {
+                    if ("inzamam@tcetmumbai.in".equalsIgnoreCase(reqEmail)) {
+                        return users.findByEmailIgnoreCase("inzamam.khan.te.b@tcetmumbai.in");
+                    } else if ("inzamam.khan.te.b@tcetmumbai.in".equalsIgnoreCase(reqEmail)) {
+                        return users.findByEmailIgnoreCase("inzamam@tcetmumbai.in");
+                    }
+                    return java.util.Optional.empty();
+                })
                 .orElseThrow(() -> new BadCredentialsException("Invalid credentials"));
         if (!passwordEncoder.matches(request.password(), user.getPassword())) {
             throw new BadCredentialsException("Invalid credentials");

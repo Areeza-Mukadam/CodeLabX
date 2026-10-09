@@ -235,6 +235,7 @@ export function PracticalLabPage() {
           );
         })}
       </div>
+      <div className="note-banner"><div className="note-symbol">i</div><div><b>{p.facultyName||"Faculty"} · Assigned {p.assignedAt?new Intl.DateTimeFormat(undefined,{dateStyle:"medium"}).format(new Date(p.assignedAt)):""}</b>{p.dueAt&&<p>Due {new Intl.DateTimeFormat(undefined,{dateStyle:"medium",timeStyle:"short"}).format(new Date(p.dueAt))}</p>}{p.assignmentInstructions&&<p>{p.assignmentInstructions}</p>}</div></div>
       <div className="lab-layout">
         <section className="lab-main">
           <div className="section-meta">

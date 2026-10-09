@@ -24,6 +24,7 @@ frontend/.vite/
 # Backend
 backend/target/
 backend/data/
+backend/uploads/
 backend/*.log
 backend/.mvn/wrapper/maven-wrapper.jar
 

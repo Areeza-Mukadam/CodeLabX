@@ -21,6 +21,11 @@ public class Practical {
 
     private Integer semester;
 
+    private Integer experimentNumber;
+    @Column(length = 32) private String programmingLanguage;
+    @Column(length = 500) private String sourcePdfPath;
+    @Column(length = 255) private String sourcePdfName;
+
     @Column(length = 4000)
     private String description;
 
@@ -79,6 +84,14 @@ public class Practical {
     public void setSubject(String subject) { this.subject = subject; }
     public Integer getSemester() { return semester; }
     public void setSemester(Integer semester) { this.semester = semester; }
+    public Integer getExperimentNumber() { return experimentNumber; }
+    public void setExperimentNumber(Integer experimentNumber) { this.experimentNumber = experimentNumber; }
+    public String getProgrammingLanguage() { return programmingLanguage; }
+    public void setProgrammingLanguage(String programmingLanguage) { this.programmingLanguage = programmingLanguage; }
+    public String getSourcePdfPath() { return sourcePdfPath; }
+    public void setSourcePdfPath(String sourcePdfPath) { this.sourcePdfPath = sourcePdfPath; }
+    public String getSourcePdfName() { return sourcePdfName; }
+    public void setSourcePdfName(String sourcePdfName) { this.sourcePdfName = sourcePdfName; }
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
     public String getAim() { return aim; }

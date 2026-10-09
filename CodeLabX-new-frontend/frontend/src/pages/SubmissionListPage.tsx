@@ -34,10 +34,13 @@ export function SubmissionListPage() {
           <thead>
             <tr>
               <th>Student</th>
+              <th>Roll no.</th>
+              <th>Class</th>
               <th>Practical</th>
               <th>Language</th>
               <th>Submitted</th>
               <th>Status</th>
+              <th>Marks</th>
               <th />
             </tr>
           </thead>
@@ -48,6 +51,8 @@ export function SubmissionListPage() {
                   <b>{s.studentName}</b>
                   <small>{s.studentEmail}</small>
                 </td>
+                <td>{s.rollNo || "—"}</td>
+                <td>{s.classSection || "—"}</td>
                 <td>{s.practicalTitle}</td>
                 <td>{s.language}</td>
                 <td>{date(s.submittedAt)}</td>
@@ -57,11 +62,14 @@ export function SubmissionListPage() {
                   </span>
                 </td>
                 <td>
+                  <b>{s.totalMarks != null ? `${s.totalMarks} / 14` : "—"}</b>
+                </td>
+                <td>
                   <Link
                     className="text-link"
                     to={`/teacher/submissions/${s.id}`}
                   >
-                    Review →
+                    {s.evaluated ? "View / Edit →" : "Review →"}
                   </Link>
                 </td>
               </tr>

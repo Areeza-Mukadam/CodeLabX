@@ -27,6 +27,10 @@ public class PracticalDtos {
             String conclusion,
             String javaStarterCode,
             String pythonStarterCode,
+            Integer experimentNumber,
+            String programmingLanguage,
+            String sourcePdfPath,
+            String sourcePdfName,
             List<PracticeQuestionInput> practiceQuestions,
             List<VivaQuestionInput> vivaQuestions
     ) {}
@@ -50,7 +54,10 @@ public class PracticalDtos {
             int assignedCount,
             int completedCount,
             int progressPercent,
-            String progressStatus
+            String progressStatus,
+            Instant assignedAt,
+            Instant dueAt,
+            String facultyName
     ) {}
 
     public record PracticalDetail(
@@ -70,7 +77,13 @@ public class PracticalDtos {
             Instant createdAt,
             Instant updatedAt,
             List<PracticeQuestionView> practiceQuestions,
-            List<VivaQuestionView> vivaQuestions
+            List<VivaQuestionView> vivaQuestions,
+            Instant assignedAt,
+            Instant dueAt,
+            String assignmentInstructions,
+            String facultyName,
+            Integer experimentNumber,
+            String programmingLanguage
     ) {}
 
     public record PracticalTeacherDetail(
@@ -91,10 +104,14 @@ public class PracticalDtos {
             Instant updatedAt,
             List<PracticeQuestionTeacherView> practiceQuestions,
             List<VivaQuestionView> vivaQuestions,
-            List<Long> assignedStudentIds
+            List<Long> assignedStudentIds,
+            Integer experimentNumber,
+            String programmingLanguage,
+            String sourcePdfName,
+            String sourcePdfPath
     ) {}
 
     public static PracticalSummary toSummary(Practical p, int assigned, int completed) {
-        return new PracticalSummary(p.getId(), p.getTitle(), p.getSubject(), p.getSemester(), p.getDescription(), p.getStatus().name(), p.getUpdatedAt(), assigned, completed, 0, "");
+        return new PracticalSummary(p.getId(), p.getTitle(), p.getSubject(), p.getSemester(), p.getDescription(), p.getStatus().name(), p.getUpdatedAt(), assigned, completed, 0, "", p.getCreatedAt(), null, p.getCreatedBy().getName());
     }
 }

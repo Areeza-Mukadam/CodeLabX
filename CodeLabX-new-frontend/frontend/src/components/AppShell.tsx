@@ -23,8 +23,11 @@ export function AppShell() {
         <nav>
           {user?.role === "STUDENT" ? (
             <>
+              <Link to="/semester-selection" className="nav-link">
+                <span>📚</span> Curriculum labs (Sem 1-8)
+              </Link>
               <Link to="/" className="nav-link">
-                <span>▦</span> My practicals
+                <span>▦</span> My dashboard
               </Link>
               <Link to="/" className="nav-link">
                 <span>◷</span> Recent activity

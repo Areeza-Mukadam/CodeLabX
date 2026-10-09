@@ -1,6 +1,10 @@
 spring:
   application:
     name: CodeLabX
+  servlet:
+    multipart:
+      max-file-size: 15MB
+      max-request-size: 16MB
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:h2}
   jpa:

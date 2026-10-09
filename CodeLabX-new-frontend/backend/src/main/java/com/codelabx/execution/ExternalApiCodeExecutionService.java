@@ -26,6 +26,7 @@ public class ExternalApiCodeExecutionService implements CodeExecutionService {
     private final String pythonVersion;
     private final int timeoutMs;
     private final String authorization;
+    private final ProgrammingLanguageRepository languages;
 
     public ExternalApiCodeExecutionService(
             @Value("${codelabx.execution.piston.url}") String pistonUrl,
@@ -33,12 +34,14 @@ public class ExternalApiCodeExecutionService implements CodeExecutionService {
             @Value("${codelabx.execution.piston.python-version}") String pythonVersion,
             @Value("${codelabx.execution.timeout-ms}") int timeoutMs,
             @Value("${codelabx.execution.piston.authorization:}") String authorization,
-            ObjectMapper objectMapper
+            ObjectMapper objectMapper,
+            ProgrammingLanguageRepository languages
     ) {
         this.javaVersion = javaVersion;
         this.pythonVersion = pythonVersion;
         this.timeoutMs = timeoutMs;
         this.authorization = authorization;
+        this.languages = languages;
         this.objectMapper = objectMapper;
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
         factory.setConnectTimeout(Duration.ofSeconds(8));
@@ -59,11 +62,11 @@ public class ExternalApiCodeExecutionService implements CodeExecutionService {
         String fileName;
         if (language == CodeLanguage.JAVA) {
             lang = "java";
-            version = javaVersion;
+            version = languages.findByCodeIgnoreCase("JAVA").filter(ProgrammingLanguage::isEnabled).map(ProgrammingLanguage::getRuntimeVersion).orElse(javaVersion);
             fileName = "Main.java";
         } else if (language == CodeLanguage.PYTHON) {
             lang = "python";
-            version = pythonVersion;
+            version = languages.findByCodeIgnoreCase("PYTHON").filter(ProgrammingLanguage::isEnabled).map(ProgrammingLanguage::getRuntimeVersion).orElse(pythonVersion);
             fileName = "main.py";
         } else {
             return ExecutionResult.malformed("Unsupported language.");

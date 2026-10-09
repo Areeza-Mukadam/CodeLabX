@@ -1,31 +1,41 @@
+import { useEffect, useState } from "react";
+import { api } from "../services/api";
 import { useAuth } from "../state/authStore";
 import "../styles/pages/dashboards.css";
 
-export function AdminDashboardPage() {
-  const user = useAuth((state) => state.user);
+type Analytics = {
+  totalDepartments:number; totalClasses:number; totalStudents:number; totalFaculty:number;
+  totalPracticals:number; totalAssignments:number; totalSubmissions:number; pendingReviews:number;
+  departmentSubmissions:{label:string;submissions:number}[]; classSubmissions:{label:string;submissions:number}[];
+  facultyAssignments:{faculty:string;department:string;classSection:string;practical:string;students:number;submissions:number;pending:number;reviewed:number}[];
+  departments:string[]; years:string[]; divisions:string[]; subjects:string[];
+  faculty:{id:number;name:string}[]; practicals:{id:number;name:string}[];
+};
+type Language={id:number;name:string;code:string;runtimeVersion:string;enabled:boolean};
+const blank={department:"",year:"",division:"",subject:"",facultyId:"",practicalId:"",from:"",to:""};
 
-  return (
-    <section className="admin-overview">
-      <span className="eyebrow">ADMIN CONSOLE</span>
-      <div className="welcome-row">
-        <div>
-          <h1>Welcome, {user?.name}</h1>
-          <p className="muted">Your administrator account is signed in.</p>
-        </div>
-      </div>
-      <div className="admin-notice" role="status">
-        <b>Administrator access is active</b>
-        <span>
-          This account has a separate role and sign-in boundary. Administration
-          tools can be added here as the platform grows.
-        </span>
-      </div>
-      <div className="card" style={{ maxWidth: 560, marginTop: 24 }}>
-        <span className="eyebrow">ACCOUNT</span>
-        <h2>{user?.name}</h2>
-        <p className="muted">{user?.email}</p>
-        <span className="status-pill">Administrator</span>
-      </div>
-    </section>
-  );
+export function AdminDashboardPage() {
+  const user=useAuth(s=>s.user), [filters,setFilters]=useState(blank), [data,setData]=useState<Analytics|null>(null), [error,setError]=useState(""), [loading,setLoading]=useState(true),[languages,setLanguages]=useState<Language[]>([]),[newLanguage,setNewLanguage]=useState("JAVA"),[languageMessage,setLanguageMessage]=useState("");
+  const load=async(next=filters)=>{setLoading(true);setError("");try{const params=new URLSearchParams(); for(const [key,value] of Object.entries(next)) if(value) params.set(key,value); if(next.from) params.set("from",new Date(`${next.from}T00:00:00`).toISOString()); if(next.to) params.set("to",new Date(`${next.to}T23:59:59.999`).toISOString()); setData(await api<Analytics>(`/admin/analytics?${params}`));}catch(e){setError(e instanceof Error?e.message:"Unable to load analytics");}finally{setLoading(false);}};
+  const loadLanguages=async()=>{try{setLanguages(await api<Language[]>("/admin/languages"));}catch(e){setLanguageMessage(e instanceof Error?e.message:"Unable to load language settings");}};
+  useEffect(()=>{void load(blank);void loadLanguages();},[]);
+  const saveLanguage=async(language:Language,enabled:boolean)=>{setLanguageMessage("");try{await api(`/admin/languages/${language.id}`,{method:"PUT",body:JSON.stringify({...language,enabled})});await loadLanguages();setLanguageMessage(`${language.name} ${enabled?"enabled":"disabled"}.`);}catch(e){setLanguageMessage(e instanceof Error?e.message:"Could not update language");}};
+  const deleteLanguage=async(language:Language)=>{setLanguageMessage("");try{await api(`/admin/languages/${language.id}`,{method:"DELETE"});await loadLanguages();setLanguageMessage(`${language.name} deleted.`);}catch(e){setLanguageMessage(e instanceof Error?e.message:"Could not delete language");}};
+  const addLanguage=async()=>{const language=newLanguage==="JAVA"?{name:"Java",code:"JAVA",runtimeVersion:"17.x",enabled:true}:{name:"Python",code:"PYTHON",runtimeVersion:"3.x",enabled:true};try{await api("/admin/languages",{method:"POST",body:JSON.stringify(language)});await loadLanguages();setLanguageMessage(`${language.name} added.`);}catch(e){setLanguageMessage(e instanceof Error?e.message:"Could not add language");}};
+  const kpis: [string,keyof Analytics][]=[["Departments","totalDepartments"],["Classes / divisions","totalClasses"],["Students","totalStudents"],["Faculty","totalFaculty"],["Practicals","totalPracticals"],["Class assignments","totalAssignments"],["Submissions","totalSubmissions"],["Pending reviews","pendingReviews"]];
+  const chart=(title:string,rows:Analytics["departmentSubmissions"])=>{const max=Math.max(1,...rows.map(r=>r.submissions));return <section className="card" style={{padding:22,minWidth:0}}><h2>{title}</h2>{rows.length?rows.map(row=><div key={row.label} style={{display:"grid",gridTemplateColumns:"minmax(90px,150px) 1fr 42px",gap:12,alignItems:"center",margin:"15px 0"}}><span>{row.label}</span><div style={{height:12,background:"#e8edf5",borderRadius:8,overflow:"hidden"}}><div style={{width:`${Math.max(2,row.submissions/max*100)}%`,height:"100%",background:"#4263eb",borderRadius:8}}/></div><b>{row.submissions}</b></div>):<p className="muted">No submission data available.</p>}</section>;};
+  return <section className="admin-overview"><span className="eyebrow">ADMIN CONSOLE</span><div className="welcome-row"><div><h1>Welcome, {user?.name}</h1><p className="muted">Live practical assignment and submission analytics from the database.</p></div><button className="button secondary" onClick={()=>void load()}>Refresh</button></div>
+    <section className="card" style={{padding:20,marginBottom:22}}><div className="field-grid">{[["Department","department",data?.departments||[]],["Year","year",data?.years||[]],["Division","division",data?.divisions||[]],["Subject","subject",data?.subjects||[]]].map(([label,key,options])=><label key={key as string}>{label}<select value={filters[key as keyof typeof blank]} onChange={e=>setFilters({...filters,[key as string]:e.target.value})}><option value="">All</option>{(options as string[]).map(x=><option key={x}>{x}</option>)}</select></label>)}
+      <label>Faculty<select value={filters.facultyId} onChange={e=>setFilters({...filters,facultyId:e.target.value})}><option value="">All</option>{data?.faculty.map(x=><option key={x.id} value={x.id}>{x.name}</option>)}</select></label>
+      <label>Practical<select value={filters.practicalId} onChange={e=>setFilters({...filters,practicalId:e.target.value})}><option value="">All</option>{data?.practicals.map(x=><option key={x.id} value={x.id}>{x.name}</option>)}</select></label>
+      <label>From<input type="date" value={filters.from} onChange={e=>setFilters({...filters,from:e.target.value})}/></label><label>To<input type="date" value={filters.to} onChange={e=>setFilters({...filters,to:e.target.value})}/></label>
+      <div style={{display:"flex",gap:8,alignItems:"end"}}><button className="button primary" onClick={()=>void load()}>Apply filters</button><button className="button secondary" onClick={()=>{setFilters(blank);void load(blank);}}>Clear</button></div>
+    </div></section>
+    {error&&<div className="alert">{error}</div>}{loading?<div className="card">Loading analytics…</div>:data&&<>
+      <div className="metric-strip" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(145px,1fr))",gap:12}}>{kpis.map(([label,key])=><div className="card" style={{padding:18}} key={key}><small>{label.toUpperCase()}</small><b style={{display:"block",fontSize:28,marginTop:8}}>{Number(data[key]).toLocaleString()}</b></div>)}</div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(min(100%,400px),1fr))",gap:18,marginTop:22}}>{chart("Submissions by department",data.departmentSubmissions)}{chart("Submissions by class / division",data.classSubmissions)}</div>
+      <section className="card" style={{padding:22,marginTop:22}}><h2>Faculty assignment activity</h2><div className="table-wrap"><table><thead><tr><th>Faculty</th><th>Department</th><th>Class</th><th>Practical</th><th>Students</th><th>Submissions</th><th>Pending</th><th>Reviewed</th></tr></thead><tbody>{data.facultyAssignments.map((row,i)=><tr key={`${row.faculty}-${row.classSection}-${row.practical}-${i}`}><td>{row.faculty}</td><td>{row.department||"—"}</td><td>{row.classSection||"—"}</td><td>{row.practical}</td><td>{row.students}</td><td>{row.submissions}</td><td>{row.pending}</td><td>{row.reviewed}</td></tr>)}</tbody></table></div>{!data.facultyAssignments.length&&<p className="muted">No class assignments available.</p>}</section>
+    </>}
+    <section className="card" style={{padding:22,marginTop:22}}><span className="eyebrow">CODE MANAGEMENT</span><h2>Programming languages</h2><p className="muted">Available runtimes are tied to the configured execution provider. Enable only runtimes students should be allowed to use.</p><div className="table-wrap"><table><thead><tr><th>Language</th><th>Runtime version</th><th>Status</th><th>Actions</th></tr></thead><tbody>{languages.map(language=><tr key={language.id}><td>{language.name}</td><td>{language.runtimeVersion}</td><td>{language.enabled?"Enabled":"Disabled"}</td><td><button className="button secondary" onClick={()=>void saveLanguage(language,!language.enabled)}>{language.enabled?"Disable":"Enable"}</button> <button className="button secondary" onClick={()=>void deleteLanguage(language)}>Delete</button></td></tr>)}</tbody></table></div><div style={{display:"flex",gap:10,alignItems:"end",marginTop:18}}><label>Add configured runtime<select value={newLanguage} onChange={e=>setNewLanguage(e.target.value)}><option value="JAVA">Java</option><option value="PYTHON">Python</option></select></label><button className="button primary" onClick={()=>void addLanguage()}>Add language</button></div>{languageMessage&&<p role="status" className="muted">{languageMessage}</p>}</section>
+  </section>;
 }
