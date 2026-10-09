@@ -41,6 +41,7 @@ public class EvaluationService {
     @Transactional
     public EvaluationView saveEvaluation(UserAccount teacher, EvaluationRequest request) {
         Submission submission = submissionService.require(request.submissionId());
+        submissionService.assertFacultyOwns(submission.getId(), teacher);
         Evaluation evaluation = evaluations.findBySubmissionId(submission.getId()).orElseGet(() -> {
             Evaluation created = new Evaluation();
             created.setSubmission(submission);
@@ -48,10 +49,38 @@ public class EvaluationService {
             return created;
         });
         evaluation.setTeacher(teacher);
-        evaluation.setCodeMarks(clamp(request.codeMarks(), 0, 10));
+        if (request.codeMarks() != null) {
+            evaluation.setCodeMarks(clamp(request.codeMarks(), 0, 10));
+        } else if (evaluation.getCodeMarks() == null) {
+            evaluation.setCodeMarks(0);
+        }
         if (request.feedback() != null) {
             evaluation.setFeedback(request.feedback());
         }
+        evaluations.save(evaluation);
+
+        if (request.entries() != null) {
+            for (VivaEntry entry : request.entries()) {
+                if (entry.vivaQuestionId() == null) continue;
+                VivaQuestion question = vivaQuestions.findById(entry.vivaQuestionId()).orElse(null);
+                if (question == null) continue;
+                VivaMark mark = vivaMarks.findByEvaluationIdAndVivaQuestionId(evaluation.getId(), question.getId())
+                        .orElseGet(VivaMark::new);
+                mark.setEvaluation(evaluation);
+                mark.setVivaQuestion(question);
+                mark.setStudentAnswerNotes(entry.notes());
+                int max = question.getMarks();
+                mark.setAwardedMarks(clamp(entry.awardedMarks(), 0, max));
+                vivaMarks.save(mark);
+            }
+            int vivaTotal = vivaMarks.findByEvaluationId(evaluation.getId()).stream()
+                    .map(VivaMark::getAwardedMarks)
+                    .filter(java.util.Objects::nonNull)
+                    .mapToInt(Integer::intValue)
+                    .sum();
+            evaluation.setVivaMarks(vivaTotal);
+        }
+
         recalc(evaluation);
         evaluations.save(evaluation);
         markProgress(submission);
@@ -61,6 +90,7 @@ public class EvaluationService {
     @Transactional
     public EvaluationView saveViva(UserAccount teacher, VivaBatchRequest request) {
         Submission submission = submissionService.require(request.submissionId());
+        submissionService.assertFacultyOwns(submission.getId(), teacher);
         Evaluation evaluation = evaluations.findBySubmissionId(submission.getId()).orElseGet(() -> {
             Evaluation created = new Evaluation();
             created.setSubmission(submission);
@@ -72,8 +102,9 @@ public class EvaluationService {
         evaluations.save(evaluation);
         if (request.entries() != null) {
             for (VivaEntry entry : request.entries()) {
-                VivaQuestion question = vivaQuestions.findById(entry.vivaQuestionId())
-                        .orElseThrow(() -> new ApiException(HttpStatus.BAD_REQUEST, "Unknown viva question."));
+                if (entry.vivaQuestionId() == null) continue;
+                VivaQuestion question = vivaQuestions.findById(entry.vivaQuestionId()).orElse(null);
+                if (question == null) continue;
                 VivaMark mark = vivaMarks.findByEvaluationIdAndVivaQuestionId(evaluation.getId(), question.getId())
                         .orElseGet(VivaMark::new);
                 mark.setEvaluation(evaluation);
@@ -86,7 +117,7 @@ public class EvaluationService {
         }
         int vivaTotal = vivaMarks.findByEvaluationId(evaluation.getId()).stream()
                 .map(VivaMark::getAwardedMarks)
-                .filter(v -> v != null)
+                .filter(java.util.Objects::nonNull)
                 .mapToInt(Integer::intValue)
                 .sum();
         evaluation.setVivaMarks(vivaTotal);
@@ -102,6 +133,10 @@ public class EvaluationService {
         return toView(evaluation);
     }
 
+    public void assertFacultyOwns(Long submissionId, UserAccount teacher) {
+        submissionService.assertFacultyOwns(submissionId, teacher);
+    }
+
     private void recalc(Evaluation evaluation) {
         int code = evaluation.getCodeMarks() == null ? 0 : evaluation.getCodeMarks();
         int viva = evaluation.getVivaMarks() == null ? 0 : evaluation.getVivaMarks();
@@ -110,11 +145,16 @@ public class EvaluationService {
     }
 
     private void markProgress(Submission submission) {
-        progress.findByStudentIdAndPracticalId(submission.getStudent().getId(), submission.getPractical().getId())
-                .ifPresent(p -> {
-                    p.setStatus(ProgressStatus.EVALUATED);
-                    progress.save(p);
+        com.codelabx.progress.StudentProgress p = progress.findByStudentIdAndPracticalId(submission.getStudent().getId(), submission.getPractical().getId())
+                .orElseGet(() -> {
+                    com.codelabx.progress.StudentProgress sp = new com.codelabx.progress.StudentProgress();
+                    sp.setStudent(submission.getStudent());
+                    sp.setPractical(submission.getPractical());
+                    return sp;
                 });
+        p.setStatus(ProgressStatus.EVALUATED);
+        p.setCurrentStep(com.codelabx.progress.PracticalStep.CONCLUSION);
+        progress.save(p);
     }
 
     private EvaluationView toView(Evaluation evaluation) {
@@ -147,7 +187,7 @@ public class EvaluationService {
         return Math.max(min, Math.min(max, value));
     }
 
-    public record EvaluationRequest(Long submissionId, Integer codeMarks, String feedback) {}
+    public record EvaluationRequest(Long submissionId, Integer codeMarks, String feedback, List<VivaEntry> entries) {}
     public record VivaEntry(Long vivaQuestionId, Integer awardedMarks, String notes) {}
     public record VivaBatchRequest(Long submissionId, List<VivaEntry> entries) {}
     public record VivaMarkView(Long vivaQuestionId, String question, int maxMarks, Integer awardedMarks, String notes) {}

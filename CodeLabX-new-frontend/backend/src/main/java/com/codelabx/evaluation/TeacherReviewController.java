@@ -15,6 +15,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.Map;
+import com.codelabx.user.UserAccount;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.transaction.annotation.Transactional;
 
 @RestController
 public class TeacherReviewController {
@@ -45,8 +48,10 @@ public class TeacherReviewController {
         this.vivaMarks = vivaMarks;
     }
 
-    @GetMapping("/api/teacher/review/{submissionId}")
-    public ReviewBundle review(@PathVariable Long submissionId) {
+    @GetMapping({"/api/teacher/review/{submissionId:[0-9]+}", "/teacher/review/{submissionId:[0-9]+}"})
+    @Transactional(readOnly = true)
+    public ReviewBundle review(@PathVariable Long submissionId, @AuthenticationPrincipal UserAccount teacher) {
+        submissionService.assertFacultyOwns(submissionId, teacher);
         var detail = submissionService.detail(submissionId);
         Submission submission = submissionService.require(submissionId);
         StudentProgress progress = progressRepository

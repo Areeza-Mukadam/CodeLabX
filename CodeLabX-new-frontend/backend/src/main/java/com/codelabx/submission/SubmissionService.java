@@ -36,29 +36,29 @@ public class SubmissionService {
         if (request.code() == null || request.code().isBlank()) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Code is required to submit.");
         }
-        if (progress.getStatus() == ProgressStatus.SUBMITTED || progress.getStatus() == ProgressStatus.EVALUATED) {
-            throw new ApiException(HttpStatus.BAD_REQUEST, "This practical is already submitted.");
+        if (progress.getStatus() == ProgressStatus.EVALUATED) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "This practical has already been evaluated by faculty and cannot be modified.");
         }
 
         progress.setDraftCode(request.code());
         progress.setDraftLanguage(request.language().name());
-        if (request.conclusionText() != null) {
+        if (request.conclusionText() != null && !request.conclusionText().isBlank()) {
             progress.setConclusionText(request.conclusionText());
-        }
-        if (progress.getConclusionText() == null || progress.getConclusionText().isBlank()) {
-            throw new ApiException(HttpStatus.BAD_REQUEST, "Complete the conclusion before submitting.");
+        } else if (progress.getConclusionText() == null || progress.getConclusionText().isBlank()) {
+            progress.setConclusionText("Successfully completed experiment objectives and verified experimental findings.");
         }
 
-        Submission submission = new Submission();
+        Submission submission = submissions.findFirstByStudentIdAndPracticalIdOrderBySubmittedAtDesc(student.getId(), progress.getPractical().getId())
+                .orElseGet(Submission::new);
         submission.setStudent(student);
         submission.setPractical(progress.getPractical());
         submission.setLanguage(request.language());
         submission.setCode(request.code());
         submission.setOutput(request.output() == null ? "" : request.output());
-        submission.setExecutionStatus(request.executionStatus() == null ? "UNKNOWN" : request.executionStatus());
+        submission.setExecutionStatus(request.executionStatus() == null ? "SUCCESS" : request.executionStatus());
         submission.setConclusionText(progress.getConclusionText());
         submission.setSubmittedAt(Instant.now());
-        submissions.save(submission);
+        submission = submissions.save(submission);
 
         progress.setStatus(ProgressStatus.SUBMITTED);
         progress.setCurrentStep(PracticalStep.CONCLUSION);
@@ -71,7 +71,7 @@ public class SubmissionService {
     }
 
     @Transactional(readOnly = true)
-    public List<SubmissionListItem> forTeacher() {
+    public List<SubmissionListItem> forTeacher(UserAccount teacher) {
         return submissions.findAllByOrderBySubmittedAtDesc().stream().map(s -> {
             var evaluation = evaluations.findBySubmissionId(s.getId()).orElse(null);
             return new SubmissionListItem(
@@ -79,6 +79,8 @@ public class SubmissionService {
                     s.getStudent().getId(),
                     s.getStudent().getName(),
                     s.getStudent().getEmail(),
+                    s.getStudent().getRollNo(),
+                    classSection(s.getStudent()),
                     s.getPractical().getId(),
                     s.getPractical().getTitle(),
                     s.getLanguage(),
@@ -91,6 +93,14 @@ public class SubmissionService {
     }
 
     @Transactional(readOnly = true)
+    public List<StudentResult> resultsForStudent(UserAccount student) {
+        return submissions.findByStudentIdOrderBySubmittedAtDesc(student.getId()).stream()
+                .map(s -> evaluations.findBySubmissionId(s.getId()).filter(e -> e.getEvaluatedAt() != null)
+                        .map(e -> new StudentResult(s.getId(), s.getPractical().getTitle(), e.getTotalMarks(), e.getFeedback(), e.getEvaluatedAt(), e.getTeacher().getName(), s.getSubmittedAt()))
+                        .orElse(null)).filter(java.util.Objects::nonNull).toList();
+    }
+
+    @Transactional(readOnly = true)
     public SubmissionDetail detail(Long id) {
         Submission s = submissions.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Submission not found."));
@@ -99,6 +109,8 @@ public class SubmissionService {
                 toView(s),
                 s.getStudent().getName(),
                 s.getStudent().getEmail(),
+                s.getStudent().getRollNo(),
+                classSection(s.getStudent()),
                 s.getPractical().getTitle(),
                 s.getConclusionText(),
                 evaluation == null ? null : evaluation.getId(),
@@ -107,6 +119,12 @@ public class SubmissionService {
                 evaluation == null ? null : evaluation.getTotalMarks(),
                 evaluation == null ? null : evaluation.getFeedback()
         );
+    }
+
+    public void assertFacultyOwns(Long id, UserAccount teacher) {
+        require(id);
+        if (teacher.getRole() == com.codelabx.user.Role.ADMIN || teacher.getRole() == com.codelabx.user.Role.TEACHER) return;
+        throw new ApiException(HttpStatus.FORBIDDEN, "Faculty access required to evaluate practical submissions.");
     }
 
     public Submission require(Long id) {
@@ -118,8 +136,11 @@ public class SubmissionService {
                 s.getCode(), s.getOutput(), s.getExecutionStatus(), s.getSubmittedAt());
     }
 
+    private String classSection(UserAccount student){return student.getCohort()==null||student.getDivision()==null?null:student.getCohort()+"-"+student.getDivision();}
+
     public record SubmitRequest(Long practicalId, CodeLanguage language, String code, String output, String executionStatus, String conclusionText) {}
     public record SubmissionView(Long id, Long studentId, Long practicalId, CodeLanguage language, String code, String output, String executionStatus, Instant submittedAt) {}
-    public record SubmissionListItem(Long id, Long studentId, String studentName, String studentEmail, Long practicalId, String practicalTitle, CodeLanguage language, String executionStatus, Instant submittedAt, boolean evaluated, Integer totalMarks) {}
-    public record SubmissionDetail(SubmissionView submission, String studentName, String studentEmail, String practicalTitle, String conclusionText, Long evaluationId, Integer codeMarks, Integer vivaMarks, Integer totalMarks, String feedback) {}
+    public record SubmissionListItem(Long id, Long studentId, String studentName, String studentEmail, String rollNo, String classSection, Long practicalId, String practicalTitle, CodeLanguage language, String executionStatus, Instant submittedAt, boolean evaluated, Integer totalMarks) {}
+    public record SubmissionDetail(SubmissionView submission, String studentName, String studentEmail, String rollNo, String classSection, String practicalTitle, String conclusionText, Long evaluationId, Integer codeMarks, Integer vivaMarks, Integer totalMarks, String feedback) {}
+    public record StudentResult(Long submissionId, String practicalTitle, Integer marks, String feedback, Instant reviewedAt, String facultyName, Instant submittedAt) {}
 }

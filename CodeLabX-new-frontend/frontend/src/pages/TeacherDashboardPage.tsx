@@ -111,7 +111,16 @@ export function TeacherDashboardPage() {
       `/teacher/students?${query({ subject: selectedSubject.subject, semester: selectedSubject.semester, classSection: selectedClass })}`,
     )
       .then((result) => {
-        if (active) setStudents(result);
+        if (active) {
+          const seen = new Set<string>();
+          const unique = (result || []).filter((s) => {
+            const key = `${s.id}-${(s.email || "").toLowerCase()}`;
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+          });
+          setStudents(unique);
+        }
       })
       .catch((error: unknown) => {
         if (active)
@@ -403,10 +412,10 @@ export function TeacherDashboardPage() {
                       <td>{submission.totalMarks ?? "—"}</td>
                       <td>
                         <Link
-                          className="text-link"
+                          className="button secondary small"
                           to={`/teacher/submissions/${submission.id}`}
                         >
-                          Review →
+                          Review / Evaluate →
                         </Link>
                       </td>
                     </tr>

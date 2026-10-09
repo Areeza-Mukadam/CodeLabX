@@ -15,6 +15,14 @@ export type Practical = {
   title: string;
   subject: string;
   semester: number;
+  experimentNumber?: number | null;
+  programmingLanguage?: string;
+  sourcePdfPath?: string;
+  sourcePdfName?: string;
+  assignmentInstructions?: string | null;
+  facultyName?: string;
+  assignedAt?: string;
+  dueAt?: string | null;
   description: string;
   status: string;
   updatedAt: string;
@@ -46,6 +54,9 @@ export type Detail = Practical & {
     order: number;
   }[];
   assignedStudentIds?: number[];
+  experimentNumber?: number | null;
+  programmingLanguage?: string;
+  sourcePdfName?: string;
 };
 
 export type Progress = {

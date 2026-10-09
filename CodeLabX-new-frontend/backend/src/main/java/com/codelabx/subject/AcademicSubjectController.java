@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/subjects")
+@RequestMapping({"/api/subjects", "/subjects"})
 public class AcademicSubjectController {
 
     private final AcademicSubjectRepository subjects;
@@ -18,8 +18,15 @@ public class AcademicSubjectController {
     }
 
     @GetMapping
-    public List<SubjectView> bySemester(@RequestParam Integer semester) {
-        return subjects.findBySemesterOrderByNameAsc(semester).stream()
+    public List<SubjectView> bySemester(@RequestParam(required = false) Integer semester) {
+        List<AcademicSubject> list = semester != null
+                ? subjects.findBySemesterOrderByNameAsc(semester)
+                : subjects.findAll(org.springframework.data.domain.Sort.by(
+                        org.springframework.data.domain.Sort.Order.asc("semester"),
+                        org.springframework.data.domain.Sort.Order.asc("name")
+                  ));
+
+        return list.stream()
                 .map(subject -> new SubjectView(subject.getCode(), subject.getName(), subject.getSemester()))
                 .toList();
     }

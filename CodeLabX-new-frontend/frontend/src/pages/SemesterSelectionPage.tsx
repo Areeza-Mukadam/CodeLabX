@@ -22,15 +22,35 @@ export function SemesterSelectionPage() {
   );
   const practicals = data?.practicals ?? [];
   const subjects = useMemo(() => {
-    const grouped = new Map<string, Practical[]>();
+    const grouped = new Map<string, { code: string; items: Practical[] }>();
     for (const subject of data?.subjects ?? []) {
-      grouped.set(subject.name, []);
+      grouped.set(subject.name.trim(), { code: subject.code, items: [] });
     }
     for (const practical of practicals) {
       const name = practical.subject?.trim() || "Other subjects";
-      grouped.set(name, [...(grouped.get(name) ?? []), practical]);
+      let key = name;
+      for (const k of grouped.keys()) {
+        if (k.toLowerCase() === name.toLowerCase()) {
+          key = k;
+          break;
+        }
+      }
+      const existing = grouped.get(key) ?? {
+        code: key
+          .split(" ")
+          .map((w) => w[0])
+          .join("")
+          .toUpperCase()
+          .slice(0, 5),
+        items: [],
+      };
+      grouped.set(key, { ...existing, items: [...existing.items, practical] });
     }
-    return [...grouped.entries()].map(([name, items]) => ({ name, items }));
+    return [...grouped.entries()].map(([name, item]) => ({
+      name,
+      code: item.code,
+      items: item.items,
+    }));
   }, [data?.subjects, practicals]);
 
   useEffect(() => {
@@ -55,16 +75,42 @@ export function SemesterSelectionPage() {
   );
   return (
     <section className="semester-subject-layout">
+      <div className="semester-quick-bar">
+        <span className="semester-quick-label">SWITCH SEMESTER:</span>
+        {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => (
+          <button
+            key={s}
+            type="button"
+            className={`semester-quick-pill ${semester === s ? "active" : ""}`}
+            onClick={() => chooseSemester(s)}
+          >
+            Sem {s}
+          </button>
+        ))}
+      </div>
+
       <aside className="semester-subject-sidebar">
         <button
           type="button"
           className="semester-change-link"
           onClick={() => setSemester(null)}
         >
-          ← Change semester
+          ← All Semesters
         </button>
-        <span className="eyebrow">SEMESTER {semester}</span>
-        <h2>Subjects</h2>
+        <div className="semester-sidebar-header">
+          <span className="eyebrow">
+            {semester <= 2
+              ? "1ST YEAR · FE"
+              : semester <= 4
+                ? "2ND YEAR · SE"
+                : semester <= 6
+                  ? "3RD YEAR · TE"
+                  : "4TH YEAR · BE"}{" "}
+            · SEMESTER {semester}
+          </span>
+          <h2>Subjects ({subjects.length})</h2>
+          <p>Choose a subject to view its laboratory experiments.</p>
+        </div>
         {loading ? (
           <Loading />
         ) : error ? (
@@ -75,14 +121,20 @@ export function SemesterSelectionPage() {
               <button
                 key={subject.name}
                 type="button"
-                className={activeSubject === subject.name ? "active" : ""}
+                className={`subject-nav-item ${activeSubject === subject.name ? "active" : ""}`}
                 aria-current={
                   activeSubject === subject.name ? "page" : undefined
                 }
                 onClick={() => setActiveSubject(subject.name)}
               >
-                <span>{subject.name}</span>
-                <small>{subject.items.length}</small>
+                <div className="subject-item-top">
+                  <span className="subject-code-tag">{subject.code}</span>
+                  <span className="subject-count-pill">
+                    {subject.items.length}{" "}
+                    {subject.items.length === 1 ? "lab" : "labs"}
+                  </span>
+                </div>
+                <span className="subject-item-name">{subject.name}</span>
               </button>
             ))}
           </nav>
@@ -94,48 +146,91 @@ export function SemesterSelectionPage() {
       </aside>
 
       <div className="semester-subject-content">
-        <span className="eyebrow">ACADEMIC YEAR · 2026–27</span>
-        <h1>Semester {semester}</h1>
-        <p className="muted">
-          Choose a practical from one of your available subjects.
-        </p>
         {loading ? (
           <Loading />
         ) : error ? (
           <ErrorBox message={error} retry={refresh} />
         ) : selectedSubject ? (
           <>
-            <div className="section-heading">
-              <h2>{selectedSubject.name}</h2>
-              <span className="count-pill">
-                {selectedSubject.items.length} practical
-                {selectedSubject.items.length === 1 ? "" : "s"}
-              </span>
+            <div className="content-header-banner">
+              <div>
+                <span className="eyebrow">
+                  ACADEMIC YEAR · 2026–27 · SEMESTER {semester}
+                </span>
+                <h1>{selectedSubject.name}</h1>
+                <p>
+                  Choose a practical to open the interactive lab IDE, review
+                  theory & algorithm, write and execute code, and submit for
+                  evaluation.
+                </p>
+              </div>
+              <div className="subject-badge-large">
+                <span className="subject-badge-code">
+                  {selectedSubject.code}
+                </span>
+                <span className="subject-badge-count">
+                  {selectedSubject.items.length} practical
+                  {selectedSubject.items.length === 1 ? "" : "s"}
+                </span>
+              </div>
             </div>
             {selectedSubject.items.length ? (
               <div className="semester-practical-list">
-                {selectedSubject.items.map((practical) => (
+                {selectedSubject.items.map((practical, idx) => (
                   <Link
                     className="semester-practical-card"
                     key={practical.id}
                     to={`/practicals/${practical.id}`}
                   >
-                    <span className="eyebrow">PRACTICAL</span>
-                    <strong>{practical.title}</strong>
-                    <span className="muted">{practical.description}</span>
-                    <span className="semester-practical-arrow">
-                      Open practical →
-                    </span>
+                    <div>
+                      <div className="practical-card-topbar">
+                        <span className="practical-exp-badge">
+                          EXPERIMENT{" "}
+                          {String(
+                            practical.experimentNumber || idx + 1,
+                          ).padStart(2, "0")}
+                        </span>
+                        <span className="practical-status-badge">
+                          {practical.status === "PUBLISHED"
+                            ? "Active Lab"
+                            : practical.status}
+                        </span>
+                      </div>
+                      <h3 className="practical-card-title">
+                        {practical.title}
+                      </h3>
+                      <p className="practical-card-desc">
+                        {practical.description}
+                      </p>
+                    </div>
+                    <div>
+                      <div className="practical-card-tags">
+                        <span className="practical-card-tag">☕ Java</span>
+                        <span className="practical-card-tag">🐍 Python</span>
+                        <span className="practical-card-tag">
+                          🎯 Theory & Algo
+                        </span>
+                        <span className="practical-card-tag">📝 Viva</span>
+                      </div>
+                      <div className="practical-card-footer">
+                        <span className="practical-card-cta">
+                          Open practical lab →
+                        </span>
+                      </div>
+                    </div>
                   </Link>
                 ))}
               </div>
             ) : (
               <div className="semester-subject-empty">
                 <strong>
-                  Practical materials for {selectedSubject.name} are not added
-                  yet.
+                  Practical materials for {selectedSubject.name} are being
+                  prepared.
                 </strong>
-                <p>Your faculty can publish them when they are ready.</p>
+                <p>
+                  Choose another subject from the left list to view active
+                  experiments.
+                </p>
               </div>
             )}
           </>
@@ -145,7 +240,7 @@ export function SemesterSelectionPage() {
               No practicals are assigned for Semester {semester} yet.
             </strong>
             <p>
-              Choose another semester or check back after your teacher assigns
+              Choose another semester or check back after your faculty assigns
               practicals.
             </p>
           </div>

@@ -14,10 +14,12 @@ public class ExecutionController {
 
     private final CodeExecutionService codeExecutionService;
     private final ProgressService progressService;
+    private final ProgrammingLanguageRepository languages;
 
-    public ExecutionController(CodeExecutionService codeExecutionService, ProgressService progressService) {
+    public ExecutionController(CodeExecutionService codeExecutionService, ProgressService progressService, ProgrammingLanguageRepository languages) {
         this.codeExecutionService = codeExecutionService;
         this.progressService = progressService;
+        this.languages = languages;
     }
 
     @PostMapping("/run")
@@ -25,6 +27,10 @@ public class ExecutionController {
         if (user.getRole() != Role.STUDENT) {
             throw new com.codelabx.common.ApiException(org.springframework.http.HttpStatus.FORBIDDEN, "Student role required.");
         }
+        boolean isEnabled = languages.findByCodeIgnoreCase(request.language().name())
+                .map(ProgrammingLanguage::isEnabled)
+                .orElse(true);
+        if (!isEnabled) throw new com.codelabx.common.ApiException(org.springframework.http.HttpStatus.BAD_REQUEST, "This programming language is disabled by the administrator.");
         if (request.practicalId() == null) return ExecutionResult.malformed("practicalId is required.");
         progressService.assertStepUnlocked(user, request.practicalId(), PracticalStep.CODE);
         return codeExecutionService.execute(request.language(), request.source(), request.stdin());

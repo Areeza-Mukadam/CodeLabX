@@ -12,6 +12,7 @@ export function StudentDashboardPage() {
   const user = useAuth((s) => s.user);
   const [classmates, setClassmates] = useState<User[]>([]);
   const [classmatesLoading, setClassmatesLoading] = useState(false);
+  const [results, setResults] = useState<Array<{submissionId:number; practicalTitle:string; marks:number|null; feedback:string|null; reviewedAt:string; facultyName:string; submittedAt:string}>>([]);
 
   const { data, error, loading, refresh } = useLoad(
     () => api<Practical[]>("/practicals"),
@@ -35,6 +36,8 @@ export function StudentDashboardPage() {
       active = false;
     };
   }, [user?.classSection]);
+
+  useEffect(() => { api<typeof results>("/submissions/results").then(setResults).catch(() => setResults([])); }, []);
 
   if (loading) return <Loading />;
   if (error) return <ErrorBox message={error} retry={refresh} />;
@@ -112,6 +115,41 @@ export function StudentDashboardPage() {
             </div>
           </div>
         </div>
+      </div>
+
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          flexWrap: "wrap",
+          gap: "18px",
+          padding: "18px 24px",
+          background: "linear-gradient(135deg, color-mix(in srgb, var(--palette-red) 7%, var(--palette-white)), var(--palette-white))",
+          border: "1px solid color-mix(in srgb, var(--palette-red) 35%, var(--line))",
+          borderRadius: "8px",
+          margin: "20px 0 4px",
+          boxShadow: "0 4px 16px rgba(192, 32, 64, 0.06)",
+        }}
+      >
+        <div>
+          <span style={{ font: "700 10px var(--mono)", color: "var(--palette-red)", letterSpacing: "1px" }}>
+            ACADEMIC CURRICULUM · SEMESTERS 1 TO 8
+          </span>
+          <h3 style={{ margin: "4px 0 4px", font: "700 18px var(--heading)", color: "var(--text)" }}>
+            Explore All 8 Semesters & Subjects
+          </h3>
+          <p style={{ margin: 0, fontSize: "13px", color: "var(--muted)" }}>
+            Access authentic practical laboratories across 1st Year to 4th Year with complete theory, algorithms, starter codes, and viva questions.
+          </p>
+        </div>
+        <Link
+          to="/semester-selection"
+          className="button primary"
+          style={{ whiteSpace: "nowrap", padding: "9px 18px", fontWeight: 700, fontSize: "13px" }}
+        >
+          Select Semester →
+        </Link>
       </div>
 
       <div className="metric-strip">
@@ -206,6 +244,14 @@ export function StudentDashboardPage() {
         </div>
         <span className="muted small">Assigned practical laboratory work</span>
       </div>
+      <section className="classmates-section">
+        <div className="section-heading"><div><span className="eyebrow">ASSESSMENT</span><h2>My Results & Feedback</h2></div></div>
+        {results.length ? <div className="practical-grid">{results.map((result) => <article className="practical-card" key={result.submissionId}>
+          <span className="status done">Reviewed</span><h3>{result.practicalTitle}</h3>
+          <p><b>Marks:</b> {result.marks ?? "—"}</p><p>{result.feedback || "No written feedback."}</p>
+          <small className="muted">Reviewed by {result.facultyName} · {date(result.reviewedAt)}</small>
+        </article>)}</div> : <p className="muted">No reviewed submissions yet. Feedback appears here after faculty submits a review.</p>}
+      </section>
       {list.length === 0 ? (
         <Empty
           title="Nothing assigned yet"
@@ -224,6 +270,7 @@ export function StudentDashboardPage() {
                 </span>
               </div>
               <h3>{p.title}</h3>
+              <p><b>{p.subject}</b>{p.facultyName ? ` · ${p.facultyName}` : ""}</p>
               <p>{p.description || "Structured programming practical"}</p>
               <div className="progress-label">
                 <span>Progress</span>
@@ -233,7 +280,7 @@ export function StudentDashboardPage() {
                 <span style={{ width: `${p.progressPercent || 0}%` }} />
               </div>
               <div className="card-bottom">
-                <span className="muted small">Updated {date(p.updatedAt)}</span>
+                <span className="muted small">Assigned {date(p.assignedAt || p.updatedAt)}{p.dueAt ? ` · Due ${date(p.dueAt)}` : ""}</span>
                 <Link className="button secondary" to={`/practicals/${p.id}`}>
                   {p.status === "SUBMITTED" ? "View status" : "Continue"}{" "}
                   <span>→</span>

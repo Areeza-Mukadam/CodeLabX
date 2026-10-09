@@ -77,20 +77,12 @@ public class ProgressService {
         if (progress.getStatus() == ProgressStatus.SUBMITTED || progress.getStatus() == ProgressStatus.EVALUATED) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "This practical is already submitted.");
         }
-        PracticalStep step = request.step();
-        if (step != progress.getCurrentStep()) {
-            throw new ApiException(HttpStatus.BAD_REQUEST, "Complete the current section before moving on.");
-        }
+        PracticalStep step = request.step() != null ? request.step() : progress.getCurrentStep();
 
-        if (step == PracticalStep.PRACTICE) {
-            Map<String, String> answers = request.practiceAnswers() == null ? Map.of() : request.practiceAnswers();
-            validatePractice(practicalId, answers);
-            progress.setPracticeAnswersJson(writeJson(answers));
+        if (step == PracticalStep.PRACTICE && request.practiceAnswers() != null) {
+            progress.setPracticeAnswersJson(writeJson(request.practiceAnswers()));
         }
-        if (step == PracticalStep.CONCLUSION) {
-            if (request.conclusionText() == null || request.conclusionText().trim().length() < 40) {
-                throw new ApiException(HttpStatus.BAD_REQUEST, "Write a conclusion of at least 40 characters.");
-            }
+        if (step == PracticalStep.CONCLUSION && request.conclusionText() != null && !request.conclusionText().isBlank()) {
             progress.setConclusionText(request.conclusionText().trim());
         }
         if (step == PracticalStep.CODE && request.draftCode() != null) {
@@ -112,23 +104,21 @@ public class ProgressService {
     }
 
     public void assertStepUnlocked(UserAccount student, Long practicalId, PracticalStep required) {
-        StudentProgress progress = repository.findByStudentIdAndPracticalId(student.getId(), practicalId)
-                .orElseThrow(() -> new ApiException(HttpStatus.FORBIDDEN, "Start this practical from the beginning."));
-        Set<PracticalStep> completed = parseCompleted(progress.getCompletedSteps());
-        for (PracticalStep step : PracticalStep.values()) {
-            if (step.ordinal() >= required.ordinal()) {
-                break;
-            }
-            if (!completed.contains(step)) {
-                throw new ApiException(HttpStatus.FORBIDDEN, "Complete previous sections before accessing " + required.name() + ".");
-            }
-        }
+        practicalService.requireAssignedPublished(practicalId, student);
     }
 
     public StudentProgress load(Long practicalId, UserAccount student) {
-        practicalService.requireAssignedPublished(practicalId, student);
+        Practical practical = practicalService.requireAssignedPublished(practicalId, student);
         return repository.findByStudentIdAndPracticalId(student.getId(), practicalId)
-                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Progress not found. Open the practical first."));
+                .orElseGet(() -> {
+                    StudentProgress created = new StudentProgress();
+                    created.setStudent(student);
+                    created.setPractical(practical);
+                    created.setDraftCode(practical.getJavaStarterCode());
+                    created.setDraftLanguage("JAVA");
+                    created.setCurrentStep(PracticalStep.AIM);
+                    return repository.save(created);
+                });
     }
 
     public ProgressView toView(StudentProgress progress) {

@@ -101,3 +101,412 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ==========================================================================
+   Semester Subjects & Practical Labs Layout (Student Portal)
+   ========================================================================== */
+
+.semester-subject-layout {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 24px;
+  align-items: start;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+@media (max-width: 1024px) {
+  .semester-subject-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Quick Semester Switcher Bar */
+.semester-quick-bar {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 12px 18px;
+  background: var(--palette-white);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  margin-bottom: 6px;
+}
+
+.semester-quick-label {
+  font: 600 11px var(--mono);
+  color: var(--muted);
+  letter-spacing: 0.8px;
+  margin-right: 6px;
+}
+
+.semester-quick-pill {
+  padding: 5px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--line);
+  background: var(--panel2);
+  color: var(--text);
+  font: 600 12px var(--sans);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.semester-quick-pill:hover {
+  border-color: var(--palette-red);
+  color: var(--palette-red);
+  background: var(--palette-white);
+}
+
+.semester-quick-pill.active {
+  background: var(--palette-red);
+  color: #ffffff;
+  border-color: var(--palette-red);
+  box-shadow: 0 2px 8px rgba(192, 32, 64, 0.25);
+}
+
+/* Left Sidebar */
+.semester-subject-sidebar {
+  background: var(--palette-white);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 22px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.03);
+  position: sticky;
+  top: 16px;
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+}
+
+.semester-change-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 13px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: var(--panel2);
+  color: var(--text);
+  font: 600 12px var(--sans);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  margin-bottom: 16px;
+}
+
+.semester-change-link:hover {
+  background: var(--palette-white);
+  border-color: var(--palette-red);
+  color: var(--palette-red);
+}
+
+.semester-sidebar-header {
+  margin-bottom: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.semester-sidebar-header .eyebrow {
+  color: var(--palette-red);
+  font: 700 10px var(--mono);
+  letter-spacing: 1px;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.semester-sidebar-header h2 {
+  margin: 0;
+  color: var(--text);
+  font: 700 19px/1.3 var(--heading);
+}
+
+.semester-sidebar-header p {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* Subject Vertical Navigation */
+.subject-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.subject-nav-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--palette-white);
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.subject-nav-item:hover {
+  border-color: var(--palette-red);
+  background: color-mix(in srgb, var(--palette-red) 4%, var(--palette-white));
+  transform: translateX(2px);
+}
+
+.subject-nav-item.active {
+  border-color: var(--palette-red);
+  background: color-mix(in srgb, var(--palette-red) 8%, var(--palette-white));
+  border-left: 4px solid var(--palette-red);
+  box-shadow: 0 3px 12px rgba(192, 32, 64, 0.08);
+}
+
+.subject-item-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.subject-code-tag {
+  font: 700 10px var(--mono);
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: var(--panel2);
+  color: var(--text);
+  letter-spacing: 0.5px;
+}
+
+.subject-nav-item.active .subject-code-tag {
+  background: var(--palette-red);
+  color: #ffffff;
+}
+
+.subject-count-pill {
+  font: 600 10px var(--mono);
+  color: var(--muted);
+  background: color-mix(in srgb, var(--line) 40%, transparent);
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.subject-nav-item.active .subject-count-pill {
+  color: var(--palette-red);
+  background: color-mix(in srgb, var(--palette-red) 15%, transparent);
+  font-weight: 700;
+}
+
+.subject-item-name {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--text);
+}
+
+.subject-empty {
+  padding: 16px;
+  color: var(--muted);
+  font-size: 13px;
+  text-align: center;
+}
+
+/* Right Content Area */
+.semester-subject-content {
+  background: var(--palette-white);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 26px 30px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.03);
+  min-height: 520px;
+}
+
+.content-header-banner {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 24px;
+}
+
+.content-header-banner .eyebrow {
+  color: var(--palette-red);
+  font: 700 11px var(--mono);
+  letter-spacing: 1px;
+}
+
+.content-header-banner h1 {
+  margin: 6px 0 6px;
+  font: 800 24px/1.25 var(--heading);
+  color: var(--text);
+}
+
+.content-header-banner p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+  max-width: 650px;
+}
+
+.subject-badge-large {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.subject-badge-code {
+  font: 800 18px var(--mono);
+  color: var(--palette-red);
+  letter-spacing: 1px;
+}
+
+.subject-badge-count {
+  font: 600 11px var(--mono);
+  color: var(--muted);
+  background: var(--panel2);
+  padding: 3px 9px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+}
+
+/* Practical Cards Grid */
+.semester-practical-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 18px;
+}
+
+@media (max-width: 600px) {
+  .semester-practical-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+.semester-practical-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--palette-white);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  text-decoration: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.semester-practical-card:hover {
+  border-color: var(--palette-red);
+  box-shadow: 0 8px 24px rgba(192, 32, 64, 0.1);
+  transform: translateY(-2px);
+}
+
+.practical-card-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.practical-exp-badge {
+  font: 700 10px var(--mono);
+  color: var(--palette-red);
+  background: color-mix(in srgb, var(--palette-red) 10%, transparent);
+  padding: 3px 8px;
+  border-radius: 4px;
+  letter-spacing: 0.6px;
+}
+
+.practical-status-badge {
+  font: 600 10px var(--mono);
+  color: #15803d;
+  background: #dcfce7;
+  padding: 2px 7px;
+  border-radius: 10px;
+}
+
+.practical-card-title {
+  margin: 0 0 8px;
+  font: 700 15px/1.35 var(--heading);
+  color: var(--text);
+  transition: color 0.15s ease;
+}
+
+.semester-practical-card:hover .practical-card-title {
+  color: var(--palette-red);
+}
+
+.practical-card-desc {
+  margin: 0 0 14px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.practical-card-tags {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.practical-card-tag {
+  font: 600 10px var(--mono);
+  color: var(--text);
+  background: var(--panel2);
+  padding: 2px 7px;
+  border-radius: 4px;
+  border: 1px solid var(--line);
+}
+
+.practical-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  margin-top: auto;
+}
+
+.practical-card-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--palette-red);
+  font: 700 12px var(--sans);
+  transition: gap 0.15s ease;
+}
+
+.semester-practical-card:hover .practical-card-cta {
+  gap: 9px;
+}
+
+.semester-subject-empty {
+  padding: 48px 24px;
+  text-align: center;
+  background: var(--panel2);
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+}
+
+.semester-subject-empty strong {
+  display: block;
+  font-size: 16px;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.semester-subject-empty p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
