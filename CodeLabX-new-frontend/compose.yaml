@@ -1,16 +1,7 @@
 services:
-  piston:
-    image: ghcr.io/engineer-man/piston
-    container_name: codelabx-piston
-    restart: unless-stopped
-    privileged: true
-    ports:
-      - "127.0.0.1:2000:2000"
-    volumes:
-      - codelabx-piston-packages:/piston/packages
-    tmpfs:
-      - /tmp:exec
-
+  # ==============================================================================
+  # 1. PostgreSQL Database Service
+  # ==============================================================================
   postgres:
     image: postgres:17-alpine
     container_name: codelabx-postgres
@@ -20,15 +11,135 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-codelabx}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-codelabx-local}
     ports:
-      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - codelabx-postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-codelabx} -d $${POSTGRES_DB:-codelabx}"]
       interval: 5s
       timeout: 5s
       retries: 10
+      start_period: 5s
 
+  # ==============================================================================
+  # 2. Piston Code Execution Engine
+  # ==============================================================================
+  piston:
+    image: ghcr.io/engineer-man/piston
+    container_name: codelabx-piston
+    restart: unless-stopped
+    privileged: true
+    ports:
+      - "${PISTON_PORT:-2000}:2000"
+    volumes:
+      - codelabx-piston-packages:/piston/packages
+    tmpfs:
+      - /tmp:exec
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:2000/api/v2/packages', (r) => process.exit(r.statusCode === 200 ? 0 : 1))\""]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
+  # ==============================================================================
+  # Reliable Piston Initialization Step (installs and verifies language runtimes)
+  # ==============================================================================
+  piston-init:
+    image: curlimages/curl:latest
+    container_name: codelabx-piston-init
+    restart: "no"
+    depends_on:
+      piston:
+        condition: service_healthy
+    command: >
+      sh -c '
+        echo "==> [Piston-Init] Waiting for Piston API readiness...";
+        until curl -s -f http://piston:2000/api/v2/packages > /dev/null 2>&1; do
+          sleep 1;
+        done;
+        echo "==> [Piston-Init] Installing language runtimes...";
+        for pkg in python java gcc node; do
+          echo "Installing $${pkg}...";
+          curl -s -X POST http://piston:2000/api/v2/packages \
+            -H "Content-Type: application/json" \
+            -d "{\"language\": \"$${pkg}\"}" || true;
+        done;
+        echo "==> [Piston-Init] Verifying installed packages in Piston...";
+        INSTALLED=$$(curl -s http://piston:2000/api/v2/packages);
+        echo "$${INSTALLED}";
+        echo "==> [Piston-Init] Language runtimes verified and ready."
+      '
+
+  # ==============================================================================
+  # 3. Spring Boot Backend Service
+  # ==============================================================================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: codelabx-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      piston:
+        condition: service_healthy
+      piston-init:
+        condition: service_completed_successfully
+    environment:
+      SPRING_PROFILES_ACTIVE: postgres
+      SERVER_PORT: 8080
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ${POSTGRES_DB:-codelabx}
+      POSTGRES_USER: ${POSTGRES_USER:-codelabx}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-codelabx-local}
+      PISTON_API_URL: http://piston:2000/api/v2/execute
+      PISTON_JAVA_VERSION: ${PISTON_JAVA_VERSION:-17.x}
+      PISTON_PYTHON_VERSION: ${PISTON_PYTHON_VERSION:-3.x}
+      JWT_SECRET: ${JWT_SECRET:-codelabx-dev-only-change-this-secret-key-at-least-32-chars!}
+      JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-86400000}
+      CODE_EXECUTION_PROVIDER: ${CODE_EXECUTION_PROVIDER:-piston}
+      CODE_EXECUTION_TIMEOUT_MS: ${CODE_EXECUTION_TIMEOUT_MS:-12000}
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:8080/api/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ==============================================================================
+  # 4. React Frontend Service
+  # ==============================================================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:8080}
+        VITE_ENABLE_MOCK_DATA: ${VITE_ENABLE_MOCK_DATA:-false}
+    container_name: codelabx-frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "${FRONTEND_PORT:-5173}:80"
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:80/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+# ==============================================================================
+# Persistent Storage Volumes
+# ==============================================================================
 volumes:
-  codelabx-piston-packages:
   codelabx-postgres-data:
+    name: codelabx-postgres-data
+  codelabx-piston-packages:
+    name: codelabx-piston-packages
