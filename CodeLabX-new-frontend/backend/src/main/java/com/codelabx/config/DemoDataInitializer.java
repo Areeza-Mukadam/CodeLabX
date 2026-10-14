@@ -193,60 +193,64 @@ public class DemoDataInitializer {
 
     private void seedAllSubjects(AcademicSubjectRepository subjects) {
         // Semester 1
-        subject(subjects, "EM-I", "Engineering Mathematics - I", 1);
-        subject(subjects, "APSD", "Applied Physics & Semiconductor Devices", 1);
-        subject(subjects, "SPC", "Structured Programming in C", 1);
-        subject(subjects, "BEE", "Basic Electrical & Electronics Engineering", 1);
-        subject(subjects, "EWDF", "Engineering Workshop & Digital Fabrication", 1);
+        subject(subjects, "BSC1101", "Physics", 1);
+        subject(subjects, "BSC1102", "Mathematics-I", 1);
+        subject(subjects, "ESC1101", "Basic Electrical Engineering", 1);
+        subject(subjects, "ESC1102", "Engineering Graphics & Design", 1);
+        subject(subjects, "ESC1103", "Workshop & Manufacturing Practices-I", 1);
+        subject(subjects, "HSMC1101", "English for General & Professional Communication", 1);
 
         // Semester 2
-        subject(subjects, "EM-II", "Engineering Mathematics - II", 2);
-        subject(subjects, "ACMS", "Applied Chemistry & Material Science", 2);
-        subject(subjects, "OOP-CPP", "Object-Oriented Programming with C++", 2);
-        subject(subjects, "EMD", "Engineering Mechanics & Dynamics", 2);
-        subject(subjects, "PCSS", "Professional Communication & Soft Skills", 2);
+        subject(subjects, "BSC2101", "Chemistry", 2);
+        subject(subjects, "BSC2102", "Mathematics-II", 2);
+        subject(subjects, "ESC2101", "Programming for Problem-Solving", 2);
+        subject(subjects, "ESC2102", "Engineering Mechanics", 2);
+        subject(subjects, "ESC2103", "Workshop & Manufacturing Practices-II", 2);
+        subject(subjects, "HME-PS2101", "Professional Skills-I (Object Oriented Programming)", 2);
 
         // Semester 3
-        subject(subjects, "DS", "Data Structures", 3);
-        subject(subjects, "DSGT", "Discrete Structures & Graph Theory", 3);
-        subject(subjects, "DLCA", "Digital Logic & Computer Architecture", 3);
-        subject(subjects, "CGV", "Computer Graphics & Visualization", 3);
-        subject(subjects, "OOP-JAVA", "Object Oriented Programming with Java", 3);
+        subject(subjects, "PCC-CS302", "Data Structure using JAVA", 3);
+        subject(subjects, "PCC-CS301", "Database Management System", 3);
+        subject(subjects, "ESC-CS301", "Digital Logic Design & Computer Architecture", 3);
+        subject(subjects, "BSC-CS301", "Mathematics-III", 3);
+        subject(subjects, "HME-IP301", "Industry Practice-I (HTML/CSS)", 3);
+        subject(subjects, "HME-CSPS301", "Professional Skills-II (Cloud Infrastructure Analysis-I)", 3);
 
         // Semester 4
-        subject(subjects, "DAA", "Design and Analysis of Algorithms", 4);
-        subject(subjects, "DBMS", "Database Management Systems", 4);
-        subject(subjects, "OS", "Operating Systems", 4);
-        subject(subjects, "MPMC", "Microprocessors and Microcontrollers", 4);
-        subject(subjects, "PDS", "Python for Data Science", 4);
+        subject(subjects, "PCC-CS402", "Operating System", 4);
+        subject(subjects, "PCC-CS401", "Design and Analysis of Algorithm using Python", 4);
+        subject(subjects, "PCC-CS403", "Computer Networks", 4);
+        subject(subjects, "HME-IP401", "Web Programming / Industry Practice-II (Javascript/React)", 4);
+        subject(subjects, "BSC-CS401", "Mathematics-IV", 4);
+        subject(subjects, "HME-CSPS401", "Professional Skills-III (Cloud Infrastructure Analysis-II)", 4);
 
         // Semester 5
-        subject(subjects, "CNS", "Computer Networks & Security", 5);
-        subject(subjects, "IIS", "Introduction to Intelligent Systems", 5);
-        subject(subjects, "SEAM", "Software Engineering & Agile Methodology", 5);
-        subject(subjects, "WDT", "Web Development Technologies", 5);
-        subject(subjects, "TCS", "Theory of Computer Science", 5);
+        subject(subjects, "PCC-CS501", "Automata Theory / Theory of Computation", 5);
+        subject(subjects, "PCC-CS502", "Introduction to Intelligent Systems", 5);
+        subject(subjects, "PCC-CS503", "Microprocessor", 5);
+        subject(subjects, "ESC-CS501", "Computer Graphics", 5);
+        subject(subjects, "HME-IP501", "Industry Practice-III (Node/Express/JSON/MongoDB)", 5);
+        subject(subjects, "HSMC-501", "Soft Skill & Interpersonal Communication", 5);
 
         // Semester 6
-        subject(subjects, "CCDS", "Cloud Computing & Distributed Systems", 6);
-        subject(subjects, "MLDL", "Machine Learning & Deep Learning", 6);
-        subject(subjects, "CND", "Cryptography & Network Defense", 6);
-        subject(subjects, "SPCC", "System Programming & Compiler Construction", 6);
-        subject(subjects, "MAD", "Mobile Application Development", 6);
+        subject(subjects, "PCC-CS601", "System Programming & Compiler Construction", 6);
+        subject(subjects, "PCC-CS602", "Software Engineering", 6);
+        subject(subjects, "PEC-CS6015", "Machine Learning (Professional Elective-I)", 6);
+        subject(subjects, "HME-CSPS601", "Professional Skills-V (Cloud Architecture-II)", 6);
+        subject(subjects, "HME-IP601", "Industry Practice-IV (Javascript OOP & Linear DSA)", 6);
 
         // Semester 7
-        subject(subjects, "BDA", "Big Data Analytics", 7);
-        subject(subjects, "AIR", "Artificial Intelligence & Robotics", 7);
-        subject(subjects, "BSC", "Blockchain & Smart Contracts", 7);
-        subject(subjects, "NLP", "Natural Language Processing", 7);
-        subject(subjects, "DSRE", "DevOps & Site Reliability Engineering", 7);
+        subject(subjects, "PCC-CS702", "Cryptography and Network Security", 7);
+        subject(subjects, "PCC-CS701", "Data Warehousing and Mining", 7);
+        subject(subjects, "PEC-CS7011", "Advanced Algorithm (Professional Elective-II)", 7);
+        subject(subjects, "PEC-CS7022", "Internet of Things (IoT) (Professional Elective-III)", 7);
+        subject(subjects, "PROJ-CS701", "Project-I", 7);
 
         // Semester 8
-        subject(subjects, "CFIR", "Cyber Forensics & Incident Response", 8);
-        subject(subjects, "HPC", "High Performance Computing", 8);
-        subject(subjects, "IOTEA", "Internet of Things & Edge AI", 8);
-        subject(subjects, "QCI", "Quantum Computing & Information", 8);
-        subject(subjects, "CMP", "Capstone Major Project Phase-II", 8);
+        subject(subjects, "PCC-CS801", "Distributed Computing", 8);
+        subject(subjects, "PCC-CS802", "Software Architecture", 8);
+        subject(subjects, "PEC-CS8013", "Data Science using Python and R", 8);
+        subject(subjects, "PROJ-CS801", "Project-II", 8);
     }
 
     private void seedFromJson(

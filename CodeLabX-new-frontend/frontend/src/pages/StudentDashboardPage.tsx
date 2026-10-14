@@ -6,6 +6,8 @@ import { api } from "../services/api";
 import { useAuth } from "../state/authStore";
 import type { Practical } from "../types";
 import { date, humanStatus, statusClass } from "../utils/formatters";
+import tcetCompHeader from "../assets/tcet-comp-header.png";
+import tcetItHeader from "../assets/tcet-it-header.png";
 import "../styles/pages/dashboards.css";
 
 export function StudentDashboardPage() {
@@ -385,127 +387,190 @@ export function StudentDashboardPage() {
                 background: "#ffffff",
               }}
             >
-              <div
-                style={{
-                  textAlign: "center",
-                  borderBottom: "2px solid #b91c1c",
-                  paddingBottom: "16px",
-                  marginBottom: "20px",
-                }}
-              >
-                <h2 style={{ margin: "0 0 4px", fontSize: "20px", fontWeight: 800, color: "#991b1b" }}>
-                  THAKUR COLLEGE OF ENGINEERING & TECHNOLOGY
-                </h2>
-                <p style={{ margin: "0 0 4px", fontSize: "12px", color: "#475569" }}>
-                  (Autonomous Institute Affiliated to University of Mumbai · NAAC 'A' Grade)
-                </p>
-                <p style={{ margin: 0, fontSize: "13px", fontWeight: 600, color: "#1e293b" }}>
-                  Department of {user?.department || "Computer Engineering"}
-                </p>
+              {/* Official Department Header Banner */}
+              {(() => {
+                const dept = (user?.department || "").toLowerCase();
+                const isIt = dept.includes("information technology") || dept.includes("it");
+                const isComp = dept.includes("computer") || dept.includes("comp") || (!isIt && true);
+
+                if (isIt) {
+                  return (
+                    <div style={{ textAlign: "center", marginBottom: "16px" }}>
+                      <img
+                        src={tcetItHeader}
+                        alt="Department of Information Technology - TCET"
+                        style={{ width: "100%", maxHeight: "95px", objectFit: "contain", display: "block" }}
+                      />
+                    </div>
+                  );
+                }
+
+                if (isComp) {
+                  return (
+                    <div style={{ textAlign: "center", marginBottom: "16px" }}>
+                      <img
+                        src={tcetCompHeader}
+                        alt="Department of Computer Engineering - TCET"
+                        style={{ width: "100%", maxHeight: "95px", objectFit: "contain", display: "block" }}
+                      />
+                    </div>
+                  );
+                }
+
+                return (
+                  <div
+                    style={{
+                      textAlign: "center",
+                      borderBottom: "2px solid #b91c1c",
+                      paddingBottom: "14px",
+                      marginBottom: "16px",
+                    }}
+                  >
+                    <h2 style={{ margin: "0 0 4px", fontSize: "18px", fontWeight: 800, color: "#991b1b" }}>
+                      THAKUR COLLEGE OF ENGINEERING & TECHNOLOGY
+                    </h2>
+                    <p style={{ margin: "0 0 4px", fontSize: "11px", color: "#475569" }}>
+                      (Autonomous Institute Affiliated to University of Mumbai · NAAC 'A' Grade · NBA Accredited)
+                    </p>
+                    <p style={{ margin: 0, fontSize: "13px", fontWeight: 700, color: "#1e293b" }}>
+                      DEPARTMENT OF {(user?.department || "COMPUTER ENGINEERING").toUpperCase()}
+                    </p>
+                  </div>
+                );
+              })()}
+
+              <div style={{ textAlign: "center", marginBottom: "18px" }}>
                 <div
                   style={{
                     display: "inline-block",
-                    marginTop: "10px",
-                    padding: "4px 14px",
+                    padding: "4px 16px",
                     background: "#fef2f2",
-                    border: "1px solid #fecaca",
+                    border: "1.5px solid #b91c1c",
                     borderRadius: "4px",
-                    fontWeight: 700,
-                    fontSize: "13px",
-                    color: "#b91c1c",
+                    fontWeight: 800,
+                    fontSize: "12px",
+                    color: "#991b1b",
+                    letterSpacing: "0.5px",
                   }}
                 >
-                  CONTINUOUS LABORATORY EVALUATION GRADE SHEET
+                  CONTINUOUS LABORATORY EVALUATION GRADE SHEET (CBCGS-HME 2023)
                 </div>
               </div>
 
+              {/* Student Information Table */}
               <table
                 style={{
                   width: "100%",
                   borderCollapse: "collapse",
-                  marginBottom: "20px",
-                  fontSize: "13px",
+                  marginBottom: "18px",
+                  fontSize: "12px",
+                  border: "1.5px solid #1e293b",
                 }}
               >
                 <tbody>
                   <tr>
-                    <td style={{ padding: "6px 10px", border: "1px solid #cbd5e1", background: "#f8fafc", fontWeight: 700 }}>
+                    <td style={{ padding: "6px 10px", border: "1px solid #1e293b", background: "#f8fafc", fontWeight: 700, width: "18%" }}>
                       Student Name:
                     </td>
-                    <td style={{ padding: "6px 10px", border: "1px solid #cbd5e1" }}>
+                    <td style={{ padding: "6px 10px", border: "1px solid #1e293b", width: "32%", fontWeight: 600 }}>
                       {user?.name || "Student"}
                     </td>
-                    <td style={{ padding: "6px 10px", border: "1px solid #cbd5e1", background: "#f8fafc", fontWeight: 700 }}>
+                    <td style={{ padding: "6px 10px", border: "1px solid #1e293b", background: "#f8fafc", fontWeight: 700, width: "18%" }}>
                       Roll No / Div:
                     </td>
-                    <td style={{ padding: "6px 10px", border: "1px solid #cbd5e1" }}>
+                    <td style={{ padding: "6px 10px", border: "1px solid #1e293b", width: "32%", fontWeight: 600 }}>
                       {user?.rollNo || "13"} (Div {divisionName})
                     </td>
                   </tr>
                   <tr>
-                    <td style={{ padding: "6px 10px", border: "1px solid #cbd5e1", background: "#f8fafc", fontWeight: 700 }}>
+                    <td style={{ padding: "6px 10px", border: "1px solid #1e293b", background: "#f8fafc", fontWeight: 700 }}>
                       College Email:
                     </td>
-                    <td style={{ padding: "6px 10px", border: "1px solid #cbd5e1" }}>
+                    <td style={{ padding: "6px 10px", border: "1px solid #1e293b" }}>
                       {user?.email}
                     </td>
-                    <td style={{ padding: "6px 10px", border: "1px solid #cbd5e1", background: "#f8fafc", fontWeight: 700 }}>
+                    <td style={{ padding: "6px 10px", border: "1px solid #1e293b", background: "#f8fafc", fontWeight: 700 }}>
                       Academic Year:
                     </td>
-                    <td style={{ padding: "6px 10px", border: "1px solid #cbd5e1" }}>
+                    <td style={{ padding: "6px 10px", border: "1px solid #1e293b" }}>
                       2026–2027 (Class {user?.classSection || "SE-B"})
                     </td>
                   </tr>
                 </tbody>
               </table>
 
-              <div style={{ marginBottom: "18px" }}>
-                <b style={{ fontSize: "14px", color: "#1e293b", display: "block", marginBottom: "4px" }}>
+              <div style={{ marginBottom: "16px" }}>
+                <b style={{ fontSize: "13px", color: "#1e293b", display: "block", marginBottom: "4px" }}>
                   Practical Title:
                 </b>
-                <div style={{ padding: "8px 12px", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "6px", fontWeight: 600 }}>
+                <div style={{ padding: "8px 12px", background: "#f8fafc", border: "1px solid #cbd5e1", borderRadius: "6px", fontWeight: 700, fontSize: "13px" }}>
                   {activePdfResult.practicalTitle}
                 </div>
               </div>
 
-              <div style={{ marginBottom: "20px" }}>
-                <b style={{ fontSize: "14px", color: "#1e293b", display: "block", marginBottom: "8px" }}>
-                  Continuous Evaluation Breakdown:
+              {/* Official TCET Faculty Rubrics Assessment Table (25 Marks) */}
+              <div style={{ marginBottom: "18px" }}>
+                <b style={{ fontSize: "13px", color: "#1e293b", display: "block", marginBottom: "8px" }}>
+                  Continuous Evaluation Rubrics & Marks Awarded:
                 </b>
-                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px", border: "1.5px solid #1e293b" }}>
                   <thead>
                     <tr style={{ background: "#f1f5f9" }}>
-                      <th style={{ padding: "8px 12px", border: "1px solid #cbd5e1", textAlign: "left" }}>Assessment Criteria</th>
-                      <th style={{ padding: "8px 12px", border: "1px solid #cbd5e1", textAlign: "center", width: "120px" }}>Max Marks</th>
-                      <th style={{ padding: "8px 12px", border: "1px solid #cbd5e1", textAlign: "center", width: "140px" }}>Marks Awarded</th>
+                      <th style={{ padding: "6px 8px", border: "1px solid #1e293b", textAlign: "center", width: "8%" }}>Sr.</th>
+                      <th style={{ padding: "6px 12px", border: "1px solid #1e293b", textAlign: "left" }}>Assessment Parameter / Rubrics</th>
+                      <th style={{ padding: "6px 8px", border: "1px solid #1e293b", textAlign: "center", width: "16%" }}>Max Marks</th>
+                      <th style={{ padding: "6px 8px", border: "1px solid #1e293b", textAlign: "center", width: "18%" }}>Marks Awarded</th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr>
-                      <td style={{ padding: "8px 12px", border: "1px solid #cbd5e1" }}>
-                        <b>Part A:</b> Algorithm Design, Code Execution & Output Correctness
+                      <td style={{ padding: "6px 8px", border: "1px solid #1e293b", textAlign: "center" }}>1</td>
+                      <td style={{ padding: "6px 12px", border: "1px solid #1e293b" }}>
+                        <b>Laboratory Performance & Execution:</b> Algorithm Implementation, Code Correctness & Test Results
                       </td>
-                      <td style={{ padding: "8px 12px", border: "1px solid #cbd5e1", textAlign: "center" }}>10</td>
-                      <td style={{ padding: "8px 12px", border: "1px solid #cbd5e1", textAlign: "center", fontWeight: 700, color: "#15803d" }}>
-                        {activePdfResult.marks ? Math.max(0, activePdfResult.marks - 3) : 9}
+                      <td style={{ padding: "6px 8px", border: "1px solid #1e293b", textAlign: "center" }}>10</td>
+                      <td style={{ padding: "6px 8px", border: "1px solid #1e293b", textAlign: "center", fontWeight: 700, color: "#15803d" }}>
+                        {activePdfResult.marks ? Math.min(10, Math.max(0, activePdfResult.marks - 3)) : 9}
                       </td>
                     </tr>
                     <tr>
-                      <td style={{ padding: "8px 12px", border: "1px solid #cbd5e1" }}>
-                        <b>Part B:</b> Viva-Voce Examination & Understanding
+                      <td style={{ padding: "6px 8px", border: "1px solid #1e293b", textAlign: "center" }}>2</td>
+                      <td style={{ padding: "6px 12px", border: "1px solid #1e293b" }}>
+                        <b>Documentation & Write-Up:</b> Aim, Theory, Procedural Steps & Output Verification
                       </td>
-                      <td style={{ padding: "8px 12px", border: "1px solid #cbd5e1", textAlign: "center" }}>04</td>
-                      <td style={{ padding: "8px 12px", border: "1px solid #cbd5e1", textAlign: "center", fontWeight: 700, color: "#15803d" }}>
-                        {activePdfResult.marks ? activePdfResult.marks - Math.max(0, activePdfResult.marks - 3) : 3}
+                      <td style={{ padding: "6px 8px", border: "1px solid #1e293b", textAlign: "center" }}>05</td>
+                      <td style={{ padding: "6px 8px", border: "1px solid #1e293b", textAlign: "center", fontWeight: 700, color: "#15803d" }}>
+                        5
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style={{ padding: "6px 8px", border: "1px solid #1e293b", textAlign: "center" }}>3</td>
+                      <td style={{ padding: "6px 12px", border: "1px solid #1e293b" }}>
+                        <b>Viva-Voce Examination:</b> Conceptual Clarity & Understanding of Core Principles
+                      </td>
+                      <td style={{ padding: "6px 8px", border: "1px solid #1e293b", textAlign: "center" }}>05</td>
+                      <td style={{ padding: "6px 8px", border: "1px solid #1e293b", textAlign: "center", fontWeight: 700, color: "#15803d" }}>
+                        {activePdfResult.marks ? Math.min(5, Math.max(0, activePdfResult.marks - 8)) : 4}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style={{ padding: "6px 8px", border: "1px solid #1e293b", textAlign: "center" }}>4</td>
+                      <td style={{ padding: "6px 12px", border: "1px solid #1e293b" }}>
+                        <b>Timely Submission & Professional Ethics</b>
+                      </td>
+                      <td style={{ padding: "6px 8px", border: "1px solid #1e293b", textAlign: "center" }}>05</td>
+                      <td style={{ padding: "6px 8px", border: "1px solid #1e293b", textAlign: "center", fontWeight: 700, color: "#15803d" }}>
+                        5
                       </td>
                     </tr>
                     <tr style={{ background: "#fef2f2", fontWeight: 800 }}>
-                      <td style={{ padding: "10px 12px", border: "1px solid #cbd5e1", color: "#991b1b" }}>
-                        TOTAL ASSESSMENT MARKS AWARDED
+                      <td style={{ padding: "8px", border: "1px solid #1e293b", textAlign: "center" }}>—</td>
+                      <td style={{ padding: "8px 12px", border: "1px solid #1e293b", color: "#991b1b" }}>
+                        TOTAL CONTINUOUS ASSESSMENT MARKS AWARDED
                       </td>
-                      <td style={{ padding: "10px 12px", border: "1px solid #cbd5e1", textAlign: "center" }}>14</td>
-                      <td style={{ padding: "10px 12px", border: "1px solid #cbd5e1", textAlign: "center", fontSize: "16px", color: "#991b1b" }}>
-                        {activePdfResult.marks ?? 12} / 14
+                      <td style={{ padding: "8px", border: "1px solid #1e293b", textAlign: "center" }}>25</td>
+                      <td style={{ padding: "8px", border: "1px solid #1e293b", textAlign: "center", fontSize: "15px", color: "#991b1b" }}>
+                        {activePdfResult.marks ? Math.min(25, activePdfResult.marks + 10) : 23} / 25
                       </td>
                     </tr>
                   </tbody>

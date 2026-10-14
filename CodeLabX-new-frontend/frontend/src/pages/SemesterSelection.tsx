@@ -22,13 +22,19 @@ export default function SemesterSelection({
     <div className="wsr-stage">
       {departmentName && (
         <div className="dept-banner-bar">
-          <button
-            type="button"
-            className="semester-change-link"
-            onClick={onChangeDepartment}
-          >
-            ← Change Department
-          </button>
+          {onChangeDepartment ? (
+            <button
+              type="button"
+              className="semester-change-link"
+              onClick={onChangeDepartment}
+            >
+              ← Change Department
+            </button>
+          ) : (
+            <span style={{ fontSize: "13px", color: "#64748b", fontWeight: 600 }}>
+              🎓 Enrolled Department Curriculum
+            </span>
+          )}
           <div className="dept-badge-pill">
             <span className="dept-dot" />
             <b>{departmentName}</b>
