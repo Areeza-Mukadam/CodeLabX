@@ -3,23 +3,67 @@ import { Link } from "react-router-dom";
 import { ErrorBox, Loading } from "../components/Feedback";
 import { useLoad } from "../hooks/useLoad";
 import { api } from "../services/api";
+import {
+  DEPARTMENTS,
+  type DepartmentInfo,
+  getCurriculumSubjects,
+  getPracticalsForSubject,
+} from "../services/curriculumData";
 import type { AcademicSubject, Practical } from "../types";
+import DepartmentSelection from "./DepartmentSelection";
 import SemesterSelection from "./SemesterSelection";
 import "../styles/pages/semester-selection.css";
 
 export function SemesterSelectionPage() {
-  const [semester, setSemester] = useState<number | null>(null);
+  const [department, setDepartment] = useState<DepartmentInfo | null>(() => {
+    const saved = localStorage.getItem("codelabx.selectedDeptId");
+    if (saved) {
+      return DEPARTMENTS.find((d) => d.id === saved) || null;
+    }
+    return null;
+  });
+
+  const [semester, setSemester] = useState<number | null>(() => {
+    const saved = localStorage.getItem("codelabx.selectedSemester");
+    return saved ? Number(saved) : null;
+  });
+
   const [activeSubject, setActiveSubject] = useState("");
+
+  const isComputerEng =
+    department?.id === "computer-engineering" ||
+    department?.name.toLowerCase().includes("computer engineering");
+
+  // Load practicals and subjects
   const { data, error, loading, refresh } = useLoad(
-    () =>
-      semester === null
-        ? Promise.resolve({ practicals: [], subjects: [] })
-        : Promise.all([
-            api<Practical[]>(`/practicals?semester=${semester}`),
-            api<AcademicSubject[]>(`/subjects?semester=${semester}`),
-          ]).then(([practicals, subjects]) => ({ practicals, subjects })),
-    [semester],
+    () => {
+      if (!department || semester === null) {
+        return Promise.resolve({ practicals: [], subjects: [] });
+      }
+
+      if (isComputerEng) {
+        return Promise.all([
+          api<Practical[]>(`/practicals?semester=${semester}`),
+          api<AcademicSubject[]>(`/subjects?semester=${semester}`),
+        ]).then(([practicals, subjects]) => ({ practicals, subjects }));
+      }
+
+      // Authentic generation for IT, AIDS, AIML, CSE-IoT, ENCS, ENTC
+      const subjects = getCurriculumSubjects(department.name, semester);
+      const practicals: Practical[] = [];
+      for (const sub of subjects) {
+        const subPracticals = getPracticalsForSubject(
+          sub.name,
+          semester,
+          department.name,
+        );
+        practicals.push(...subPracticals);
+      }
+      return Promise.resolve({ practicals, subjects });
+    },
+    [department?.id, semester],
   );
+
   const practicals = data?.practicals ?? [];
   const subjects = useMemo(() => {
     const grouped = new Map<string, { code: string; items: Practical[] }>();
@@ -62,21 +106,75 @@ export function SemesterSelectionPage() {
     }
   }, [activeSubject, subjects]);
 
+  function chooseDepartment(dept: DepartmentInfo) {
+    localStorage.setItem("codelabx.selectedDeptId", dept.id);
+    setDepartment(dept);
+    setActiveSubject("");
+  }
+
   function chooseSemester(value: number) {
     localStorage.setItem("codelabx.selectedSemester", String(value));
     setActiveSubject("");
     setSemester(value);
   }
 
-  if (semester === null) return <SemesterSelection onSelect={chooseSemester} />;
+  function resetDepartment() {
+    localStorage.removeItem("codelabx.selectedDeptId");
+    localStorage.removeItem("codelabx.selectedSemester");
+    setDepartment(null);
+    setSemester(null);
+    setActiveSubject("");
+  }
 
+  function resetSemester() {
+    localStorage.removeItem("codelabx.selectedSemester");
+    setSemester(null);
+    setActiveSubject("");
+  }
+
+  // Step 1: Select Department
+  if (department === null) {
+    return <DepartmentSelection onSelect={chooseDepartment} />;
+  }
+
+  // Step 2: Select Semester
+  if (semester === null) {
+    return (
+      <SemesterSelection
+        departmentName={department.name}
+        departmentCode={department.code}
+        onChangeDepartment={resetDepartment}
+        onSelect={chooseSemester}
+      />
+    );
+  }
+
+  // Step 3: View Subjects & Experiments
   const selectedSubject = subjects.find(
     (subject) => subject.name === activeSubject,
   );
+
   return (
     <section className="semester-subject-layout">
       <div className="semester-quick-bar">
-        <span className="semester-quick-label">SWITCH SEMESTER:</span>
+        <button
+          type="button"
+          className="semester-change-link"
+          onClick={resetDepartment}
+          style={{ marginRight: "12px", whiteSpace: "nowrap" }}
+        >
+          ← All Departments
+        </button>
+
+        <div className="dept-quick-badge">
+          <span>{department.icon}</span>
+          <b>{department.name}</b>
+          <small>({department.code})</small>
+        </div>
+
+        <span className="semester-quick-label" style={{ marginLeft: "auto" }}>
+          SWITCH SEMESTER:
+        </span>
         {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => (
           <button
             key={s}
@@ -90,15 +188,26 @@ export function SemesterSelectionPage() {
       </div>
 
       <aside className="semester-subject-sidebar">
-        <button
-          type="button"
-          className="semester-change-link"
-          onClick={() => setSemester(null)}
-        >
-          ← All Semesters
-        </button>
+        <div style={{ display: "flex", gap: "10px", marginBottom: "12px" }}>
+          <button
+            type="button"
+            className="semester-change-link"
+            onClick={resetSemester}
+          >
+            ← Semesters
+          </button>
+          <button
+            type="button"
+            className="semester-change-link"
+            onClick={resetDepartment}
+          >
+            ← Departments
+          </button>
+        </div>
+
         <div className="semester-sidebar-header">
           <span className="eyebrow">
+            {department.code} ·{" "}
             {semester <= 2
               ? "1ST YEAR · FE"
               : semester <= 4
@@ -111,6 +220,7 @@ export function SemesterSelectionPage() {
           <h2>Subjects ({subjects.length})</h2>
           <p>Choose a subject to view its laboratory experiments.</p>
         </div>
+
         {loading ? (
           <Loading />
         ) : error ? (
@@ -155,7 +265,7 @@ export function SemesterSelectionPage() {
             <div className="content-header-banner">
               <div>
                 <span className="eyebrow">
-                  ACADEMIC YEAR · 2026–27 · SEMESTER {semester}
+                  {department.name} · ACADEMIC YEAR 2026–27 · SEMESTER {semester}
                 </span>
                 <h1>{selectedSubject.name}</h1>
                 <p>

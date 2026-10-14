@@ -44,6 +44,23 @@ const DEFAULT_DEPARTMENTS = [
 
 const DEFAULT_CLASS_SECTIONS = ["SE-B", "SE-A", "TE-A", "TE-B"];
 
+function getSectionDefaultTemplate(key: string, title?: string): string {
+  switch (key) {
+    case "aim":
+      return `To study, implement, and analyze ${title || "the algorithmic problem"} under real-world input constraints and verify output correctness.`;
+    case "theory":
+      return `Theoretical Background:\n1. Core concepts and mathematical formulation.\n2. Invariants, constraints, and algorithmic complexity characteristics.\n3. Practical applications in modern software engineering.`;
+    case "algorithm":
+      return `Step 1: Parse and validate input data structures.\nStep 2: Initialize working variables and base state.\nStep 3: Iterate through elements and apply core transformation logic.\nStep 4: Check boundary edge cases and terminate.\nStep 5: Return or display the verified solution output.`;
+    case "codeInstructions":
+      return `1. Complete the core function implementation.\n2. Ensure proper handling of corner cases (e.g. empty inputs, large bounds).\n3. Test the program using the Run button and verify the terminal output.`;
+    case "conclusion":
+      return `The practical was executed successfully. Algorithmic logic and execution results conformed to the expected theoretical bounds.`;
+    default:
+      return "";
+  }
+}
+
 export function PracticalFormPage() {
   const { id } = useParams();
   const edit = !!id;
@@ -474,13 +491,36 @@ export function PracticalFormPage() {
       </div>
 
       {!edit && (
-        <div className="builder-mode-switch" role="tablist">
+        <div
+          className="builder-mode-switch"
+          role="tablist"
+          style={{
+            display: "flex",
+            gap: "20px",
+            marginBottom: "28px",
+            background: "transparent",
+            border: "none",
+            padding: 0,
+            flexWrap: "wrap",
+          }}
+        >
           <button
             type="button"
             role="tab"
             aria-selected={activeMode === "document"}
             className={activeMode === "document" ? "active" : ""}
             onClick={() => setActiveMode("document")}
+            style={{
+              padding: "12px 24px",
+              borderRadius: "8px",
+              border: activeMode === "document" ? "2px solid #2563eb" : "1.5px solid #cbd5e1",
+              background: activeMode === "document" ? "#eff6ff" : "#ffffff",
+              color: activeMode === "document" ? "#1e40af" : "#475569",
+              fontWeight: 700,
+              fontSize: "14px",
+              cursor: "pointer",
+              boxShadow: activeMode === "document" ? "0 4px 12px rgba(37, 99, 235, 0.12)" : "0 1px 3px rgba(0,0,0,0.05)",
+            }}
           >
             📄 Upload & Auto-Generate Practical (from PDF / Word)
           </button>
@@ -490,6 +530,17 @@ export function PracticalFormPage() {
             aria-selected={activeMode === "manual"}
             className={activeMode === "manual" ? "active" : ""}
             onClick={() => setActiveMode("manual")}
+            style={{
+              padding: "12px 24px",
+              borderRadius: "8px",
+              border: activeMode === "manual" ? "2px solid #c02040" : "1.5px solid #cbd5e1",
+              background: activeMode === "manual" ? "#fff1f2" : "#ffffff",
+              color: activeMode === "manual" ? "#be123c" : "#475569",
+              fontWeight: 700,
+              fontSize: "14px",
+              cursor: "pointer",
+              boxShadow: activeMode === "manual" ? "0 4px 12px rgba(192, 32, 64, 0.12)" : "0 1px 3px rgba(0,0,0,0.05)",
+            }}
           >
             ✍️ Manual Practical Generator
           </button>
@@ -836,10 +887,60 @@ export function PracticalFormPage() {
               ] as const
             ).map((k, i) => (
               <section className="form-section" key={k}>
-                <span className="eyebrow">
-                  {String(i + 2).padStart(2, "0")} ·{" "}
-                  {k.replace(/[A-Z]/g, (m) => ` ${m}`).toUpperCase()}
-                </span>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    flexWrap: "wrap",
+                    gap: "8px",
+                    marginBottom: "8px",
+                  }}
+                >
+                  <span className="eyebrow" style={{ margin: 0 }}>
+                    {String(i + 2).padStart(2, "0")} ·{" "}
+                    {k.replace(/[A-Z]/g, (m) => ` ${m}`).toUpperCase()}
+                  </span>
+                  <div style={{ display: "flex", gap: "8px" }}>
+                    <button
+                      type="button"
+                      className="button secondary compact"
+                      onClick={() => {
+                        const tpl = getSectionDefaultTemplate(k, form.title);
+                        update(k, form[k] ? `${form[k]}\n\n${tpl}` : tpl);
+                      }}
+                      style={{
+                        fontSize: "12px",
+                        padding: "5px 12px",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "5px",
+                        borderRadius: "6px",
+                        fontWeight: 600,
+                      }}
+                    >
+                      ＋ Add {k === "aim" ? "Objective" : k === "theory" ? "Theory Point" : k === "algorithm" ? "Step" : "Template"}
+                    </button>
+                    <button
+                      type="button"
+                      className="button secondary compact"
+                      onClick={() => update(k, "")}
+                      style={{
+                        fontSize: "12px",
+                        padding: "5px 12px",
+                        color: "#dc2626",
+                        borderColor: "#fca5a5",
+                        borderRadius: "6px",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "5px",
+                        fontWeight: 600,
+                      }}
+                    >
+                      🗑️ Delete / Clear
+                    </button>
+                  </div>
+                </div>
                 <label>
                   <span>
                     {k === "codeInstructions"

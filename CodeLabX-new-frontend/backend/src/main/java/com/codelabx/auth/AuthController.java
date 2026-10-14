@@ -23,6 +23,11 @@ public class AuthController {
         return authService.login(request);
     }
 
+    @PostMapping("/register")
+    public AuthResponse register(@Valid @RequestBody AuthService.RegisterRequest request) {
+        return authService.register(request);
+    }
+
     @PostMapping("/logout")
     public ResponseEntity<Void> logout() {
         return ResponseEntity.noContent().build();

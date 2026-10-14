@@ -184,18 +184,27 @@ export function TeacherDashboardPage() {
             Choose a subject and class to find a student’s practical work.
           </p>
         </div>
-        <div className="teacher-create-actions">
+        <div className="teacher-create-actions" style={{ display: "flex", gap: "18px", alignItems: "center", flexWrap: "wrap" }}>
           <Link
             className="button primary"
             to="/teacher/practicals/new?mode=upload"
+            style={{ padding: "10px 20px", borderRadius: "8px", fontWeight: 700 }}
           >
-            📄 Upload & Make Practical
+            📄 Upload Laboratory Manual
           </Link>
           <Link
             className="button secondary"
             to="/teacher/practicals/new?mode=manual"
+            style={{
+              padding: "10px 20px",
+              borderRadius: "8px",
+              fontWeight: 700,
+              background: "#ffffff",
+              border: "1.5px solid #cbd5e1",
+              color: "#1e293b",
+            }}
           >
-            ＋ Manual Generator
+            ✍️ Manual Practical Generator
           </Link>
         </div>
       </div>

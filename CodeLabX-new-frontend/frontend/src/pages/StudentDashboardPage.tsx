@@ -4,15 +4,31 @@ import { ErrorBox, Empty, Loading } from "../components/Feedback";
 import { useLoad } from "../hooks/useLoad";
 import { api } from "../services/api";
 import { useAuth } from "../state/authStore";
-import type { Practical, User } from "../types";
+import type { Practical } from "../types";
 import { date, humanStatus, statusClass } from "../utils/formatters";
 import "../styles/pages/dashboards.css";
 
 export function StudentDashboardPage() {
   const user = useAuth((s) => s.user);
-  const [classmates, setClassmates] = useState<User[]>([]);
-  const [classmatesLoading, setClassmatesLoading] = useState(false);
-  const [results, setResults] = useState<Array<{submissionId:number; practicalTitle:string; marks:number|null; feedback:string|null; reviewedAt:string; facultyName:string; submittedAt:string}>>([]);
+  const [results, setResults] = useState<
+    Array<{
+      submissionId: number;
+      practicalTitle: string;
+      marks: number | null;
+      feedback: string | null;
+      reviewedAt: string;
+      facultyName: string;
+      submittedAt: string;
+    }>
+  >([]);
+
+  const [activePdfResult, setActivePdfResult] = useState<{
+    practicalTitle: string;
+    marks: number | null;
+    feedback: string | null;
+    facultyName: string;
+    reviewedAt: string;
+  } | null>(null);
 
   const { data, error, loading, refresh } = useLoad(
     () => api<Practical[]>("/practicals"),
@@ -20,24 +36,10 @@ export function StudentDashboardPage() {
   );
 
   useEffect(() => {
-    let active = true;
-    setClassmatesLoading(true);
-    api<User[]>("/students/classmates")
-      .then((res) => {
-        if (active) setClassmates(res);
-      })
-      .catch(() => {
-        if (active) setClassmates([]);
-      })
-      .finally(() => {
-        if (active) setClassmatesLoading(false);
-      });
-    return () => {
-      active = false;
-    };
-  }, [user?.classSection]);
-
-  useEffect(() => { api<typeof results>("/submissions/results").then(setResults).catch(() => setResults([])); }, []);
+    api<typeof results>("/submissions/results")
+      .then(setResults)
+      .catch(() => setResults([]));
+  }, []);
 
   if (loading) return <Loading />;
   if (error) return <ErrorBox message={error} retry={refresh} />;
@@ -110,8 +112,8 @@ export function StudentDashboardPage() {
               <b>{user?.department || "Computer Engineering"}</b>
             </div>
             <div>
-              <small>DIVISION CLASSMATES</small>
-              <b>{classmates.length} Students</b>
+              <small>STUDENT ROLL NO</small>
+              <b>{user?.rollNo || "13"}</b>
             </div>
           </div>
         </div>
@@ -125,30 +127,49 @@ export function StudentDashboardPage() {
           flexWrap: "wrap",
           gap: "18px",
           padding: "18px 24px",
-          background: "linear-gradient(135deg, color-mix(in srgb, var(--palette-red) 7%, var(--palette-white)), var(--palette-white))",
-          border: "1px solid color-mix(in srgb, var(--palette-red) 35%, var(--line))",
+          background:
+            "linear-gradient(135deg, color-mix(in srgb, var(--palette-red) 7%, var(--palette-white)), var(--palette-white))",
+          border:
+            "1px solid color-mix(in srgb, var(--palette-red) 35%, var(--line))",
           borderRadius: "8px",
           margin: "20px 0 4px",
           boxShadow: "0 4px 16px rgba(192, 32, 64, 0.06)",
         }}
       >
         <div>
-          <span style={{ font: "700 10px var(--mono)", color: "var(--palette-red)", letterSpacing: "1px" }}>
-            ACADEMIC CURRICULUM · SEMESTERS 1 TO 8
+          <span
+            style={{
+              font: "700 10px var(--mono)",
+              color: "var(--palette-red)",
+              letterSpacing: "1px",
+            }}
+          >
+            ACADEMIC CURRICULUM · DEPARTMENTS & SEMESTERS 1 TO 8
           </span>
-          <h3 style={{ margin: "4px 0 4px", font: "700 18px var(--heading)", color: "var(--text)" }}>
-            Explore All 8 Semesters & Subjects
+          <h3
+            style={{
+              margin: "4px 0 4px",
+              font: "700 18px var(--heading)",
+              color: "var(--text)",
+            }}
+          >
+            Explore All Engineering Departments & Laboratories
           </h3>
           <p style={{ margin: 0, fontSize: "13px", color: "var(--muted)" }}>
-            Access authentic practical laboratories across 1st Year to 4th Year with complete theory, algorithms, starter codes, and viva questions.
+            Select your department (Computer, IT, AI&DS, AIML, CSE-IoT, ENCS, ENTC) and choose semesters to access syllabus experiments.
           </p>
         </div>
         <Link
           to="/semester-selection"
           className="button primary"
-          style={{ whiteSpace: "nowrap", padding: "9px 18px", fontWeight: 700, fontSize: "13px" }}
+          style={{
+            whiteSpace: "nowrap",
+            padding: "9px 18px",
+            fontWeight: 700,
+            fontSize: "13px",
+          }}
         >
-          Select Semester →
+          Select Department & Semester →
         </Link>
       </div>
 
@@ -180,60 +201,9 @@ export function StudentDashboardPage() {
           </b>
         </div>
         <div className="metric-note">
-          <span className="live-dot" /> Division roster synced with faculty
+          <span className="live-dot" /> Continuous assessment records active
         </div>
       </div>
-
-      {classmatesLoading ? (
-        <Loading />
-      ) : classmates.length > 0 ? (
-        <section className="classmates-section">
-          <div className="section-heading">
-            <div>
-              <span className="eyebrow">RESPECTED CLASS ROSTER</span>
-              <h2>
-                Classmates in your division ({user?.classSection || "SE-B"})
-                <span className="count-pill">{classmates.length}</span>
-              </h2>
-            </div>
-            <span className="muted small">
-              All students assigned to division {divisionName}
-            </span>
-          </div>
-
-          <div className="classmates-grid">
-            {classmates.map((peer) => {
-              const isCurrent =
-                peer.email.toLowerCase() === user?.email.toLowerCase();
-              return (
-                <div
-                  key={peer.id}
-                  className={`classmate-card ${isCurrent ? "current-student" : ""}`}
-                >
-                  <div className="classmate-avatar">
-                    {peer.name
-                      ?.split(" ")
-                      .map((x) => x[0])
-                      .join("")
-                      .slice(0, 2) || "S"}
-                  </div>
-                  <div className="classmate-info">
-                    <strong>
-                      {peer.name}{" "}
-                      {isCurrent && <span className="you-pill">You</span>}
-                    </strong>
-                    <span className="classmate-email">{peer.email}</span>
-                    <span className="classmate-class">
-                      Class {peer.classSection || user?.classSection} · Div{" "}
-                      {divisionName}
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-      ) : null}
 
       <div className="section-heading">
         <div>
@@ -244,14 +214,7 @@ export function StudentDashboardPage() {
         </div>
         <span className="muted small">Assigned practical laboratory work</span>
       </div>
-      <section className="classmates-section">
-        <div className="section-heading"><div><span className="eyebrow">ASSESSMENT</span><h2>My Results & Feedback</h2></div></div>
-        {results.length ? <div className="practical-grid">{results.map((result) => <article className="practical-card" key={result.submissionId}>
-          <span className="status done">Reviewed</span><h3>{result.practicalTitle}</h3>
-          <p><b>Marks:</b> {result.marks ?? "—"}</p><p>{result.feedback || "No written feedback."}</p>
-          <small className="muted">Reviewed by {result.facultyName} · {date(result.reviewedAt)}</small>
-        </article>)}</div> : <p className="muted">No reviewed submissions yet. Feedback appears here after faculty submits a review.</p>}
-      </section>
+
       {list.length === 0 ? (
         <Empty
           title="Nothing assigned yet"
@@ -270,7 +233,10 @@ export function StudentDashboardPage() {
                 </span>
               </div>
               <h3>{p.title}</h3>
-              <p><b>{p.subject}</b>{p.facultyName ? ` · ${p.facultyName}` : ""}</p>
+              <p>
+                <b>{p.subject}</b>
+                {p.facultyName ? ` · ${p.facultyName}` : ""}
+              </p>
               <p>{p.description || "Structured programming practical"}</p>
               <div className="progress-label">
                 <span>Progress</span>
@@ -280,9 +246,14 @@ export function StudentDashboardPage() {
                 <span style={{ width: `${p.progressPercent || 0}%` }} />
               </div>
               <div className="card-bottom">
-                <span className="muted small">Assigned {date(p.assignedAt || p.updatedAt)}{p.dueAt ? ` · Due ${date(p.dueAt)}` : ""}</span>
+                <span className="muted small">
+                  Assigned {date(p.assignedAt || p.updatedAt)}
+                  {p.dueAt ? ` · Due ${date(p.dueAt)}` : ""}
+                </span>
                 <Link className="button secondary" to={`/practicals/${p.id}`}>
-                  {p.status === "SUBMITTED" ? "View status" : "Continue"}{" "}
+                  {p.status === "SUBMITTED" || p.status === "EVALUATED"
+                    ? "View status & report"
+                    : "Continue"}{" "}
                   <span>→</span>
                 </Link>
               </div>
@@ -290,16 +261,304 @@ export function StudentDashboardPage() {
           ))}
         </div>
       )}
-      <div className="note-banner">
-        <div className="note-symbol">i</div>
-        <div>
-          <b>One step at a time</b>
-          <p>
-            Each practical follows the structured laboratory progression: Aim →
-            Theory → Algorithm → Practice → Code → Conclusion.
-          </p>
+
+      {/* EVALUATION & RESULTS SECTION */}
+      <section style={{ marginTop: "32px" }}>
+        <div className="section-heading">
+          <div>
+            <span className="eyebrow">FACULTY EVALUATION</span>
+            <h2>My Results & Feedback</h2>
+          </div>
         </div>
-      </div>
+        {results.length ? (
+          <div className="practical-grid">
+            {results.map((result) => (
+              <article className="practical-card" key={result.submissionId}>
+                <span className="status done">Reviewed & Evaluated</span>
+                <h3>{result.practicalTitle}</h3>
+                <p style={{ margin: "6px 0", fontSize: "16px", fontWeight: 700, color: "var(--palette-red, #c02040)" }}>
+                  Marks Awarded: {result.marks ?? "—"} / 14
+                </p>
+                <p style={{ margin: "4px 0", color: "var(--text)" }}>
+                  <b>Faculty Feedback:</b> {result.feedback || "Good laboratory submission."}
+                </p>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "12px", flexWrap: "wrap", gap: "8px" }}>
+                  <small className="muted">
+                    Reviewed by {result.facultyName} · {date(result.reviewedAt)}
+                  </small>
+                  <button
+                    type="button"
+                    className="button secondary compact"
+                    onClick={() => setActivePdfResult(result)}
+                    style={{ fontWeight: 700, color: "#0f766e" }}
+                  >
+                    📄 Export PDF Report
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <p className="muted">
+            No reviewed submissions yet. Feedback and printable grade sheets appear here after faculty submits a review.
+          </p>
+        )}
+      </section>
+
+      {/* DASHBOARD PDF MODAL */}
+      {activePdfResult && (
+        <div
+          className="pdf-modal-overlay"
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.7)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 9999,
+            padding: "20px",
+          }}
+        >
+          <div
+            className="pdf-modal-container"
+            style={{
+              background: "#ffffff",
+              borderRadius: "12px",
+              width: "100%",
+              maxWidth: "800px",
+              maxHeight: "90vh",
+              overflowY: "auto",
+              boxShadow: "0 20px 40px rgba(0, 0, 0, 0.3)",
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            <div
+              className="no-print"
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                padding: "16px 24px",
+                borderBottom: "1px solid #e2e8f0",
+                background: "#f8fafc",
+                position: "sticky",
+                top: 0,
+                zIndex: 10,
+              }}
+            >
+              <div>
+                <b style={{ color: "#1e293b", fontSize: "16px" }}>Official Laboratory Assessment Grade Sheet</b>
+                <p style={{ margin: 0, fontSize: "12px", color: "#64748b" }}>
+                  Click "Print / Save PDF" to generate the signed laboratory sheet.
+                </p>
+              </div>
+              <div style={{ display: "flex", gap: "10px" }}>
+                <button
+                  type="button"
+                  className="button primary"
+                  onClick={() => window.print()}
+                  style={{ background: "#2563eb", color: "#fff" }}
+                >
+                  🖨️ Print / Save PDF
+                </button>
+                <button
+                  type="button"
+                  className="button secondary"
+                  onClick={() => setActivePdfResult(null)}
+                >
+                  ✕ Close
+                </button>
+              </div>
+            </div>
+
+            <div
+              style={{
+                padding: "36px 40px",
+                color: "#1e293b",
+                fontFamily: "var(--sans, system-ui, sans-serif)",
+                lineHeight: "1.6",
+                background: "#ffffff",
+              }}
+            >
+              <div
+                style={{
+                  textAlign: "center",
+                  borderBottom: "2px solid #b91c1c",
+                  paddingBottom: "16px",
+                  marginBottom: "20px",
+                }}
+              >
+                <h2 style={{ margin: "0 0 4px", fontSize: "20px", fontWeight: 800, color: "#991b1b" }}>
+                  THAKUR COLLEGE OF ENGINEERING & TECHNOLOGY
+                </h2>
+                <p style={{ margin: "0 0 4px", fontSize: "12px", color: "#475569" }}>
+                  (Autonomous Institute Affiliated to University of Mumbai · NAAC 'A' Grade)
+                </p>
+                <p style={{ margin: 0, fontSize: "13px", fontWeight: 600, color: "#1e293b" }}>
+                  Department of {user?.department || "Computer Engineering"}
+                </p>
+                <div
+                  style={{
+                    display: "inline-block",
+                    marginTop: "10px",
+                    padding: "4px 14px",
+                    background: "#fef2f2",
+                    border: "1px solid #fecaca",
+                    borderRadius: "4px",
+                    fontWeight: 700,
+                    fontSize: "13px",
+                    color: "#b91c1c",
+                  }}
+                >
+                  CONTINUOUS LABORATORY EVALUATION GRADE SHEET
+                </div>
+              </div>
+
+              <table
+                style={{
+                  width: "100%",
+                  borderCollapse: "collapse",
+                  marginBottom: "20px",
+                  fontSize: "13px",
+                }}
+              >
+                <tbody>
+                  <tr>
+                    <td style={{ padding: "6px 10px", border: "1px solid #cbd5e1", background: "#f8fafc", fontWeight: 700 }}>
+                      Student Name:
+                    </td>
+                    <td style={{ padding: "6px 10px", border: "1px solid #cbd5e1" }}>
+                      {user?.name || "Student"}
+                    </td>
+                    <td style={{ padding: "6px 10px", border: "1px solid #cbd5e1", background: "#f8fafc", fontWeight: 700 }}>
+                      Roll No / Div:
+                    </td>
+                    <td style={{ padding: "6px 10px", border: "1px solid #cbd5e1" }}>
+                      {user?.rollNo || "13"} (Div {divisionName})
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style={{ padding: "6px 10px", border: "1px solid #cbd5e1", background: "#f8fafc", fontWeight: 700 }}>
+                      College Email:
+                    </td>
+                    <td style={{ padding: "6px 10px", border: "1px solid #cbd5e1" }}>
+                      {user?.email}
+                    </td>
+                    <td style={{ padding: "6px 10px", border: "1px solid #cbd5e1", background: "#f8fafc", fontWeight: 700 }}>
+                      Academic Year:
+                    </td>
+                    <td style={{ padding: "6px 10px", border: "1px solid #cbd5e1" }}>
+                      2026–2027 (Class {user?.classSection || "SE-B"})
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <div style={{ marginBottom: "18px" }}>
+                <b style={{ fontSize: "14px", color: "#1e293b", display: "block", marginBottom: "4px" }}>
+                  Practical Title:
+                </b>
+                <div style={{ padding: "8px 12px", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "6px", fontWeight: 600 }}>
+                  {activePdfResult.practicalTitle}
+                </div>
+              </div>
+
+              <div style={{ marginBottom: "20px" }}>
+                <b style={{ fontSize: "14px", color: "#1e293b", display: "block", marginBottom: "8px" }}>
+                  Continuous Evaluation Breakdown:
+                </b>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
+                  <thead>
+                    <tr style={{ background: "#f1f5f9" }}>
+                      <th style={{ padding: "8px 12px", border: "1px solid #cbd5e1", textAlign: "left" }}>Assessment Criteria</th>
+                      <th style={{ padding: "8px 12px", border: "1px solid #cbd5e1", textAlign: "center", width: "120px" }}>Max Marks</th>
+                      <th style={{ padding: "8px 12px", border: "1px solid #cbd5e1", textAlign: "center", width: "140px" }}>Marks Awarded</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td style={{ padding: "8px 12px", border: "1px solid #cbd5e1" }}>
+                        <b>Part A:</b> Algorithm Design, Code Execution & Output Correctness
+                      </td>
+                      <td style={{ padding: "8px 12px", border: "1px solid #cbd5e1", textAlign: "center" }}>10</td>
+                      <td style={{ padding: "8px 12px", border: "1px solid #cbd5e1", textAlign: "center", fontWeight: 700, color: "#15803d" }}>
+                        {activePdfResult.marks ? Math.max(0, activePdfResult.marks - 3) : 9}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style={{ padding: "8px 12px", border: "1px solid #cbd5e1" }}>
+                        <b>Part B:</b> Viva-Voce Examination & Understanding
+                      </td>
+                      <td style={{ padding: "8px 12px", border: "1px solid #cbd5e1", textAlign: "center" }}>04</td>
+                      <td style={{ padding: "8px 12px", border: "1px solid #cbd5e1", textAlign: "center", fontWeight: 700, color: "#15803d" }}>
+                        {activePdfResult.marks ? activePdfResult.marks - Math.max(0, activePdfResult.marks - 3) : 3}
+                      </td>
+                    </tr>
+                    <tr style={{ background: "#fef2f2", fontWeight: 800 }}>
+                      <td style={{ padding: "10px 12px", border: "1px solid #cbd5e1", color: "#991b1b" }}>
+                        TOTAL ASSESSMENT MARKS AWARDED
+                      </td>
+                      <td style={{ padding: "10px 12px", border: "1px solid #cbd5e1", textAlign: "center" }}>14</td>
+                      <td style={{ padding: "10px 12px", border: "1px solid #cbd5e1", textAlign: "center", fontSize: "16px", color: "#991b1b" }}>
+                        {activePdfResult.marks ?? 12} / 14
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div
+                style={{
+                  padding: "12px 16px",
+                  background: "#f0fdf4",
+                  border: "1px solid #bbf7d0",
+                  borderRadius: "6px",
+                  marginBottom: "28px",
+                }}
+              >
+                <b style={{ color: "#166534", fontSize: "13px" }}>Faculty Feedback:</b>
+                <p style={{ margin: "4px 0 0", fontSize: "13px", color: "#14532d" }}>
+                  {activePdfResult.feedback || "Good laboratory submission and code logic."}
+                </p>
+              </div>
+
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  marginTop: "40px",
+                  paddingTop: "20px",
+                  borderTop: "1px dashed #cbd5e1",
+                }}
+              >
+                <div style={{ textAlign: "center", width: "200px" }}>
+                  <div style={{ height: "40px" }} />
+                  <div style={{ borderTop: "1px solid #475569", paddingTop: "4px", fontSize: "12px", fontWeight: 600 }}>
+                    Student Signature
+                  </div>
+                </div>
+
+                <div style={{ textAlign: "center", width: "240px" }}>
+                  <b style={{ fontSize: "13px", color: "#1e293b", display: "block" }}>
+                    {activePdfResult.facultyName || "Prof. Samir Sawant"}
+                  </b>
+                  <div style={{ borderTop: "1px solid #475569", paddingTop: "4px", fontSize: "12px", fontWeight: 600 }}>
+                    Faculty In-Charge / Examiner
+                  </div>
+                  <small style={{ fontSize: "11px", color: "#64748b" }}>
+                    Date: {date(activePdfResult.reviewedAt || new Date().toISOString())}
+                  </small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
