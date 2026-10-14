@@ -40,25 +40,43 @@ const DEFAULT_DEPARTMENTS = [
   "Information Technology",
   "Artificial Intelligence & Data Science",
   "Artificial Intelligence & Machine Learning",
+  "Computer Science & Engineering (IoT)",
+  "Electronics & Computer Science",
+  "Electronics & Telecommunication",
 ];
 
 const DEFAULT_CLASS_SECTIONS = ["SE-B", "SE-A", "TE-A", "TE-B"];
 
-function getSectionDefaultTemplate(key: string, title?: string): string {
-  switch (key) {
-    case "aim":
-      return `To study, implement, and analyze ${title || "the algorithmic problem"} under real-world input constraints and verify output correctness.`;
-    case "theory":
-      return `Theoretical Background:\n1. Core concepts and mathematical formulation.\n2. Invariants, constraints, and algorithmic complexity characteristics.\n3. Practical applications in modern software engineering.`;
-    case "algorithm":
-      return `Step 1: Parse and validate input data structures.\nStep 2: Initialize working variables and base state.\nStep 3: Iterate through elements and apply core transformation logic.\nStep 4: Check boundary edge cases and terminate.\nStep 5: Return or display the verified solution output.`;
-    case "codeInstructions":
-      return `1. Complete the core function implementation.\n2. Ensure proper handling of corner cases (e.g. empty inputs, large bounds).\n3. Test the program using the Run button and verify the terminal output.`;
-    case "conclusion":
-      return `The practical was executed successfully. Algorithmic logic and execution results conformed to the expected theoretical bounds.`;
-    default:
-      return "";
+function getSectionDefaultTemplate(keyOrTitle: string, title?: string): string {
+  const norm = keyOrTitle.toLowerCase();
+  if (norm.includes("aim") || norm.includes("objective")) {
+    return `To study, implement, and analyze ${title || "the algorithmic problem"} under real-world input constraints and verify output correctness.`;
   }
+  if (norm.includes("theory") || norm.includes("background")) {
+    return `Theoretical Background:\n1. Core concepts and mathematical formulation.\n2. Invariants, constraints, and algorithmic complexity characteristics.\n3. Practical applications in modern software engineering.`;
+  }
+  if (norm.includes("algorithm") || norm.includes("procedure") || norm.includes("step")) {
+    return `Step 1: Parse and validate input data structures.\nStep 2: Initialize working variables and base state.\nStep 3: Iterate through elements and apply core transformation logic.\nStep 4: Check boundary edge cases and terminate.\nStep 5: Return or display the verified solution output.`;
+  }
+  if (norm.includes("code") || norm.includes("instruction")) {
+    return `1. Complete the core function implementation.\n2. Ensure proper handling of corner cases (e.g. empty inputs, large bounds).\n3. Test the program using the Run button and verify the terminal output.`;
+  }
+  if (norm.includes("conclusion")) {
+    return `The practical was executed successfully. Algorithmic logic and execution results conformed to the expected theoretical bounds.`;
+  }
+  if (norm.includes("result") || norm.includes("discussion")) {
+    return `Results & Discussion:\n1. Test cases executed across diverse input domains with verified outputs.\n2. Observed time and space complexity adhere to theoretical big-O bounds.\n3. Edge cases and boundary conditions successfully validated without exceptions.`;
+  }
+  if (norm.includes("requirement") || norm.includes("hardware") || norm.includes("software")) {
+    return `System Requirements:\n1. Hardware: 64-bit multi-core CPU, 8 GB RAM, High-speed Internet.\n2. Software: Ubuntu Linux / Windows 11, VS Code, JDK 21 / Python 3.12, GCC 13.`;
+  }
+  if (norm.includes("precaution") || norm.includes("rule")) {
+    return `Precautions & Guidelines:\n1. Ensure memory bounds and array indices are strictly validated to avoid buffer overflows.\n2. Gracefully handle null pointers and edge-case exceptions.\n3. Always free dynamically allocated memory resources.`;
+  }
+  if (norm.includes("observation")) {
+    return `Observations & Calculations:\n- Test Vector 1: Input size N = 100 -> Execution Time = 0.12 ms\n- Test Vector 2: Input size N = 1,000 -> Execution Time = 1.45 ms\n- Test Vector 3: Input size N = 10,000 -> Execution Time = 16.80 ms`;
+  }
+  return `1. Core definition and procedural steps.\n2. Computational analysis and boundary execution.\n3. Findings, performance metrics, and validation.`;
 }
 
 export function PracticalFormPage() {
@@ -97,6 +115,83 @@ export function PracticalFormPage() {
   const [generatingDraft, setGeneratingDraft] = useState(false);
   const [generatorSuccessMessage, setGeneratorSuccessMessage] = useState("");
 
+  // Dynamic Manual Sections State
+  const [manualSections, setManualSections] = useState<Array<{
+    id: string;
+    key?: string;
+    title: string;
+    content: string;
+    subtitle?: string;
+    placeholder?: string;
+  }>>([
+    {
+      id: "sec-aim",
+      key: "aim",
+      title: "Aim & Objective",
+      subtitle: "Define what this practical experiment achieves",
+      content: "",
+      placeholder: "To study, implement, and analyze...",
+    },
+    {
+      id: "sec-theory",
+      key: "theory",
+      title: "Theory & Background",
+      subtitle: "Core theoretical principles and mathematical formulation",
+      content: "",
+      placeholder: "Theoretical Background...",
+    },
+    {
+      id: "sec-algo",
+      key: "algorithm",
+      title: "Algorithm / Step-by-Step Procedure",
+      subtitle: "Step-by-step logic or pseudo-code methodology",
+      content: "",
+      placeholder: "Step 1: ...\nStep 2: ...",
+    },
+    {
+      id: "sec-code",
+      key: "codeInstructions",
+      title: "Code Instructions",
+      subtitle: "Instructions shown directly in the student code editor",
+      content: "",
+      placeholder: "1. Complete the core function implementation...",
+    },
+    {
+      id: "sec-concl",
+      key: "conclusion",
+      title: "Conclusion",
+      subtitle: "Summary of learning and execution verification",
+      content: "",
+      placeholder: "The practical was executed successfully...",
+    },
+  ]);
+  const [newSectionTitle, setNewSectionTitle] = useState("");
+
+  const updateSectionContent = (id: string, content: string) => {
+    setManualSections((prev) =>
+      prev.map((s) => (s.id === id ? { ...s, content } : s)),
+    );
+  };
+
+  const removeSectionBox = (id: string) => {
+    setManualSections((prev) => prev.filter((s) => s.id !== id));
+  };
+
+  const addSectionBox = (title: string, key?: string) => {
+    const newId = `sec-custom-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    const template = getSectionDefaultTemplate(key || title, form.title);
+    setManualSections((prev) => [
+      ...prev,
+      {
+        id: newId,
+        key: key || "custom",
+        title,
+        content: template,
+        placeholder: `Enter ${title.toLowerCase()}...`,
+      },
+    ]);
+  };
+
   useEffect(() => {
     if (edit) {
       api<Detail>(`/practicals/${id}`)
@@ -130,8 +225,13 @@ export function PracticalFormPage() {
   const [manualClassSection, setManualClassSection] = useState("SE-B");
 
   const departments = useMemo(() => {
-    const list = [...new Set(students.map((s) => s.department).filter(Boolean))] as string[];
-    return list.length > 0 ? list : DEFAULT_DEPARTMENTS;
+    const list = [
+      ...new Set([
+        ...DEFAULT_DEPARTMENTS,
+        ...students.map((s) => s.department).filter(Boolean),
+      ]),
+    ] as string[];
+    return list;
   }, [students]);
 
   const docClassSections = useMemo(() => {
@@ -211,8 +311,29 @@ export function PracticalFormPage() {
     setBusy(true);
     setError("");
     try {
+      const aimSec = manualSections.find((s) => s.key === "aim" || s.title.toLowerCase().includes("aim"));
+      const theorySec = manualSections.find((s) => s.key === "theory" || s.title.toLowerCase().includes("theory"));
+      const algoSec = manualSections.find((s) => s.key === "algorithm" || s.title.toLowerCase().includes("algorithm") || s.title.toLowerCase().includes("procedure"));
+      const codeSec = manualSections.find((s) => s.key === "codeInstructions" || s.title.toLowerCase().includes("code instruction"));
+      const conclSec = manualSections.find((s) => s.key === "conclusion" || s.title.toLowerCase().includes("conclusion"));
+
+      const standardIds = new Set([aimSec?.id, theorySec?.id, algoSec?.id, codeSec?.id, conclSec?.id].filter(Boolean));
+      const customSections = manualSections.filter((s) => !standardIds.has(s.id));
+
+      let assembledTheory = theorySec ? theorySec.content : "";
+      for (const cs of customSections) {
+        if (cs.content.trim()) {
+          assembledTheory += `\n\n### ${cs.title}\n${cs.content.trim()}`;
+        }
+      }
+
       const body = {
         ...form,
+        aim: aimSec ? aimSec.content : "",
+        theory: assembledTheory,
+        algorithm: algoSec ? algoSec.content : "",
+        codeInstructions: codeSec ? codeSec.content : "",
+        conclusion: conclSec ? conclSec.content : "",
         practiceQuestions: form.practiceQuestions.filter((x) =>
           x.question.trim(),
         ),
@@ -467,6 +588,13 @@ export function PracticalFormPage() {
       })),
       status: "DRAFT",
     }));
+    setManualSections([
+      { id: "sec-aim", key: "aim", title: "Aim & Objective", content: parsedDoc.aim || "", placeholder: "To study, implement..." },
+      { id: "sec-theory", key: "theory", title: "Theory & Background", content: parsedDoc.theory || "", placeholder: "Theoretical Background..." },
+      { id: "sec-algo", key: "algorithm", title: "Algorithm / Step-by-Step Procedure", content: parsedDoc.algorithm || "", placeholder: "Step 1: ..." },
+      { id: "sec-code", key: "codeInstructions", title: "Code Instructions", content: parsedDoc.codeInstructions || "", placeholder: "1. Complete implementation..." },
+      { id: "sec-concl", key: "conclusion", title: "Conclusion", content: parsedDoc.conclusion || "", placeholder: "The practical was executed successfully..." },
+    ]);
     setActiveMode("manual");
   };
 
@@ -877,16 +1005,8 @@ export function PracticalFormPage() {
                 </label>
               </div>
             </section>
-            {(
-              [
-                "aim",
-                "theory",
-                "algorithm",
-                "codeInstructions",
-                "conclusion",
-              ] as const
-            ).map((k, i) => (
-              <section className="form-section" key={k}>
+            {manualSections.map((sec, i) => (
+              <section className="form-section" key={sec.id}>
                 <div
                   style={{
                     display: "flex",
@@ -898,16 +1018,15 @@ export function PracticalFormPage() {
                   }}
                 >
                   <span className="eyebrow" style={{ margin: 0 }}>
-                    {String(i + 2).padStart(2, "0")} ·{" "}
-                    {k.replace(/[A-Z]/g, (m) => ` ${m}`).toUpperCase()}
+                    {String(i + 2).padStart(2, "0")} · {sec.title.toUpperCase()}
                   </span>
                   <div style={{ display: "flex", gap: "8px" }}>
                     <button
                       type="button"
                       className="button secondary compact"
                       onClick={() => {
-                        const tpl = getSectionDefaultTemplate(k, form.title);
-                        update(k, form[k] ? `${form[k]}\n\n${tpl}` : tpl);
+                        const tpl = getSectionDefaultTemplate(sec.key || sec.title, form.title);
+                        updateSectionContent(sec.id, sec.content ? `${sec.content}\n\n${tpl}` : tpl);
                       }}
                       style={{
                         fontSize: "12px",
@@ -919,12 +1038,13 @@ export function PracticalFormPage() {
                         fontWeight: 600,
                       }}
                     >
-                      ＋ Add {k === "aim" ? "Objective" : k === "theory" ? "Theory Point" : k === "algorithm" ? "Step" : "Template"}
+                      ＋ Add Template / Step
                     </button>
                     <button
                       type="button"
                       className="button secondary compact"
-                      onClick={() => update(k, "")}
+                      onClick={() => removeSectionBox(sec.id)}
+                      title="Delete this entire box from the experiment manual"
                       style={{
                         fontSize: "12px",
                         padding: "5px 12px",
@@ -937,27 +1057,106 @@ export function PracticalFormPage() {
                         fontWeight: 600,
                       }}
                     >
-                      🗑️ Delete / Clear
+                      🗑️ Delete Box
                     </button>
                   </div>
                 </div>
                 <label>
-                  <span>
-                    {k === "codeInstructions"
-                      ? "Instructions shown in the editor"
-                      : k === "conclusion"
-                        ? "Completion requirements"
-                        : "Learning material"}
-                  </span>
+                  <span>{sec.subtitle || `Content for ${sec.title}`}</span>
                   <textarea
-                    rows={k === "theory" || k === "algorithm" ? 6 : 4}
-                    value={form[k]}
-                    onChange={(e) => update(k, e.target.value)}
-                    placeholder={`Enter ${k.replace(/[A-Z]/g, " $&").toLowerCase()}…`}
+                    rows={sec.key === "theory" || sec.key === "algorithm" ? 6 : 4}
+                    value={sec.content}
+                    onChange={(e) => updateSectionContent(sec.id, e.target.value)}
+                    placeholder={sec.placeholder || `Enter ${sec.title.toLowerCase()}…`}
                   />
                 </label>
               </section>
             ))}
+
+            {/* ADD NEW SECTION / BOX TOOLBAR */}
+            <div
+              className="add-section-box-toolbar"
+              style={{
+                margin: "18px 0 24px",
+                padding: "16px 20px",
+                background: "#f8fafc",
+                border: "2px dashed #94a3b8",
+                borderRadius: "10px",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: "10px",
+                  flexWrap: "wrap",
+                  gap: "6px",
+                }}
+              >
+                <b style={{ color: "#1e293b", fontSize: "14px" }}>
+                  ＋ Add New Section / Box to Practical
+                </b>
+                <span style={{ fontSize: "12px", color: "#64748b" }}>
+                  Add custom boxes like Result & Discussion, Requirements, Observations, etc.
+                </span>
+              </div>
+
+              {/* Quick Template Pills */}
+              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "12px" }}>
+                {[
+                  { title: "Result & Discussion", key: "result" },
+                  { title: "System & Software Requirements", key: "requirements" },
+                  { title: "Precautions & Safety Guidelines", key: "precautions" },
+                  { title: "Observations & Calculations", key: "observation" },
+                  { title: "Aim & Objective", key: "aim" },
+                  { title: "Conclusion", key: "conclusion" },
+                ].map((item) => (
+                  <button
+                    key={item.title}
+                    type="button"
+                    className="button secondary compact"
+                    onClick={() => addSectionBox(item.title, item.key)}
+                    style={{ fontSize: "12px", borderRadius: "20px", padding: "5px 12px", fontWeight: 600 }}
+                  >
+                    ＋ {item.title}
+                  </button>
+                ))}
+              </div>
+
+              {/* Custom Box Title Input */}
+              <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                <input
+                  type="text"
+                  placeholder="Or enter custom section box title (e.g. Result and Discussion)..."
+                  value={newSectionTitle}
+                  onChange={(e) => setNewSectionTitle(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      if (newSectionTitle.trim()) {
+                        addSectionBox(newSectionTitle.trim());
+                        setNewSectionTitle("");
+                      }
+                    }
+                  }}
+                  style={{ flex: 1, padding: "8px 12px", borderRadius: "6px", border: "1px solid #cbd5e1" }}
+                />
+                <button
+                  type="button"
+                  className="button primary compact"
+                  onClick={() => {
+                    if (newSectionTitle.trim()) {
+                      addSectionBox(newSectionTitle.trim());
+                      setNewSectionTitle("");
+                    }
+                  }}
+                  style={{ whiteSpace: "nowrap" }}
+                >
+                  ＋ Add Custom Box
+                </button>
+              </div>
+            </div>
             <section className="form-section">
               <span className="eyebrow">07 · STARTER CODE</span>
               <label>

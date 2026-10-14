@@ -117,7 +117,7 @@ export function LoginPage() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [role, setRole] = useState<LoginRole>("student");
   const [email, setEmail] = useState(roleDetails.student.email);
-  const [password, setPassword] = useState("CodeLabX123!");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -139,7 +139,7 @@ export function LoginPage() {
   function chooseRole(nextRole: LoginRole) {
     setRole(nextRole);
     setEmail(roleDetails[nextRole].email);
-    setPassword("CodeLabX123!");
+    setPassword("");
     setError("");
   }
 
@@ -448,7 +448,6 @@ export function LoginPage() {
                 <div className="demo-box">
                   <div className="demo-box-header">
                     <b>Select a student demo account:</b>
-                    <span className="demo-pass-badge">Pass: CodeLabX123!</span>
                   </div>
                   <div className="preset-chip-list">
                     {studentPresets.map((preset) => (
@@ -474,7 +473,6 @@ export function LoginPage() {
                 <div className="demo-box">
                   <div className="demo-box-header">
                     <b>Select a faculty demo account:</b>
-                    <span className="demo-pass-badge">Pass: CodeLabX123!</span>
                   </div>
                   <div className="preset-chip-list">
                     {facultyPresets.map((preset) => (
@@ -500,7 +498,6 @@ export function LoginPage() {
                 <div className="demo-box">
                   <div className="demo-box-header">
                     <b>Select an administrator demo account:</b>
-                    <span className="demo-pass-badge">Pass: CodeLabX123!</span>
                   </div>
                   <div className="preset-chip-list">
                     {adminPresets.map((preset) => (

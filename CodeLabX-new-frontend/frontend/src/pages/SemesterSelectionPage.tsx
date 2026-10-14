@@ -9,19 +9,38 @@ import {
   getCurriculumSubjects,
   getPracticalsForSubject,
 } from "../services/curriculumData";
-import type { AcademicSubject, Practical } from "../types";
+import type { Practical } from "../types";
 import DepartmentSelection from "./DepartmentSelection";
 import SemesterSelection from "./SemesterSelection";
 import "../styles/pages/semester-selection.css";
+import { useAuth } from "../state/authStore";
 
 export function SemesterSelectionPage() {
-  const [department, setDepartment] = useState<DepartmentInfo | null>(() => {
+  const currentUser = useAuth((s) => s.user);
+  const isStudent = currentUser?.role === "STUDENT";
+
+  const studentDept = useMemo(() => {
+    if (!isStudent) return null;
+    const userDeptName = currentUser?.department || "Computer Engineering";
+    const found = DEPARTMENTS.find(
+      (d) =>
+        d.name.toLowerCase() === userDeptName.toLowerCase() ||
+        d.id.toLowerCase() === userDeptName.toLowerCase() ||
+        d.code.toLowerCase() === userDeptName.toLowerCase(),
+    );
+    return found || DEPARTMENTS[0];
+  }, [isStudent, currentUser?.department]);
+
+  const [departmentState, setDepartmentState] = useState<DepartmentInfo | null>(() => {
     const saved = localStorage.getItem("codelabx.selectedDeptId");
     if (saved) {
       return DEPARTMENTS.find((d) => d.id === saved) || null;
     }
     return null;
   });
+
+  // Students are strictly bound to their department; faculty/admin can select any department
+  const department = isStudent ? studentDept : departmentState;
 
   const [semester, setSemester] = useState<number | null>(() => {
     const saved = localStorage.getItem("codelabx.selectedSemester");
@@ -30,10 +49,6 @@ export function SemesterSelectionPage() {
 
   const [activeSubject, setActiveSubject] = useState("");
 
-  const isComputerEng =
-    department?.id === "computer-engineering" ||
-    department?.name.toLowerCase().includes("computer engineering");
-
   // Load practicals and subjects
   const { data, error, loading, refresh } = useLoad(
     () => {
@@ -41,25 +56,29 @@ export function SemesterSelectionPage() {
         return Promise.resolve({ practicals: [], subjects: [] });
       }
 
-      if (isComputerEng) {
-        return Promise.all([
-          api<Practical[]>(`/practicals?semester=${semester}`),
-          api<AcademicSubject[]>(`/subjects?semester=${semester}`),
-        ]).then(([practicals, subjects]) => ({ practicals, subjects }));
-      }
-
-      // Authentic generation for IT, AIDS, AIML, CSE-IoT, ENCS, ENTC
+      // 1. Fetch official syllabus subjects for this department & semester
       const subjects = getCurriculumSubjects(department.name, semester);
-      const practicals: Practical[] = [];
+
+      // 2. Fetch full catalog practicals with authentic writeups
+      const catalogPracticals: Practical[] = [];
       for (const sub of subjects) {
         const subPracticals = getPracticalsForSubject(
           sub.name,
           semester,
           department.name,
         );
-        practicals.push(...subPracticals);
+        catalogPracticals.push(...subPracticals);
       }
-      return Promise.resolve({ practicals, subjects });
+
+      // 3. Merge any extra faculty-created practicals from backend API
+      return api<Practical[]>(`/practicals?semester=${semester}`)
+        .then((backendPracticals) => {
+          const map = new Map<number, Practical>();
+          for (const cp of catalogPracticals) map.set(cp.id, cp);
+          for (const bp of backendPracticals) map.set(bp.id, bp);
+          return { practicals: Array.from(map.values()), subjects };
+        })
+        .catch(() => ({ practicals: catalogPracticals, subjects }));
     },
     [department?.id, semester],
   );
@@ -108,7 +127,7 @@ export function SemesterSelectionPage() {
 
   function chooseDepartment(dept: DepartmentInfo) {
     localStorage.setItem("codelabx.selectedDeptId", dept.id);
-    setDepartment(dept);
+    setDepartmentState(dept);
     setActiveSubject("");
   }
 
@@ -121,7 +140,7 @@ export function SemesterSelectionPage() {
   function resetDepartment() {
     localStorage.removeItem("codelabx.selectedDeptId");
     localStorage.removeItem("codelabx.selectedSemester");
-    setDepartment(null);
+    setDepartmentState(null);
     setSemester(null);
     setActiveSubject("");
   }
@@ -132,7 +151,7 @@ export function SemesterSelectionPage() {
     setActiveSubject("");
   }
 
-  // Step 1: Select Department
+  // Step 1: Select Department (Only shown to faculty/admin or users without an assigned department)
   if (department === null) {
     return <DepartmentSelection onSelect={chooseDepartment} />;
   }
@@ -143,7 +162,7 @@ export function SemesterSelectionPage() {
       <SemesterSelection
         departmentName={department.name}
         departmentCode={department.code}
-        onChangeDepartment={resetDepartment}
+        onChangeDepartment={isStudent ? undefined : resetDepartment}
         onSelect={chooseSemester}
       />
     );
@@ -157,14 +176,16 @@ export function SemesterSelectionPage() {
   return (
     <section className="semester-subject-layout">
       <div className="semester-quick-bar">
-        <button
-          type="button"
-          className="semester-change-link"
-          onClick={resetDepartment}
-          style={{ marginRight: "12px", whiteSpace: "nowrap" }}
-        >
-          ← All Departments
-        </button>
+        {!isStudent && (
+          <button
+            type="button"
+            className="semester-change-link"
+            onClick={resetDepartment}
+            style={{ marginRight: "12px", whiteSpace: "nowrap" }}
+          >
+            ← All Departments
+          </button>
+        )}
 
         <div className="dept-quick-badge">
           <span>{department.icon}</span>
