@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import type { FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import tcetLogo from "../assets/tcet-mumbai-logo.png";
@@ -51,28 +51,8 @@ const studentPresets = [
     division: "SE-B",
   },
   {
-    label: "Rahul Verma (SE-B)",
-    email: "rahul.verma.se.b@tcetmumbai.in",
-    division: "SE-B",
-  },
-  {
-    label: "Tanvi Patil (SE-B)",
-    email: "tanvi.patil.se.b@tcetmumbai.in",
-    division: "SE-B",
-  },
-  {
-    label: "Aarav Mehta (SE-A)",
-    email: "aarav.mehta.se.a@tcetmumbai.in",
-    division: "SE-A",
-  },
-  {
     label: "Sagar Mishra (TE-A)",
     email: "student2@tcetmumbai.in",
-    division: "TE-A",
-  },
-  {
-    label: "Sneha Deshmukh (TE-A)",
-    email: "sneha.deshmukh.te.a@tcetmumbai.in",
     division: "TE-A",
   },
 ];
@@ -83,16 +63,6 @@ const facultyPresets = [
     email: "teacher@tcetmumbai.in",
     division: "CMPN",
   },
-  {
-    label: "Prof. Rashmi Thakur (IT)",
-    email: "faculty.it@tcetmumbai.in",
-    division: "IT",
-  },
-  {
-    label: "Prof. Rajesh Patel (AIML)",
-    email: "faculty.aiml@tcetmumbai.in",
-    division: "AIML",
-  },
 ];
 
 const adminPresets = [
@@ -101,82 +71,17 @@ const adminPresets = [
     email: "admin@tcetmumbai.in",
     division: "Admin",
   },
-  {
-    label: "TCET Exam Cell Admin",
-    email: "admin.exam@tcetmumbai.in",
-    division: "Exam Cell",
-  },
 ];
 
-function parseEmailPreview(emailStr: string) {
-  if (!emailStr || !emailStr.includes("@")) return null;
-  const user = emailStr.split("@")[0].toLowerCase();
-  let cohort = "SE";
-  let yearName = "Second Year (SE)";
-  if (user.includes("fe") || user.includes("25")) {
-    cohort = "FE";
-    yearName = "First Year (FE)";
-  } else if (user.includes("te") || user.includes("23")) {
-    cohort = "TE";
-    yearName = "Third Year (TE)";
-  } else if (user.includes("be") || user.includes("22")) {
-    cohort = "BE";
-    yearName = "Final Year (BE)";
-  }
-
-  let division = "B";
-  const divMatch = user.match(
-    /(?:^|[._-])(?:div[._-]?)?([a-d])(?=[._-\d]|$)|(?:fe|se|te|be)[._-]?([a-d])/i,
-  );
-  if (divMatch) {
-    division = (divMatch[1] || divMatch[2]).toUpperCase();
-  }
-
-  let name = "";
-  if (user === "student") name = "Areeza Mukadam";
-  else if (user === "student2") name = "Sagar Mishra";
-  else {
-    const tokens = user
-      .split(/[._-]+/)
-      .filter(
-        (t) =>
-          ![
-            "fe",
-            "se",
-            "te",
-            "be",
-            "comp",
-            "cmpn",
-            "it",
-            "aiml",
-            "aids",
-            "extc",
-            "mech",
-            "div",
-            "student",
-            "tcet",
-          ].includes(t) && !/\d/.test(t),
-      );
-    if (tokens.length > 0) {
-      name = tokens
-        .map((t) => t.charAt(0).toUpperCase() + t.slice(1))
-        .join(" ");
-    } else {
-      name = `Student (${cohort}-${division})`;
-    }
-  }
-
-  return {
-    name,
-    classSection: `${cohort}-${division}`,
-    division,
-    cohort,
-    yearName,
-    department: user.includes("it")
-      ? "Information Technology"
-      : "Computer Engineering",
-  };
-}
+const DEPARTMENT_LIST = [
+  "Computer Engineering",
+  "Information Technology",
+  "Artificial Intelligence & Data Science",
+  "Artificial Intelligence & Machine Learning",
+  "Computer Science & Engineering (IoT)",
+  "Electronics & Computer Science",
+  "Electronics & Telecommunication",
+];
 
 function createDemoSession(
   cleanEmail: string,
@@ -190,16 +95,15 @@ function createDemoSession(
     };
   }
   if (cleanEmail.endsWith("@tcetmumbai.in")) {
-    const preview = parseEmailPreview(cleanEmail);
     const user: User = {
       id: Math.floor(Math.random() * 8000) + 100,
-      name: preview?.name || "Demo User",
+      name: cleanEmail.split("@")[0].replace(/[._-]/g, " "),
       email: cleanEmail,
       role: expectedRole,
-      classSection: preview?.classSection || "SE-B",
-      division: preview?.division || "B",
-      cohort: preview?.cohort || "SE",
-      department: preview?.department || "Computer Engineering",
+      classSection: "SE-B",
+      division: "B",
+      cohort: "SE",
+      department: "Computer Engineering",
     };
     return {
       token: `demo-token-${user.role.toLowerCase()}-${user.id}-${Date.now()}`,
@@ -210,19 +114,27 @@ function createDemoSession(
 }
 
 export function LoginPage() {
+  const [isSignUp, setIsSignUp] = useState(false);
   const [role, setRole] = useState<LoginRole>("student");
   const [email, setEmail] = useState(roleDetails.student.email);
   const [password, setPassword] = useState("CodeLabX123!");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+
+  // Sign up fields
+  const [regName, setRegName] = useState("");
+  const [regEmail, setRegEmail] = useState("");
+  const [regPassword, setRegPassword] = useState("");
+  const [regConfirmPassword, setRegConfirmPassword] = useState("");
+  const [regRole, setRegRole] = useState<"STUDENT" | "TEACHER">("STUDENT");
+  const [regDepartment, setRegDepartment] = useState("Computer Engineering");
+  const [regYear, setRegYear] = useState("SE");
+  const [regDivision, setRegDivision] = useState("B");
+  const [regRollNo, setRegRollNo] = useState("");
+
   const setAuth = useAuth((state) => state.setAuth);
   const nav = useNavigate();
   const details = roleDetails[role];
-
-  const studentPreview = useMemo(() => {
-    if (role !== "student") return null;
-    return parseEmailPreview(email);
-  }, [role, email]);
 
   function chooseRole(nextRole: LoginRole) {
     setRole(nextRole);
@@ -234,6 +146,14 @@ export function LoginPage() {
   async function performLogin(targetEmail: string, targetPass: string) {
     setBusy(true);
     setError("");
+
+    const cleanEmail = targetEmail.trim().toLowerCase();
+    if (!cleanEmail.endsWith("@tcetmumbai.in")) {
+      setError("Only @tcetmumbai.in college email addresses are permitted.");
+      setBusy(false);
+      return;
+    }
+
     const expectedRole =
       role === "faculty" ? "TEACHER" : role === "admin" ? "ADMIN" : "STUDENT";
 
@@ -244,13 +164,11 @@ export function LoginPage() {
       try {
         const result = await api<{ token: string; user: User }>("/auth/login", {
           method: "POST",
-          body: JSON.stringify({ email: targetEmail, password: targetPass }),
+          body: JSON.stringify({ email: cleanEmail, password: targetPass }),
         });
         token = result.token;
         user = result.user;
       } catch (backendError) {
-        // Fallback to demo account resolution if backend is unreachable or account is local demo
-        const cleanEmail = targetEmail.trim().toLowerCase();
         if (targetPass === DEMO_PASSWORD) {
           const session = createDemoSession(cleanEmail, expectedRole);
           if (session) {
@@ -290,9 +208,70 @@ export function LoginPage() {
     }
   }
 
-  function submit(event: FormEvent) {
+  function submitLogin(event: FormEvent) {
     event.preventDefault();
     performLogin(email, password);
+  }
+
+  async function submitRegister(event: FormEvent) {
+    event.preventDefault();
+    setError("");
+
+    const cleanEmail = regEmail.trim().toLowerCase();
+    if (!cleanEmail.endsWith("@tcetmumbai.in")) {
+      setError("Registration requires a valid @tcetmumbai.in college email address.");
+      return;
+    }
+
+    if (!regName.trim()) {
+      setError("Please enter your full name.");
+      return;
+    }
+
+    if (regPassword.length < 6) {
+      setError("Password must be at least 6 characters long.");
+      return;
+    }
+
+    if (regPassword !== regConfirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+
+    setBusy(true);
+    try {
+      const classSec = `${regYear}-${regDivision}`;
+      const payload = {
+        name: regName.trim(),
+        email: cleanEmail,
+        password: regPassword,
+        role: regRole,
+        department: regDepartment,
+        classSection: regRole === "STUDENT" ? classSec : null,
+        division: regRole === "STUDENT" ? regDivision : null,
+        rollNo: regRole === "STUDENT" ? regRollNo.trim() : null,
+      };
+
+      const result = await api<{ token: string; user: User }>("/auth/register", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+
+      setAuth(result.token, result.user);
+      nav(
+        result.user.role === "STUDENT"
+          ? "/semester-selection"
+          : result.user.role === "ADMIN"
+            ? "/admin"
+            : "/",
+      );
+    } catch (cause) {
+      setError(
+        cause instanceof Error ? cause.message : "Unable to create account. Please try again.",
+      );
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
@@ -309,8 +288,8 @@ export function LoginPage() {
           <div className="login-benefits">
             {role === "student" && (
               <p className="login-tagline">
-                Sign in using your college email address. Your division,
-                academic year, and respected class are automatically mapped.
+                Sign in or register using your college email address (@tcetmumbai.in).
+                Select your department and access semester syllabus experiments.
               </p>
             )}
             {role === "faculty" && (
@@ -333,205 +312,335 @@ export function LoginPage() {
       </section>
 
       <section className="login-panel">
-        <div
-          className="login-role-switch"
-          role="tablist"
-          aria-label="Choose sign-in type"
-        >
-          {(Object.keys(roleDetails) as LoginRole[]).map((option) => (
-            <button
-              key={option}
-              type="button"
-              role="tab"
-              aria-selected={role === option}
-              className={role === option ? "selected" : ""}
-              onClick={() => chooseRole(option)}
-            >
-              {roleDetails[option].tab}
-            </button>
-          ))}
+        <div className="auth-mode-toggle" style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
+          <button
+            type="button"
+            className={`auth-toggle-btn ${!isSignUp ? "active" : ""}`}
+            onClick={() => {
+              setIsSignUp(false);
+              setError("");
+            }}
+            style={{
+              flex: 1,
+              padding: "10px",
+              borderRadius: "6px",
+              fontWeight: 700,
+              fontSize: "13px",
+              cursor: "pointer",
+              border: !isSignUp ? "2px solid var(--palette-red, #c02040)" : "1px solid #cbd5e1",
+              background: !isSignUp ? "#fff" : "transparent",
+              color: !isSignUp ? "var(--palette-red, #c02040)" : "var(--muted, #64748b)",
+            }}
+          >
+            Sign In
+          </button>
+          <button
+            type="button"
+            className={`auth-toggle-btn ${isSignUp ? "active" : ""}`}
+            onClick={() => {
+              setIsSignUp(true);
+              setError("");
+            }}
+            style={{
+              flex: 1,
+              padding: "10px",
+              borderRadius: "6px",
+              fontWeight: 700,
+              fontSize: "13px",
+              cursor: "pointer",
+              border: isSignUp ? "2px solid var(--palette-red, #c02040)" : "1px solid #cbd5e1",
+              background: isSignUp ? "#fff" : "transparent",
+              color: isSignUp ? "var(--palette-red, #c02040)" : "var(--muted, #64748b)",
+            }}
+          >
+            ＋ Create Account (Sign Up)
+          </button>
         </div>
 
-        <form className="login-form" onSubmit={submit}>
-          <span className="eyebrow">{details.eyebrow}</span>
-          <h2>
-            {role === "admin"
-              ? "Administrator sign in"
-              : role === "faculty"
-                ? "Faculty sign in"
-                : "Student college sign in"}
-          </h2>
-          <p className="muted">
-            {role === "student"
-              ? "Use your college email ID (@tcetmumbai.in) to automatically identify your class & division."
-              : role === "faculty"
-                ? "Use your faculty account to manage your laboratory."
-                : "Use an institution administrator account."}
-          </p>
-
-          {role === "admin" && (
-            <div className="admin-notice" role="status">
-              <b>Administrative access</b>
-              <span>
-                Administrator accounts are provisioned separately from student
-                and faculty accounts.
-              </span>
-            </div>
-          )}
-
-          <label>
-            {role === "student"
-              ? "Student college email"
-              : role === "faculty"
-                ? "Faculty email"
-                : "Administrator email"}
-            <input
-              required
-              type="email"
-              autoComplete="username"
-              placeholder={
-                role === "admin"
-                  ? "admin@tcetmumbai.in"
-                  : "name.year.div@tcetmumbai.in"
-              }
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-            />
-          </label>
-
-          {role === "student" && studentPreview && (
+        {!isSignUp ? (
+          <>
             <div
-              className="email-preview-card"
-              role="status"
-              aria-live="polite"
+              className="login-role-switch"
+              role="tablist"
+              aria-label="Choose sign-in type"
             >
-              <div className="email-preview-top">
-                <span className="badge-pulse" />
-                <b>Detected student:</b>
-                <span>{studentPreview.name}</span>
-              </div>
-              <div className="email-preview-grid">
-                <div>
-                  <small>CLASS</small>
-                  <strong>{studentPreview.classSection}</strong>
-                </div>
-                <div>
-                  <small>DIVISION</small>
-                  <strong>Div {studentPreview.division}</strong>
-                </div>
-                <div>
-                  <small>YEAR</small>
-                  <strong>{studentPreview.yearName}</strong>
-                </div>
-                <div>
-                  <small>BRANCH</small>
-                  <strong>{studentPreview.department}</strong>
-                </div>
-              </div>
+              {(Object.keys(roleDetails) as LoginRole[]).map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  role="tab"
+                  aria-selected={role === option}
+                  className={role === option ? "selected" : ""}
+                  onClick={() => chooseRole(option)}
+                >
+                  {roleDetails[option].tab}
+                </button>
+              ))}
             </div>
-          )}
 
-          <label>
-            Password
-            <input
-              required
-              type="password"
-              autoComplete="current-password"
-              placeholder="Enter your password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-            />
-          </label>
-          {error && <div className="alert">{error}</div>}
-          <button className="button primary full" disabled={busy}>
-            {busy
-              ? "Signing in…"
-              : role === "admin"
-                ? "Continue to admin console"
-                : role === "faculty"
-                  ? "Continue to faculty console"
-                  : "Continue to student workspace"}
-            <span>→</span>
-          </button>
+            <form className="login-form" onSubmit={submitLogin}>
+              <span className="eyebrow">{details.eyebrow}</span>
+              <h2>
+                {role === "admin"
+                  ? "Administrator sign in"
+                  : role === "faculty"
+                    ? "Faculty sign in"
+                    : "Student college sign in"}
+              </h2>
+              <p className="muted">
+                {role === "student"
+                  ? "Use your college email ID (@tcetmumbai.in) to access your practicals."
+                  : role === "faculty"
+                    ? "Use your faculty account (@tcetmumbai.in) to manage laboratory work."
+                    : "Use an institution administrator account."}
+              </p>
 
-          {role === "student" && (
-            <div className="demo-box">
-              <div className="demo-box-header">
-                <b>Select a student demo account:</b>
-                <span className="demo-pass-badge">Pass: CodeLabX123!</span>
-              </div>
-              <div className="preset-chip-list">
-                {studentPresets.map((preset) => (
-                  <button
-                    type="button"
-                    key={preset.email}
-                    className={`preset-chip ${email === preset.email ? "active" : ""}`}
-                    onClick={() => {
-                      setEmail(preset.email);
-                      setPassword("CodeLabX123!");
-                      performLogin(preset.email, "CodeLabX123!");
-                    }}
-                  >
-                    <span>{preset.label}</span>
-                    <small>{preset.division}</small>
-                  </button>
+              {role === "admin" && (
+                <div className="admin-notice" role="status">
+                  <b>Administrative access</b>
+                  <span>
+                    Administrator accounts are provisioned separately from student
+                    and faculty accounts.
+                  </span>
+                </div>
+              )}
+
+              <label>
+                {role === "student"
+                  ? "Student college email (@tcetmumbai.in)"
+                  : role === "faculty"
+                    ? "Faculty email (@tcetmumbai.in)"
+                    : "Administrator email"}
+                <input
+                  required
+                  type="email"
+                  autoComplete="username"
+                  placeholder="name.year.div@tcetmumbai.in"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                />
+              </label>
+
+              <label>
+                Password
+                <input
+                  required
+                  type="password"
+                  autoComplete="current-password"
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                />
+              </label>
+              {error && <div className="alert">{error}</div>}
+              <button className="button primary full" disabled={busy}>
+                {busy
+                  ? "Signing in…"
+                  : role === "admin"
+                    ? "Continue to admin console"
+                    : role === "faculty"
+                      ? "Continue to faculty console"
+                      : "Continue to student workspace"}
+                <span>→</span>
+              </button>
+
+              {role === "student" && (
+                <div className="demo-box">
+                  <div className="demo-box-header">
+                    <b>Select a student demo account:</b>
+                    <span className="demo-pass-badge">Pass: CodeLabX123!</span>
+                  </div>
+                  <div className="preset-chip-list">
+                    {studentPresets.map((preset) => (
+                      <button
+                        type="button"
+                        key={preset.email}
+                        className={`preset-chip ${email === preset.email ? "active" : ""}`}
+                        onClick={() => {
+                          setEmail(preset.email);
+                          setPassword("CodeLabX123!");
+                          performLogin(preset.email, "CodeLabX123!");
+                        }}
+                      >
+                        <span>{preset.label}</span>
+                        <small>{preset.division}</small>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {role === "faculty" && (
+                <div className="demo-box">
+                  <div className="demo-box-header">
+                    <b>Select a faculty demo account:</b>
+                    <span className="demo-pass-badge">Pass: CodeLabX123!</span>
+                  </div>
+                  <div className="preset-chip-list">
+                    {facultyPresets.map((preset) => (
+                      <button
+                        type="button"
+                        key={preset.email}
+                        className={`preset-chip ${email === preset.email ? "active" : ""}`}
+                        onClick={() => {
+                          setEmail(preset.email);
+                          setPassword("CodeLabX123!");
+                          performLogin(preset.email, "CodeLabX123!");
+                        }}
+                      >
+                        <span>{preset.label}</span>
+                        <small>{preset.division}</small>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {role === "admin" && (
+                <div className="demo-box">
+                  <div className="demo-box-header">
+                    <b>Select an administrator demo account:</b>
+                    <span className="demo-pass-badge">Pass: CodeLabX123!</span>
+                  </div>
+                  <div className="preset-chip-list">
+                    {adminPresets.map((preset) => (
+                      <button
+                        type="button"
+                        key={preset.email}
+                        className={`preset-chip ${email === preset.email ? "active" : ""}`}
+                        onClick={() => {
+                          setEmail(preset.email);
+                          setPassword("CodeLabX123!");
+                          performLogin(preset.email, "CodeLabX123!");
+                        }}
+                      >
+                        <span>{preset.label}</span>
+                        <small>{preset.division}</small>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </form>
+          </>
+        ) : (
+          /* CREATE ACCOUNT (SIGN UP) FORM */
+          <form className="login-form" onSubmit={submitRegister}>
+            <span className="eyebrow">NEW USER REGISTRATION</span>
+            <h2>Create your TCET account</h2>
+            <p className="muted">
+              Registration is restricted to verified <b>@tcetmumbai.in</b> college email addresses.
+            </p>
+
+            <label>
+              Account Type / Role
+              <select
+                value={regRole}
+                onChange={(e) => setRegRole(e.target.value as "STUDENT" | "TEACHER")}
+              >
+                <option value="STUDENT">Student</option>
+                <option value="TEACHER">Faculty / Teacher</option>
+              </select>
+            </label>
+
+            <label>
+              Full Name
+              <input
+                required
+                type="text"
+                placeholder="e.g. Inzamam Khan"
+                value={regName}
+                onChange={(e) => setRegName(e.target.value)}
+              />
+            </label>
+
+            <label>
+              College Email (@tcetmumbai.in only)
+              <input
+                required
+                type="email"
+                placeholder="name.year.div@tcetmumbai.in"
+                value={regEmail}
+                onChange={(e) => setRegEmail(e.target.value)}
+              />
+            </label>
+
+            <label>
+              Engineering Department
+              <select
+                value={regDepartment}
+                onChange={(e) => setRegDepartment(e.target.value)}
+              >
+                {DEPARTMENT_LIST.map((dept) => (
+                  <option key={dept} value={dept}>
+                    {dept}
+                  </option>
                 ))}
-              </div>
-            </div>
-          )}
+              </select>
+            </label>
 
-          {role === "faculty" && (
-            <div className="demo-box">
-              <div className="demo-box-header">
-                <b>Select a faculty demo account:</b>
-                <span className="demo-pass-badge">Pass: CodeLabX123!</span>
+            {regRole === "STUDENT" && (
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px" }}>
+                <label>
+                  Year
+                  <select value={regYear} onChange={(e) => setRegYear(e.target.value)}>
+                    <option value="FE">First Year (FE)</option>
+                    <option value="SE">Second Year (SE)</option>
+                    <option value="TE">Third Year (TE)</option>
+                    <option value="BE">Final Year (BE)</option>
+                  </select>
+                </label>
+                <label>
+                  Division
+                  <select value={regDivision} onChange={(e) => setRegDivision(e.target.value)}>
+                    <option value="A">Div A</option>
+                    <option value="B">Div B</option>
+                    <option value="C">Div C</option>
+                    <option value="D">Div D</option>
+                  </select>
+                </label>
+                <label>
+                  Roll No
+                  <input
+                    type="text"
+                    placeholder="e.g. 13"
+                    value={regRollNo}
+                    onChange={(e) => setRegRollNo(e.target.value)}
+                  />
+                </label>
               </div>
-              <div className="preset-chip-list">
-                {facultyPresets.map((preset) => (
-                  <button
-                    type="button"
-                    key={preset.email}
-                    className={`preset-chip ${email === preset.email ? "active" : ""}`}
-                    onClick={() => {
-                      setEmail(preset.email);
-                      setPassword("CodeLabX123!");
-                      performLogin(preset.email, "CodeLabX123!");
-                    }}
-                  >
-                    <span>{preset.label}</span>
-                    <small>{preset.division}</small>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+            )}
 
-          {role === "admin" && (
-            <div className="demo-box">
-              <div className="demo-box-header">
-                <b>Select an administrator demo account:</b>
-                <span className="demo-pass-badge">Pass: CodeLabX123!</span>
-              </div>
-              <div className="preset-chip-list">
-                {adminPresets.map((preset) => (
-                  <button
-                    type="button"
-                    key={preset.email}
-                    className={`preset-chip ${email === preset.email ? "active" : ""}`}
-                    onClick={() => {
-                      setEmail(preset.email);
-                      setPassword("CodeLabX123!");
-                      performLogin(preset.email, "CodeLabX123!");
-                    }}
-                  >
-                    <span>{preset.label}</span>
-                    <small>{preset.division}</small>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-        </form>
+            <label>
+              Password (Min 6 characters)
+              <input
+                required
+                type="password"
+                placeholder="Create a strong password"
+                value={regPassword}
+                onChange={(e) => setRegPassword(e.target.value)}
+              />
+            </label>
+
+            <label>
+              Confirm Password
+              <input
+                required
+                type="password"
+                placeholder="Confirm your password"
+                value={regConfirmPassword}
+                onChange={(e) => setRegConfirmPassword(e.target.value)}
+              />
+            </label>
+
+            {error && <div className="alert">{error}</div>}
+
+            <button className="button primary full" disabled={busy}>
+              {busy ? "Creating account…" : "Create Account & Continue"}
+              <span>→</span>
+            </button>
+          </form>
+        )}
       </section>
     </main>
   );

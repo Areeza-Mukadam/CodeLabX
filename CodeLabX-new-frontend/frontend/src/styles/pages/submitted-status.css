@@ -13,3 +13,35 @@
 .submitted-panel .button {
   margin-top: 12px;
 }
+
+/* Print styling for PDF export */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .no-print,
+  .app-shell-header,
+  .app-shell-nav,
+  header,
+  nav {
+    display: none !important;
+  }
+  .pdf-modal-overlay {
+    position: static !important;
+    background: none !important;
+    padding: 0 !important;
+  }
+  .pdf-modal-container,
+  .pdf-modal-container * {
+    visibility: visible !important;
+  }
+  .pdf-modal-container {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+}

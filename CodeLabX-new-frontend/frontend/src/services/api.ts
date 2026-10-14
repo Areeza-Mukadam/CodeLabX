@@ -5,6 +5,8 @@ import {
   DEMO_SUBJECTS,
   DEMO_USERS,
 } from "./mockData";
+import { findDepartmentPracticalById } from "./curriculumData";
+import type { User } from "../types";
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:8080";
 const demoMocksEnabled = import.meta.env.DEV || import.meta.env.VITE_ENABLE_MOCK_DATA === "true";
@@ -133,6 +135,9 @@ function getMockResponse<T>(path: string, init: RequestInit = {}): T | null {
       // ignore
     }
     const email = (body.email || "").trim().toLowerCase();
+    if (!email.endsWith("@tcetmumbai.in")) {
+      throw new Error("Only @tcetmumbai.in college email addresses are permitted.");
+    }
     const user = DEMO_USERS[email];
     if (user) {
       if (body.password === DEMO_PASSWORD) {
@@ -143,6 +148,40 @@ function getMockResponse<T>(path: string, init: RequestInit = {}): T | null {
       }
       throw new Error("Invalid credentials");
     }
+  }
+
+  // /auth/register
+  if (cleanPath === "/auth/register" && method === "POST") {
+    let body: any = {};
+    try {
+      body = JSON.parse((init.body as string) || "{}");
+    } catch {}
+    const email = (body.email || "").trim().toLowerCase();
+    if (!email.endsWith("@tcetmumbai.in")) {
+      throw new Error("Only @tcetmumbai.in college email addresses are permitted.");
+    }
+    const role = (body.role || "student").toUpperCase() === "TEACHER" || (body.role || "").toUpperCase() === "FACULTY"
+      ? "TEACHER"
+      : "STUDENT";
+    const classSec = body.classSection || "SE-B";
+    const cohort = classSec.includes("-") ? classSec.split("-")[0] : "SE";
+    const division = body.division || (classSec.includes("-") ? classSec.split("-")[1] : "B");
+    const newUser: User = {
+      id: Math.floor(Math.random() * 8000) + 500,
+      name: body.name || "Student",
+      email,
+      role: role as "STUDENT" | "TEACHER" | "ADMIN",
+      department: body.department || "Computer Engineering",
+      classSection: classSec,
+      division,
+      cohort,
+      rollNo: body.rollNo || "01",
+    };
+    DEMO_USERS[email] = newUser;
+    return {
+      token: `demo-token-${newUser.role.toLowerCase()}-${newUser.id}-${Date.now()}`,
+      user: newUser,
+    } as T;
   }
 
   // /subjects
@@ -232,7 +271,7 @@ function getMockResponse<T>(path: string, init: RequestInit = {}): T | null {
       } as T;
     }
     const found =
-      DEMO_PRACTICALS.find((p) => p.id === id) || DEMO_PRACTICALS[0];
+      DEMO_PRACTICALS.find((p) => p.id === id) || findDepartmentPracticalById(id) || DEMO_PRACTICALS[0];
     return found as T;
   }
 

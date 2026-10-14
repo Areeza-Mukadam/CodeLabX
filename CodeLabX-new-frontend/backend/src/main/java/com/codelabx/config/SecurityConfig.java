@@ -34,7 +34,7 @@ public class SecurityConfig {
                                 response.sendError(HttpStatus.UNAUTHORIZED.value(), "Authentication required"))
                 )
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/error", "/api/health", "/api/auth/login", "/auth/login").permitAll()
+                        .requestMatchers("/error", "/api/health", "/api/auth/login", "/auth/login", "/api/auth/register", "/auth/register").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/teacher/**", "/teacher/**").hasAnyRole("TEACHER", "ADMIN")
                         .requestMatchers("/api/evaluations/**", "/evaluations/**").hasAnyRole("TEACHER", "ADMIN")

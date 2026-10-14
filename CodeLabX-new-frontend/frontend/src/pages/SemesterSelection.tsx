@@ -1,5 +1,8 @@
 interface SemesterSelectionProps {
   onSelect?: (semester: number) => void;
+  departmentName?: string;
+  departmentCode?: string;
+  onChangeDepartment?: () => void;
 }
 
 const years = [
@@ -11,14 +14,36 @@ const years = [
 
 export default function SemesterSelection({
   onSelect,
+  departmentName,
+  departmentCode,
+  onChangeDepartment,
 }: SemesterSelectionProps) {
   return (
     <div className="wsr-stage">
+      {departmentName && (
+        <div className="dept-banner-bar">
+          <button
+            type="button"
+            className="semester-change-link"
+            onClick={onChangeDepartment}
+          >
+            ← Change Department
+          </button>
+          <div className="dept-badge-pill">
+            <span className="dept-dot" />
+            <b>{departmentName}</b>
+            {departmentCode && <span className="dept-tag">{departmentCode}</span>}
+          </div>
+        </div>
+      )}
+
       <div className="wsr-head">
         <span className="wsr-tag">ACADEMIC YEAR · 2026–27</span>
         <h2>Select Your Semester</h2>
         <p>
-          Choose your academic year and select the semester you want to access.
+          {departmentName
+            ? `Choose the academic semester for ${departmentName} to access syllabus experiments.`
+            : "Choose your academic year and select the semester you want to access."}
         </p>
       </div>
 

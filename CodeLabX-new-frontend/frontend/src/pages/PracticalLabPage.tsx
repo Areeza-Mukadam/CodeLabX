@@ -9,18 +9,77 @@ import type { Detail, Progress } from "../types";
 import { steps } from "../types";
 import { humanStatus, statusClass } from "../utils/formatters";
 
-const starterForLanguage = (language: string, practical: Detail) => {
-  switch (language) {
+const starterForLanguage = (language: string, _practical?: Detail) => {
+  switch (language.toUpperCase()) {
     case "JAVA":
-      return practical.javaStarterCode;
+      return `// TCET CodeLabX - Java Starter Template
+import java.util.*;
+
+public class Solution {
+    public static void main(String[] args) {
+        // Write your solution here
+        
+    }
+}
+`;
     case "PYTHON":
-      return practical.pythonStarterCode;
+      return `# TCET CodeLabX - Python Starter Template
+
+def main():
+    # Write your solution here
+    pass
+
+if __name__ == "__main__":
+    main()
+`;
+    case "C":
+      return `// TCET CodeLabX - C Starter Template
+#include <stdio.h>
+
+int main() {
+    // Write your solution here
+    return 0;
+}
+`;
+    case "CPP":
+    case "C++":
+      return `// TCET CodeLabX - C++ Starter Template
+#include <iostream>
+using namespace std;
+
+int main() {
+    // Write your solution here
+    return 0;
+}
+`;
     case "SQL":
-      return "SELECT 'Hello from SQLite' AS message;";
+      return `-- TCET CodeLabX - SQL Starter Template
+-- Write your SQL query below
+SELECT 1;
+`;
     case "ASSEMBLY":
-      return "section .text\nglobal _start\n_start:\n    mov rax, 60\n    xor rdi, rdi\n    syscall\n";
+      return `; TCET CodeLabX - Assembly (NASM) Starter Template
+section .data
+    msg db "Hello, World!", 10
+    len equ $ - msg
+
+section .text
+    global _start
+
+_start:
+    ; Write your code here
+    mov rax, 1
+    mov rdi, 1
+    mov rsi, msg
+    mov rdx, len
+    syscall
+
+    mov rax, 60
+    xor rdi, rdi
+    syscall
+`;
     default:
-      return practical.javaStarterCode;
+      return `// Write your solution here\n`;
   }
 };
 
@@ -56,7 +115,9 @@ export function PracticalLabPage() {
       setStep(prog.data.currentStep);
       setAnswers(prog.data.practiceAnswers || {});
       setLanguage(prog.data.draftLanguage || initialLanguage);
-      setCode(prog.data.draftCode || starterForLanguage(initialLanguage, p));
+      const draft = prog.data.draftCode;
+      const isFullSolution = draft && (draft === p.javaStarterCode || draft === p.pythonStarterCode);
+      setCode(!draft || isFullSolution ? starterForLanguage(initialLanguage, p) : draft);
       setConclusion(prog.data.conclusionText || "");
     }
   }, [prog.data, p]);
@@ -90,7 +151,7 @@ export function PracticalLabPage() {
     );
   if (!p || !prog.data) return null;
   if (prog.data.status === "SUBMITTED" || prog.data.status === "EVALUATED")
-    return <SubmittedStatus title={p.title} status={prog.data.status} />;
+    return <SubmittedStatus practical={p} title={p.title} status={prog.data.status} />;
   const idx = steps.findIndex((x) => x[0] === step),
     completed = prog.data.completedSteps || [];
   const selectStep = (key: string) => {
