@@ -29,8 +29,10 @@ services:
     container_name: codelabx-piston
     restart: unless-stopped
     privileged: true
+    environment:
+      PISTON_RUN_TIMEOUT: ${PISTON_RUN_TIMEOUT:-12000}
     ports:
-      - "${PISTON_PORT:-2000}:2000"
+      - "127.0.0.1:${PISTON_PORT:-2000}:2000"
     volumes:
       - codelabx-piston-packages:/piston/packages
     tmpfs:
@@ -52,22 +54,31 @@ services:
     depends_on:
       piston:
         condition: service_healthy
+    environment:
+      PISTON_JAVA_VERSION: ${PISTON_JAVA_VERSION:-15.0.2}
+      PISTON_PYTHON_VERSION: ${PISTON_PYTHON_VERSION:-3.12.0}
     command: >
       sh -c '
+        set -e;
         echo "==> [Piston-Init] Waiting for Piston API readiness...";
         until curl -s -f http://piston:2000/api/v2/packages > /dev/null 2>&1; do
           sleep 1;
         done;
         echo "==> [Piston-Init] Installing language runtimes...";
-        for pkg in python java gcc node; do
-          echo "Installing $${pkg}...";
-          curl -s -X POST http://piston:2000/api/v2/packages \
+        for spec in "python:$${PISTON_PYTHON_VERSION}" "java:$${PISTON_JAVA_VERSION}"; do
+          LANGUAGE=$${spec%%:*};
+          VERSION=$${spec#*:};
+          if curl -fsS http://piston:2000/api/v2/packages | grep -Fq "\"language\":\"$${LANGUAGE}\",\"language_version\":\"$${VERSION}\",\"installed\":true"; then
+            echo "$${LANGUAGE} $${VERSION} is already installed.";
+          else
+            echo "Installing $${LANGUAGE} $${VERSION}...";
+            curl -fsS -X POST http://piston:2000/api/v2/packages \
             -H "Content-Type: application/json" \
-            -d "{\"language\": \"$${pkg}\"}" || true;
+            -d "{\"language\":\"$${LANGUAGE}\",\"version\":\"$${VERSION}\"}";
+          fi;
         done;
         echo "==> [Piston-Init] Verifying installed packages in Piston...";
-        INSTALLED=$$(curl -s http://piston:2000/api/v2/packages);
-        echo "$${INSTALLED}";
+        curl -fsS http://piston:2000/api/v2/packages | grep -E "\"language\":\"(java|python)\"";
         echo "==> [Piston-Init] Language runtimes verified and ready."
       '
 
@@ -95,9 +106,10 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-codelabx}
       POSTGRES_USER: ${POSTGRES_USER:-codelabx}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-codelabx-local}
-      PISTON_API_URL: http://piston:2000/api/v2/execute
-      PISTON_JAVA_VERSION: ${PISTON_JAVA_VERSION:-17.x}
-      PISTON_PYTHON_VERSION: ${PISTON_PYTHON_VERSION:-3.x}
+      PISTON_API_URL: ${PISTON_API_URL:-http://piston:2000/api/v2/execute}
+      PISTON_AUTHORIZATION: ${PISTON_AUTHORIZATION:-}
+      PISTON_JAVA_VERSION: ${PISTON_JAVA_VERSION:-15.0.2}
+      PISTON_PYTHON_VERSION: ${PISTON_PYTHON_VERSION:-3.12.0}
       JWT_SECRET: ${JWT_SECRET:-codelabx-dev-only-change-this-secret-key-at-least-32-chars!}
       JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-86400000}
       CODE_EXECUTION_PROVIDER: ${CODE_EXECUTION_PROVIDER:-piston}

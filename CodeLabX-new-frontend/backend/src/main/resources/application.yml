@@ -28,8 +28,8 @@ codelabx:
     piston:
       url: ${PISTON_API_URL:http://127.0.0.1:2000/api/v2/execute}
       authorization: ${PISTON_AUTHORIZATION:}
-      java-version: ${PISTON_JAVA_VERSION:17.x}
-      python-version: ${PISTON_PYTHON_VERSION:3.x}
+      java-version: ${PISTON_JAVA_VERSION:15.0.2}
+      python-version: ${PISTON_PYTHON_VERSION:3.12.0}
     judge0:
       url: ${JUDGE0_API_URL:}
       api-key: ${JUDGE0_API_KEY:}
