@@ -35,18 +35,6 @@ type ParsedDoc = {
   ocrMessage?: string;
 };
 
-const DEFAULT_DEPARTMENTS = [
-  "Computer Engineering",
-  "Information Technology",
-  "Artificial Intelligence & Data Science",
-  "Artificial Intelligence & Machine Learning",
-  "Computer Science & Engineering (IoT)",
-  "Electronics & Computer Science",
-  "Electronics & Telecommunication",
-];
-
-const DEFAULT_CLASS_SECTIONS = ["SE-B", "SE-A", "TE-A", "TE-B"];
-
 function getSectionDefaultTemplate(keyOrTitle: string, title?: string): string {
   const norm = keyOrTitle.toLowerCase();
   if (norm.includes("aim") || norm.includes("objective")) {
@@ -105,7 +93,7 @@ export function PracticalFormPage() {
   // Document upload state
   const [docSubject, setDocSubject] = useState("Data Structures");
   const [docSemester, setDocSemester] = useState<number>(3);
-  const [docClassSection, setDocClassSection] = useState("SE-B");
+  const [docClassSection, setDocClassSection] = useState("");
   const [docDepartment, setDocDepartment] = useState(userDepartment);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [parsedDoc, setParsedDoc] = useState<ParsedDoc | null>(null);
@@ -215,24 +203,19 @@ export function PracticalFormPage() {
           ...new Set(result.map((s) => s.classSection).filter(Boolean)),
         ] as string[];
         setDocClassSection((current) =>
-          sections.includes(current) ? current : sections[0] || "SE-B",
+          sections.includes(current) ? current : sections[0] || "",
         );
       })
       .catch(() => setStudents([]));
   }, [form.semester, docSemester, activeMode]);
 
   const [manualDepartment, setManualDepartment] = useState(userDepartment);
-  const [manualClassSection, setManualClassSection] = useState("SE-B");
+  const [manualClassSection, setManualClassSection] = useState("");
 
   const departments = useMemo(() => {
-    const list = [
-      ...new Set([
-        ...DEFAULT_DEPARTMENTS,
-        ...students.map((s) => s.department).filter(Boolean),
-      ]),
-    ] as string[];
-    return list;
-  }, [students]);
+    if (currentUser?.department) return [currentUser.department];
+    return [...new Set(students.map((s) => s.department).filter(Boolean))] as string[];
+  }, [students, currentUser?.department]);
 
   const docClassSections = useMemo(() => {
     const list = [
@@ -243,7 +226,7 @@ export function PracticalFormPage() {
           .filter(Boolean),
       ),
     ] as string[];
-    return list.length > 0 ? list : DEFAULT_CLASS_SECTIONS;
+    return list;
   }, [students, docDepartment]);
 
   const classSections = useMemo(() => {
@@ -255,7 +238,7 @@ export function PracticalFormPage() {
           .filter(Boolean),
       ),
     ] as string[];
-    return list.length > 0 ? list : DEFAULT_CLASS_SECTIONS;
+    return list;
   }, [students, manualDepartment]);
 
   useEffect(() => {
@@ -268,6 +251,8 @@ export function PracticalFormPage() {
   useEffect(() => {
     if (classSections.length > 0 && (!manualClassSection || !classSections.includes(manualClassSection))) {
       setManualClassSection(classSections[0]);
+    } else if (classSections.length === 0 && manualClassSection) {
+      setManualClassSection("");
     }
   }, [classSections, manualClassSection]);
 
@@ -308,6 +293,10 @@ export function PracticalFormPage() {
 
   // Manual save
   const save = async (publish = false) => {
+    if (publish && (!manualClassSection || classStudents.length === 0)) {
+      setError("Choose a class with students in your department before publishing.");
+      return;
+    }
     setBusy(true);
     setError("");
     try {
@@ -428,6 +417,10 @@ export function PracticalFormPage() {
 
   const generateAndPublishFromDoc = async () => {
     if (!parsedDoc) return;
+    if (!docClassSection || !docClassSections.includes(docClassSection)) {
+      setError("Choose a class with students in your department before publishing.");
+      return;
+    }
     setGeneratingAndPublishing(true);
     setError("");
     setGeneratorSuccessMessage("");
@@ -719,11 +712,10 @@ export function PracticalFormPage() {
                   Assign to Class / Division
                   <select
                     value={docClassSection}
+                    disabled={!docClassSections.length}
                     onChange={(e) => setDocClassSection(e.target.value)}
                   >
-                    {docClassSections.length === 0 && (
-                      <option value="SE-B">SE-B (Default)</option>
-                    )}
+                    <option value="">{docClassSections.length ? "Select a class" : "No students found in this department"}</option>
                     {docClassSections.map((sec) => (
                       <option key={sec} value={sec}>
                         Class {sec}
@@ -1287,10 +1279,12 @@ export function PracticalFormPage() {
                 Class / division
                 <select
                   value={manualClassSection}
+                  disabled={!classSections.length}
                   onChange={(event) => {
                     setManualClassSection(event.target.value);
                   }}
                 >
+                  <option value="">{classSections.length ? "Select a class" : "No students found in this department"}</option>
                   {classSections.map((section) => (
                     <option key={section} value={section}>
                       {section}
@@ -1300,7 +1294,7 @@ export function PracticalFormPage() {
               </label>
               <p className="muted">
                 Publishing assigns this practical to all{" "}
-                {classStudents.length > 0 ? classStudents.length : 32} students in{" "}
+                {classStudents.length} students in{" "}
                 {manualClassSection || "SE-B"}.
               </p>
               <label>

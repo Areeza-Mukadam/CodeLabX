@@ -52,13 +52,16 @@ public class TeacherDashboardController {
 
     @GetMapping({"/api/teacher/dashboard", "/teacher/dashboard"})
     public DashboardView dashboard(@AuthenticationPrincipal UserAccount teacher) {
-        List<Practical> allPracticals = practicals.findAllByOrderByUpdatedAtDesc();
+        List<Practical> allPracticals = practicals.findAllByOrderByUpdatedAtDesc().stream()
+                .filter(p -> p.getCreatedBy() != null && Objects.equals(p.getCreatedBy().getId(), teacher.getId())).toList();
         long active = allPracticals.stream().filter(p -> p.getStatus() == PracticalStatus.PUBLISHED).count();
-        long studentCount = users.findByRole(Role.STUDENT).size();
+        long studentCount = departmentStudents(teacher).size();
         long pendingEval = submissions.findAllByOrderBySubmittedAtDesc().stream()
+                .filter(s -> s.getPractical() != null && s.getPractical().getCreatedBy() != null && Objects.equals(s.getPractical().getCreatedBy().getId(), teacher.getId()))
                 .filter(s -> evaluations.findBySubmissionId(s.getId()).isEmpty())
                 .count();
         long vivaPending = submissions.findAllByOrderBySubmittedAtDesc().stream()
+                .filter(s -> s.getPractical() != null && s.getPractical().getCreatedBy() != null && Objects.equals(s.getPractical().getCreatedBy().getId(), teacher.getId()))
                 .filter(s -> {
                     var ev = evaluations.findBySubmissionId(s.getId());
                     return ev.isEmpty() || ev.get().getVivaMarks() == null;
@@ -77,7 +80,8 @@ public class TeacherDashboardController {
 
     @GetMapping({"/api/teacher/subjects", "/teacher/subjects"})
     public List<SubjectView> subjects(@AuthenticationPrincipal UserAccount teacher) {
-        List<Practical> all = practicals.findAllByOrderByUpdatedAtDesc();
+        List<Practical> all = practicals.findAllByOrderByUpdatedAtDesc().stream()
+                .filter(p -> p.getCreatedBy() != null && Objects.equals(p.getCreatedBy().getId(), teacher.getId())).toList();
         List<Practical> matching = all.stream()
                 .filter(p -> p.getSubject() != null && !p.getSubject().isBlank())
                 .toList();
@@ -85,11 +89,7 @@ public class TeacherDashboardController {
                 .collect(java.util.stream.Collectors.groupingBy(p -> p.getSubject().trim() + "\u0000" + (p.getSemester() != null ? p.getSemester() : 1), java.util.TreeMap::new, java.util.stream.Collectors.toList()))
                 .values().stream().map(rows -> new SubjectView(rows.get(0).getSubject(), rows.get(0).getSemester() != null ? rows.get(0).getSemester() : 1, rows.size())).toList();
         if (grouped.isEmpty()) {
-            return List.of(
-                    new SubjectView("Data Structures & Algorithms", 1, 3),
-                    new SubjectView("Data Structures", 3, 12),
-                    new SubjectView("Introduction to Intelligent Systems", 5, 5)
-            );
+            return List.of();
         }
         return grouped;
     }
@@ -98,18 +98,17 @@ public class TeacherDashboardController {
     public List<String> classes(@RequestParam(required = false) String subject, @RequestParam(required = false) Integer semester, @AuthenticationPrincipal UserAccount teacher) {
         final String sQuery = subject != null ? subject.trim().toLowerCase() : null;
         var ids = practicals.findAllByOrderByUpdatedAtDesc().stream()
+                .filter(p -> p.getCreatedBy() != null && Objects.equals(p.getCreatedBy().getId(), teacher.getId()))
                 .filter(p -> (sQuery == null || (p.getSubject() != null && p.getSubject().trim().toLowerCase().equals(sQuery)))
                         && (semester == null || Objects.equals(semester, p.getSemester())))
                 .map(Practical::getId).toList();
         List<String> list = assignments.findAll().stream()
                 .filter(a -> ids.contains(a.getPractical().getId()))
+                .filter(a -> a.getClassDepartment() == null || Objects.equals(a.getClassDepartment(), teacher.getDepartment()))
                 .map(a -> a.getClassSection() != null ? a.getClassSection() : classSection(a.getStudent()))
                 .filter(Objects::nonNull).distinct().sorted().toList();
         if (list.isEmpty()) {
-            list = users.findByRole(Role.STUDENT).stream().map(this::classSection).filter(Objects::nonNull).distinct().sorted().toList();
-        }
-        if (list.isEmpty()) {
-            list = List.of("SE-A", "SE-B", "TE-A", "TE-B");
+            list = departmentStudents(teacher).stream().map(this::classSection).filter(Objects::nonNull).distinct().sorted().toList();
         }
         return list;
     }
@@ -118,6 +117,7 @@ public class TeacherDashboardController {
     public List<UserDto> students(@RequestParam(required = false) String subject, @RequestParam(required = false) Integer semester, @RequestParam(required = false) String classSection, @AuthenticationPrincipal UserAccount teacher) {
         final String sQuery = subject != null ? subject.trim().toLowerCase() : null;
         var ids = practicals.findAllByOrderByUpdatedAtDesc().stream()
+                .filter(p -> p.getCreatedBy() != null && Objects.equals(p.getCreatedBy().getId(), teacher.getId()))
                 .filter(p -> (sQuery == null || (p.getSubject() != null && p.getSubject().trim().toLowerCase().equals(sQuery)))
                         && (semester == null || Objects.equals(semester, p.getSemester())))
                 .map(Practical::getId).toList();
@@ -130,12 +130,12 @@ public class TeacherDashboardController {
         assignments.findAll().stream()
                 .filter(a -> ids.contains(a.getPractical().getId()) && a.getClassSection() != null)
                 .forEach(a -> users.findByRole(Role.STUDENT).stream()
-                        .filter(u -> Objects.equals(a.getClassSection(), classSection(u)) && (a.getClassDepartment() == null || Objects.equals(a.getClassDepartment(), u.getDepartment())))
+                        .filter(u -> Objects.equals(a.getClassSection(), classSection(u))
+                                && Objects.equals(teacher.getDepartment(), u.getDepartment())
+                                && (a.getClassDepartment() == null || Objects.equals(a.getClassDepartment(), u.getDepartment())))
                         .forEach(u -> eligible.putIfAbsent(u.getId(), u)));
-        if (eligible.isEmpty()) {
-            users.findByRole(Role.STUDENT).forEach(u -> eligible.putIfAbsent(u.getId(), u));
-        }
         return eligible.values().stream()
+                .filter(u -> Objects.equals(teacher.getDepartment(), u.getDepartment()))
                 .filter(u -> classSection == null || Objects.equals(classSection, classSection(u)))
                 .map(UserDto::from)
                 .toList();
@@ -145,11 +145,14 @@ public class TeacherDashboardController {
     public List<TeacherSubmission> studentSubmissions(@org.springframework.web.bind.annotation.PathVariable Long studentId, @RequestParam(required = false) String subject, @RequestParam(required = false) Integer semester, @AuthenticationPrincipal UserAccount teacher) {
         final String sQuery = subject != null ? subject.trim().toLowerCase() : null;
         var practicalIds = practicals.findAllByOrderByUpdatedAtDesc().stream()
+                .filter(p -> p.getCreatedBy() != null && Objects.equals(p.getCreatedBy().getId(), teacher.getId()))
                 .filter(p -> (sQuery == null || (p.getSubject() != null && p.getSubject().trim().toLowerCase().equals(sQuery)))
                         && (semester == null || Objects.equals(semester, p.getSemester())))
                 .map(Practical::getId).toList();
+        UserAccount targetStudent = users.findById(studentId).orElse(null);
+        if (targetStudent == null || !Objects.equals(targetStudent.getDepartment(), teacher.getDepartment())) return List.of();
         return submissions.findByStudentIdOrderBySubmittedAtDesc(studentId).stream()
-                .filter(s -> s.getPractical() != null && (practicalIds.isEmpty() || practicalIds.contains(s.getPractical().getId())))
+                .filter(s -> s.getPractical() != null && practicalIds.contains(s.getPractical().getId()))
                 .map(s -> {
                     var e = evaluations.findBySubmissionId(s.getId()).orElse(null);
                     return new TeacherSubmission(s.getId(), s.getPractical().getId(), s.getPractical().getTitle(), s.getLanguage().name().toLowerCase(), s.getSubmittedAt(), e != null, e == null ? null : e.getTotalMarks());
@@ -157,7 +160,26 @@ public class TeacherDashboardController {
     }
 
     private String classSection(UserAccount u){return u==null||u.getCohort()==null||u.getDivision()==null?null:u.getCohort()+"-"+u.getDivision();}
-    private List<UserAccount> assignedStudents(Long practicalId){java.util.Set<Long> ids=new java.util.HashSet<>();List<UserAccount> roster=users.findByRole(Role.STUDENT);for(PracticalAssignment a:assignments.findByPracticalId(practicalId)){if(a.getStudent()!=null)ids.add(a.getStudent().getId());else if(a.getClassSection()!=null)roster.stream().filter(u->Objects.equals(a.getClassSection(),classSection(u))&&(a.getClassDepartment()==null||Objects.equals(a.getClassDepartment(),u.getDepartment()))).map(UserAccount::getId).forEach(ids::add);}return roster.stream().filter(u->ids.contains(u.getId())).toList();}
+    private List<UserAccount> departmentStudents(UserAccount teacher) {
+        if (teacher == null || teacher.getDepartment() == null) return List.of();
+        return users.findByRole(Role.STUDENT).stream().filter(u -> Objects.equals(teacher.getDepartment(), u.getDepartment())).toList();
+    }
+    private List<UserAccount> assignedStudents(Long practicalId){
+        var practical = practicals.findById(practicalId).orElse(null);
+        if (practical == null || practical.getCreatedBy() == null) return List.of();
+        String department = practical.getCreatedBy().getDepartment();
+        List<UserAccount> roster = users.findByRole(Role.STUDENT).stream()
+                .filter(u -> Objects.equals(department, u.getDepartment())).toList();
+        java.util.Set<Long> ids = new java.util.HashSet<>();
+        for (PracticalAssignment a : assignments.findByPracticalId(practicalId)) {
+            if (a.getStudent() != null && Objects.equals(department, a.getStudent().getDepartment())) ids.add(a.getStudent().getId());
+            else if (a.getClassSection() != null && (a.getClassDepartment() == null || Objects.equals(department, a.getClassDepartment()))) {
+                roster.stream().filter(u -> Objects.equals(a.getClassSection(), classSection(u)))
+                        .map(UserAccount::getId).forEach(ids::add);
+            }
+        }
+        return roster.stream().filter(u -> ids.contains(u.getId())).toList();
+    }
 
     public record RecentPractical(Long id, String title, String status, long students, long completed) {}
     public record DashboardView(long activePracticals, long students, long pendingEvaluations, long vivaPending, java.util.List<RecentPractical> recentPracticals) {}
