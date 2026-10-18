@@ -2,6 +2,7 @@ package com.codelabx.execution;
 
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.MediaType;
@@ -28,6 +29,7 @@ public class ExternalApiCodeExecutionService implements CodeExecutionService {
     private final String authorization;
     private final ProgrammingLanguageRepository languages;
 
+    @Autowired
     public ExternalApiCodeExecutionService(
             @Value("${codelabx.execution.piston.url}") String pistonUrl,
             @Value("${codelabx.execution.piston.java-version}") String javaVersion,
@@ -37,16 +39,34 @@ public class ExternalApiCodeExecutionService implements CodeExecutionService {
             ObjectMapper objectMapper,
             ProgrammingLanguageRepository languages
     ) {
+        this(pistonUrl, javaVersion, pythonVersion, timeoutMs, authorization, objectMapper, languages,
+                createRestClient(pistonUrl, timeoutMs));
+    }
+
+    ExternalApiCodeExecutionService(
+            String pistonUrl,
+            String javaVersion,
+            String pythonVersion,
+            int timeoutMs,
+            String authorization,
+            ObjectMapper objectMapper,
+            ProgrammingLanguageRepository languages,
+            RestClient restClient
+    ) {
         this.javaVersion = javaVersion;
         this.pythonVersion = pythonVersion;
         this.timeoutMs = timeoutMs;
         this.authorization = authorization;
         this.languages = languages;
         this.objectMapper = objectMapper;
+        this.restClient = restClient;
+    }
+
+    private static RestClient createRestClient(String pistonUrl, int timeoutMs) {
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
         factory.setConnectTimeout(Duration.ofSeconds(8));
         factory.setReadTimeout(Duration.ofMillis(Math.max(timeoutMs, 1000) + 3000));
-        this.restClient = RestClient.builder()
+        return RestClient.builder()
                 .baseUrl(pistonUrl)
                 .requestFactory(factory)
                 .build();
@@ -93,7 +113,7 @@ public class ExternalApiCodeExecutionService implements CodeExecutionService {
                     .retrieve()
                     .body(String.class);
             long elapsed = System.currentTimeMillis() - started;
-            return mapPiston(body, elapsed);
+            return mapPiston(body, elapsed, language);
         } catch (RestClientResponseException ex) {
             int status = ex.getStatusCode().value();
             if (status == 401 || status == 403) {
@@ -107,7 +127,7 @@ public class ExternalApiCodeExecutionService implements CodeExecutionService {
         }
     }
 
-    private ExecutionResult mapPiston(String body, long elapsed) {
+    private ExecutionResult mapPiston(String body, long elapsed, CodeLanguage language) {
         try {
             JsonNode root = objectMapper.readTree(body);
             JsonNode compile = root.path("compile");
@@ -125,6 +145,14 @@ public class ExternalApiCodeExecutionService implements CodeExecutionService {
             String stderr = text(run, "stderr");
             String signal = run.path("signal").asText("");
             int code = run.path("code").asInt(0);
+
+            String javaCompilerOutput = stderr == null || stderr.isBlank() ? text(run, "output") : stderr;
+            if (language == CodeLanguage.JAVA && code != 0
+                    && javaCompilerOutput.contains("compilation failed")
+                    && javaCompilerOutput.matches("(?s).*\\b\\d+: error:.*")) {
+                return new ExecutionResult("COMPILATION_ERROR", stdout, javaCompilerOutput,
+                        javaCompilerOutput, "", elapsed);
+            }
 
             if ("SIGKILL".equals(signal) || "timeout".equalsIgnoreCase(signal)) {
                 return new ExecutionResult("TIMEOUT", stdout, stderr, "", "Execution timed out.", elapsed);
