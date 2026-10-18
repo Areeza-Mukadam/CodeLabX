@@ -6,8 +6,7 @@ import { api } from "../services/api";
 import { useAuth } from "../state/authStore";
 import type { Practical } from "../types";
 import { date, humanStatus, statusClass } from "../utils/formatters";
-import tcetCompHeader from "../assets/tcet-comp-header.png";
-import tcetItHeader from "../assets/tcet-it-header.png";
+import { DepartmentPrintHeader } from "../components/DepartmentPrintHeader";
 import "../styles/pages/dashboards.css";
 
 export function StudentDashboardPage() {
@@ -387,57 +386,7 @@ export function StudentDashboardPage() {
                 background: "#ffffff",
               }}
             >
-              {/* Official Department Header Banner */}
-              {(() => {
-                const dept = (user?.department || "").toLowerCase();
-                const isIt = dept.includes("information technology") || dept.includes("it");
-                const isComp = dept.includes("computer") || dept.includes("comp") || (!isIt && true);
-
-                if (isIt) {
-                  return (
-                    <div style={{ textAlign: "center", marginBottom: "16px" }}>
-                      <img
-                        src={tcetItHeader}
-                        alt="Department of Information Technology - TCET"
-                        style={{ width: "100%", maxHeight: "95px", objectFit: "contain", display: "block" }}
-                      />
-                    </div>
-                  );
-                }
-
-                if (isComp) {
-                  return (
-                    <div style={{ textAlign: "center", marginBottom: "16px" }}>
-                      <img
-                        src={tcetCompHeader}
-                        alt="Department of Computer Engineering - TCET"
-                        style={{ width: "100%", maxHeight: "95px", objectFit: "contain", display: "block" }}
-                      />
-                    </div>
-                  );
-                }
-
-                return (
-                  <div
-                    style={{
-                      textAlign: "center",
-                      borderBottom: "2px solid #b91c1c",
-                      paddingBottom: "14px",
-                      marginBottom: "16px",
-                    }}
-                  >
-                    <h2 style={{ margin: "0 0 4px", fontSize: "18px", fontWeight: 800, color: "#991b1b" }}>
-                      THAKUR COLLEGE OF ENGINEERING & TECHNOLOGY
-                    </h2>
-                    <p style={{ margin: "0 0 4px", fontSize: "11px", color: "#475569" }}>
-                      (Autonomous Institute Affiliated to University of Mumbai · NAAC 'A' Grade · NBA Accredited)
-                    </p>
-                    <p style={{ margin: 0, fontSize: "13px", fontWeight: 700, color: "#1e293b" }}>
-                      DEPARTMENT OF {(user?.department || "COMPUTER ENGINEERING").toUpperCase()}
-                    </p>
-                  </div>
-                );
-              })()}
+              <DepartmentPrintHeader department={user?.department} />
 
               <div style={{ textAlign: "center", marginBottom: "18px" }}>
                 <div
