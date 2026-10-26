@@ -95,6 +95,8 @@ public class DemoDataInitializer {
     private void seedLanguages(ProgrammingLanguageRepository languages) {
         seedLang(languages, "JAVA", "Java", "17.x", true);
         seedLang(languages, "PYTHON", "Python", "3.11", true);
+        seedLang(languages, "SQL", "SQL (SQLite)", "3.36.0", true);
+        seedLang(languages, "ASSEMBLY", "Assembly (NASM 64-bit)", "2.15.5", true);
         seedLang(languages, "C", "C", "gcc 11.x", true);
         seedLang(languages, "CPP", "C++", "g++ 11.x", true);
         seedLang(languages, "JAVASCRIPT", "JavaScript", "Node.js 20.x", true);

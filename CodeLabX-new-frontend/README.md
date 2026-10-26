@@ -176,8 +176,7 @@ If the tunnel restarts, update Render's `PISTON_API_URL` to the new HTTPS URL. I
 
 ### Migrate to a college Piston server
 
-When the college server is ready, configure the backend's `PISTON_API_URL` to its reachable HTTPS execution endpoint, normally ending in `/api/v2/execute`. If the college endpoint requires an `Authorization` header, configure its complete value in `PISTON_AUTHORIZATION` using Render's secret environment settings. If it has no endpoint-specific authorization, leave `PISTON_AUTHORIZATION` empty. Ensure the Render backend has a network route to that endpoint and that its TLS certificate is trusted. Update `PISTON_JAVA_VERSION` and `PISTON_PYTHON_VERSION` to versions installed on that server if they differ. Restart the Render service after changing environment settings. The request shape, Piston provider, Java/Python support, timeouts, and frontend remain unchanged.
-
+i
 ### Execution environment variables
 
 | Variable | Purpose |

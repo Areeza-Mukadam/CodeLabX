@@ -30,6 +30,8 @@ codelabx:
       authorization: ${PISTON_AUTHORIZATION:}
       java-version: ${PISTON_JAVA_VERSION:15.0.2}
       python-version: ${PISTON_PYTHON_VERSION:3.12.0}
+      sql-version: ${PISTON_SQL_VERSION:3.41.2}
+      assembly-version: ${PISTON_ASSEMBLY_VERSION:2.15.5}
     judge0:
       url: ${JUDGE0_API_URL:}
       api-key: ${JUDGE0_API_KEY:}

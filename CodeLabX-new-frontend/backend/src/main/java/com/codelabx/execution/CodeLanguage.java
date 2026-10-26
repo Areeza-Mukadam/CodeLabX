@@ -2,5 +2,7 @@ package com.codelabx.execution;
 
 public enum CodeLanguage {
     JAVA,
-    PYTHON
+    PYTHON,
+    SQL,
+    ASSEMBLY
 }

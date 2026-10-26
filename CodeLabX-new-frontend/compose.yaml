@@ -57,6 +57,8 @@ services:
     environment:
       PISTON_JAVA_VERSION: ${PISTON_JAVA_VERSION:-15.0.2}
       PISTON_PYTHON_VERSION: ${PISTON_PYTHON_VERSION:-3.12.0}
+      PISTON_SQL_VERSION: ${PISTON_SQL_VERSION:-3.41.2}
+      PISTON_ASSEMBLY_VERSION: ${PISTON_ASSEMBLY_VERSION:-2.15.5}
     command: >
       sh -c '
         set -e;
@@ -65,7 +67,7 @@ services:
           sleep 1;
         done;
         echo "==> [Piston-Init] Installing language runtimes...";
-        for spec in "python:$${PISTON_PYTHON_VERSION}" "java:$${PISTON_JAVA_VERSION}"; do
+        for spec in "python:$${PISTON_PYTHON_VERSION}" "java:$${PISTON_JAVA_VERSION}" "sqlite3:$${PISTON_SQL_VERSION}" "nasm64:$${PISTON_ASSEMBLY_VERSION}"; do
           LANGUAGE=$${spec%%:*};
           VERSION=$${spec#*:};
           if curl -fsS http://piston:2000/api/v2/packages | grep -Fq "\"language\":\"$${LANGUAGE}\",\"language_version\":\"$${VERSION}\",\"installed\":true"; then
@@ -78,7 +80,7 @@ services:
           fi;
         done;
         echo "==> [Piston-Init] Verifying installed packages in Piston...";
-        curl -fsS http://piston:2000/api/v2/packages | grep -E "\"language\":\"(java|python)\"";
+        curl -fsS http://piston:2000/api/v2/packages | grep -E "\"language\":\"(java|python|sqlite3|nasm64)\"";
         echo "==> [Piston-Init] Language runtimes verified and ready."
       '
 

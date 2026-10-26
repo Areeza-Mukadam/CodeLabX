@@ -50,7 +50,12 @@ public class Judge0CodeExecutionService implements CodeExecutionService {
         if (apiKey == null || apiKey.isBlank()) {
             return ExecutionResult.unavailable("Judge0 is not configured on the server.");
         }
-        int languageId = language == CodeLanguage.JAVA ? 62 : 71;
+        int languageId = switch (language) {
+            case JAVA -> 62;
+            case PYTHON -> 71;
+            case SQL -> 82;
+            case ASSEMBLY -> 45;
+        };
         String encoded = Base64.getEncoder().encodeToString(source.getBytes(StandardCharsets.UTF_8));
         Map<String, Object> payload = Map.of(
                 "language_id", languageId,

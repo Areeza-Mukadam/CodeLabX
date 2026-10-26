@@ -12,6 +12,11 @@
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",
+    "@sqlite.org/sqlite-wasm": "^3.41.2-build13",
+    "@tracecode/tracejvm": "^0.4.1",
+    "@wasm-oj/browser": "^0.2.5",
+    "@wasm-oj/toolchain-clang": "^0.2.0",
+    "pyodide": "^314.0.7",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-router-dom": "^7.9.0",

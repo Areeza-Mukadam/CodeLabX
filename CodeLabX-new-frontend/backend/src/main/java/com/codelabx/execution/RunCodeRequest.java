@@ -7,7 +7,7 @@ import jakarta.validation.constraints.Size;
 public record RunCodeRequest(
         Long practicalId,
         @NotNull CodeLanguage language,
-        @NotBlank String source,
+        @NotBlank @Size(max = 32000) String source,
         @Size(max = 10000) String stdin
 ) {
 }
