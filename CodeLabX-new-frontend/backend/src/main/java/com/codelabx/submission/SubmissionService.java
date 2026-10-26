@@ -57,6 +57,7 @@ public class SubmissionService {
         submission.setOutput(request.output() == null ? "" : request.output());
         submission.setExecutionStatus(request.executionStatus() == null ? "SUCCESS" : request.executionStatus());
         submission.setConclusionText(progress.getConclusionText());
+        submission.setScreenshots(request.screenshots());
         submission.setSubmittedAt(Instant.now());
         submission = submissions.save(submission);
 
@@ -117,7 +118,8 @@ public class SubmissionService {
                 evaluation == null ? null : evaluation.getCodeMarks(),
                 evaluation == null ? null : evaluation.getVivaMarks(),
                 evaluation == null ? null : evaluation.getTotalMarks(),
-                evaluation == null ? null : evaluation.getFeedback()
+                evaluation == null ? null : evaluation.getFeedback(),
+                s.getScreenshots()
         );
     }
 
@@ -133,14 +135,14 @@ public class SubmissionService {
 
     private SubmissionView toView(Submission s) {
         return new SubmissionView(s.getId(), s.getStudent().getId(), s.getPractical().getId(), s.getLanguage(),
-                s.getCode(), s.getOutput(), s.getExecutionStatus(), s.getSubmittedAt());
+                s.getCode(), s.getOutput(), s.getExecutionStatus(), s.getScreenshots(), s.getSubmittedAt());
     }
 
     private String classSection(UserAccount student){return student.getCohort()==null||student.getDivision()==null?null:student.getCohort()+"-"+student.getDivision();}
 
-    public record SubmitRequest(Long practicalId, CodeLanguage language, String code, String output, String executionStatus, String conclusionText) {}
-    public record SubmissionView(Long id, Long studentId, Long practicalId, CodeLanguage language, String code, String output, String executionStatus, Instant submittedAt) {}
+    public record SubmitRequest(Long practicalId, CodeLanguage language, String code, String output, String executionStatus, String conclusionText, String screenshots) {}
+    public record SubmissionView(Long id, Long studentId, Long practicalId, CodeLanguage language, String code, String output, String executionStatus, String screenshots, Instant submittedAt) {}
     public record SubmissionListItem(Long id, Long studentId, String studentName, String studentEmail, String rollNo, String classSection, Long practicalId, String practicalTitle, CodeLanguage language, String executionStatus, Instant submittedAt, boolean evaluated, Integer totalMarks) {}
-    public record SubmissionDetail(SubmissionView submission, String studentName, String studentEmail, String rollNo, String classSection, String practicalTitle, String conclusionText, Long evaluationId, Integer codeMarks, Integer vivaMarks, Integer totalMarks, String feedback) {}
+    public record SubmissionDetail(SubmissionView submission, String studentName, String studentEmail, String rollNo, String classSection, String practicalTitle, String conclusionText, Long evaluationId, Integer codeMarks, Integer vivaMarks, Integer totalMarks, String feedback, String screenshots) {}
     public record StudentResult(Long submissionId, String practicalTitle, Integer marks, String feedback, Instant reviewedAt, String facultyName, Instant submittedAt) {}
 }

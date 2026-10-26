@@ -39,6 +39,9 @@ public class Submission {
     @Column(length = 8000)
     private String conclusionText;
 
+    @Column(columnDefinition = "TEXT")
+    private String screenshots;
+
     @Column(nullable = false)
     private Instant submittedAt = Instant.now();
 
@@ -58,6 +61,8 @@ public class Submission {
     public void setExecutionStatus(String executionStatus) { this.executionStatus = executionStatus; }
     public String getConclusionText() { return conclusionText; }
     public void setConclusionText(String conclusionText) { this.conclusionText = conclusionText; }
+    public String getScreenshots() { return screenshots; }
+    public void setScreenshots(String screenshots) { this.screenshots = screenshots; }
     public Instant getSubmittedAt() { return submittedAt; }
     public void setSubmittedAt(Instant submittedAt) { this.submittedAt = submittedAt; }
 }

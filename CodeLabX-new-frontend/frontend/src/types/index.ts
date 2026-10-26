@@ -57,6 +57,12 @@ export type Detail = Practical & {
   experimentNumber?: number | null;
   programmingLanguage?: string;
   sourcePdfName?: string;
+  department?: string;
+  objectives?: string[];
+  coPoMapping?: Array<{ co: string; po: string; pso: string; bloom: string }>;
+  observationTable?: Array<{ srNo: number; scanType: string; command: string; purpose: string }>;
+  result?: string;
+  learningOutcomes?: string[];
 };
 
 export type Progress = {
@@ -69,6 +75,7 @@ export type Progress = {
   conclusionText: string;
   draftCode: string;
   draftLanguage: string;
+  screenshots?: string[];
 };
 
 export const steps = [

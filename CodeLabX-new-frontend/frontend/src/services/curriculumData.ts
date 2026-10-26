@@ -736,10 +736,61 @@ export function getCurriculumSubjects(deptName: string, semester: number): Acade
         { code: "ETC-804", name: "Satellite & Deep Space Communications" },
       ],
     },
+    comps: {
+      1: [
+        { code: "FEC101", name: "Applied Mathematics - I" },
+        { code: "FEC102", name: "Applied Physics - I" },
+        { code: "FEC103", name: "Applied Chemistry - I" },
+        { code: "FEC104", name: "Engineering Mechanics & Programming in C" },
+      ],
+      2: [
+        { code: "FEC201", name: "Applied Mathematics - II" },
+        { code: "FEC202", name: "Applied Physics - II" },
+        { code: "FEC203", name: "Object Oriented Programming using Java" },
+        { code: "FEC204", name: "Basic Electrical & Electronics Engineering" },
+      ],
+      3: [
+        { code: "CSC301", name: "Engineering Mathematics - III" },
+        { code: "CSC302", name: "Discrete Structures & Graph Theory" },
+        { code: "CSC303", name: "Data Structures & Algorithms" },
+        { code: "CSC304", name: "Digital Logic & Computer Organization" },
+      ],
+      4: [
+        { code: "CSC401", name: "Engineering Mathematics - IV" },
+        { code: "CSC402", name: "Analysis of Algorithms" },
+        { code: "CSC403", name: "Database Management Systems" },
+        { code: "CSC404", name: "Operating System" },
+      ],
+      5: [
+        { code: "CSC501", name: "Automata Theory & Compiler Design" },
+        { code: "CSC502", name: "Computer Networks" },
+        { code: "CSC503", name: "Software Engineering & Agile Methodology" },
+        { code: "CSC504", name: "Web Programming" },
+      ],
+      6: [
+        { code: "CSC601", name: "Cryptography and Network Security" },
+        { code: "CSC602", name: "System Programming & Compiler Construction" },
+        { code: "CSC603", name: "Artificial Intelligence & Machine Learning" },
+        { code: "CSC604", name: "Mobile Application Development" },
+      ],
+      7: [
+        { code: "CSC701", name: "Machine Learning & Deep Learning" },
+        { code: "CSC702", name: "Big Data Analytics & Cloud Infrastructure" },
+        { code: "CSC703", name: "Blockchain Technology" },
+        { code: "CSC704", name: "Cyber Forensics & Information Assurance" },
+      ],
+      8: [
+        { code: "CSC801", name: "Distributed Systems & High-Performance Computing" },
+        { code: "CSC802", name: "Quantum Computing & Advanced Architectures" },
+        { code: "CSC803", name: "Internet of Things & Embedded Systems" },
+        { code: "CSC804", name: "Major Project / Capstone Laboratory" },
+      ],
+    },
   };
 
-  let key = "aids";
-  if (normDept.includes("intelligence") && normDept.includes("data")) key = "aids";
+  let key = "comps";
+  if (normDept.includes("computer") || normDept.includes("comps") || normDept === "cmpn") key = "comps";
+  else if (normDept.includes("intelligence") && normDept.includes("data")) key = "aids";
   else if (normDept.includes("machine") || normDept.includes("aiml")) key = "aiml";
   else if (normDept.includes("iot") || normDept.includes("internet of things")) key = "cse-iot";
   else if (normDept.includes("electronics") && normDept.includes("computer")) key = "encs";
@@ -894,6 +945,151 @@ function hashString(str: string): number {
   return hash;
 }
 
+export const EXPERIMENT_8_NMAP: Detail = {
+  id: 8,
+  title: "Demonstrate the use of NMAP with different options to scan open ports, perform OS fingerprinting, ping scan, TCP port scan and UDP port scan",
+  subject: "Cryptography and Network Security",
+  semester: 6,
+  experimentNumber: 8,
+  department: "Computer Engineering",
+  description: "Comprehensive Nmap network scanning experiment covering ping scan, TCP port scan, UDP port scan, and OS fingerprinting.",
+  status: "PUBLISHED",
+  updatedAt: "2026-10-26T10:00:00Z",
+  assignedCount: 68,
+  completedCount: 65,
+  progressPercent: 100,
+  progressStatus: "COMPLETED",
+  aim: "Demonstrate the use of NMAP with different options to scan open ports, perform OS fingerprinting, ping scan, TCP port scan and UDP port scan",
+  theory: `Nmap (Network Mapper) is a free and open-source network scanner created by Gordon Lyon (also known by his pseudonym Fyodor Vaskovich). Nmap is used to discover hosts and services on a computer network by sending packets and analyzing the responses.
+
+Nmap provides a number of features for probing computer networks, including host discovery and service and operating system detection. These features are extensible by scripts that provide more advanced service detection, vulnerability detection, and other features. Nmap can adapt to network conditions including latency and congestion during a scan.
+
+Nmap started as a Linux utility and was ported to other systems including Windows, macOS, and BSD. It is most popular on Linux, followed by Windows.
+
+Legal & Safety Note:
+Port scanning networks without prior mutual consent is strictly illegal under cyber laws (including the Indian IT Act 2000 Section 43/66). In this laboratory, all scans must be executed either against localhost (127.0.0.1), authorized TCET internal lab IP ranges (e.g., 192.168.1.10), or scanme.nmap.org (the official authorized testing server provided by the Nmap project).
+
+Nmap Scanning Options:
+• -sn: Ping Scan - disable port scan; only host discovery.
+• -p <port ranges>: Only scan specified ports.
+• -sT: TCP Connect() Scan - full 3-way handshake completion.
+• -sS: TCP SYN (Stealth / Half-open) Scan.
+• -sU: UDP Port Scan for UDP services (DNS, DHCP, SNMP).
+• -O: Enable OS Detection via TCP/IP stack fingerprinting.
+• -A: Aggressive Scan Options (OS detection, Version detection, Script scanning, Traceroute).
+• -v: Increase Verbosity Level.`,
+  algorithm: `Step 1: Perform Ping Scan (Host Discovery)
+Execute: nmap -sn 192.168.1.10
+Checks whether target host is responsive without sending port probes.
+
+Step 2: Perform TCP Connect Port Scan
+Execute: nmap -sT 192.168.1.10
+Establishes full TCP three-way handshake (SYN -> SYN-ACK -> ACK) to determine open ports.
+
+Step 3: Perform UDP Port Scan
+Execute: nmap -sU 192.168.1.10
+Sends UDP packets to target ports. If ICMP port unreachable error (type 3, code 3) is returned, port is closed.
+
+Step 4: Perform OS Fingerprinting
+Execute: nmap -O 192.168.1.10
+Sends a series of TCP and UDP packets to the remote host and analyzes every bit in the responses against Nmap's database.
+
+Step 5: Perform Aggressive Scan
+Execute: nmap -A 192.168.1.10
+Combines OS detection, service version detection, script scanning, and traceroute.
+
+Step 6: Capture Output Terminal Logs and Screenshots
+Record observed open ports, service versions, and OS fingerprint in the observation table.
+
+Step 7: Analyze Results and Conclude
+Analyze differences between TCP vs UDP port scans and determine security implications of exposed network services.`,
+  codeInstructions: "Execute the Nmap network scanning commands in your terminal and attach the output logs and verified terminal screenshots below.",
+  conclusion: "The Nmap tool was successfully used to perform different types of network scans. The experiment demonstrated how Ping Scan, TCP Scan, UDP Scan, port scanning, and OS fingerprinting can be performed using appropriate Nmap options. Through this experiment, different Nmap scanning techniques were demonstrated. The Ping Scan identified active hosts, TCP and UDP scans identified port states, and OS fingerprinting provided information about the probable operating system of the target.",
+  javaStarterCode: `// TCET Security Laboratory - Experiment 8: NMAP Network Scanning
+public class NmapSecurityLab {
+    public static void main(String[] args) {
+        String targetHost = "192.168.1.10";
+        System.out.println("=== TCET Network Security Lab - Experiment 8 ===");
+        System.out.println("Target Host: " + targetHost);
+        System.out.println("1. Ping Scan: nmap -sn " + targetHost);
+        System.out.println("2. TCP Scan:  nmap -sT " + targetHost);
+        System.out.println("3. UDP Scan:  nmap -sU " + targetHost);
+        System.out.println("4. OS Fingerprint: nmap -O " + targetHost);
+        System.out.println("5. Aggressive Scan: nmap -A " + targetHost);
+        System.out.println("Status: Terminal commands executed successfully.");
+    }
+}`,
+  pythonStarterCode: `# TCET Security Laboratory - Experiment 8: NMAP Network Scanning
+def main():
+    target = "192.168.1.10"
+    print("=== TCET Network Security Lab - Experiment 8: NMAP Network Scanning ===")
+    print(f"Target: {target}")
+    scans = [
+        ("Host Discovery (Ping)", f"nmap -sn {target}"),
+        ("TCP Connect Scan", f"nmap -sT {target}"),
+        ("UDP Port Scan", f"nmap -sU {target}"),
+        ("OS Fingerprinting", f"nmap -O {target}"),
+        ("Aggressive Scan", f"nmap -A -v {target}")
+    ]
+    for name, cmd in scans:
+        print(f"[*] {name}: {cmd}")
+    print("[+] Scans completed. Attach terminal screenshots below.")
+
+if __name__ == '__main__':
+    main()`,
+  programmingLanguage: "PYTHON",
+  practiceQuestions: [
+    {
+      id: 801,
+      question: "What is the primary difference between a TCP Connect scan (-sT) and a TCP SYN scan (-sS)?",
+      order: 1
+    },
+    {
+      id: 802,
+      question: "Explain why UDP port scanning (-sU) is generally much slower than TCP scanning.",
+      order: 2
+    },
+    {
+      id: 803,
+      question: "How does Nmap determine the operating system of a target machine during OS fingerprinting (-O)?",
+      order: 3
+    }
+  ],
+  vivaQuestions: [
+    {
+      id: 801,
+      question: "What are the three common port states reported by Nmap, and what does 'filtered' signify?",
+      marks: 2,
+      order: 1
+    },
+    {
+      id: 802,
+      question: "Under what legal circumstances is port scanning considered authorized, and what laws govern unauthorized scans in India?",
+      marks: 2,
+      order: 2
+    }
+  ],
+  objectives: [
+    "Understand the purpose and working of Nmap as a network exploration and security auditing tool.",
+    "Perform host discovery using Ping Scan to identify live hosts on a network.",
+    "Perform TCP port scanning to identify open, closed, and filtered TCP ports.",
+    "Perform UDP port scanning to identify active UDP services.",
+    "Perform OS fingerprinting to determine the probable operating system of a remote host.",
+    "Analyze Nmap scan outputs and understand their significance in network security and vulnerability assessment."
+  ],
+  result: "The Nmap tool was successfully used to perform different types of network scans. The experiment demonstrated how Ping Scan, TCP Scan, UDP Scan, port scanning, and OS fingerprinting can be performed using appropriate Nmap options.",
+  learningOutcomes: [
+    "Explain the purpose and functionality of Nmap.",
+    "Identify active hosts using Ping Scan.",
+    "Perform TCP and UDP port scans using appropriate Nmap options.",
+    "Interpret open, closed, and filtered port states.",
+    "Perform OS fingerprinting using the -O option.",
+    "Analyze Nmap scan results to identify network services.",
+    "Select appropriate Nmap scanning options for basic network security assessment.",
+    "Understand the importance of authorization and responsible use of network scanning tools."
+  ]
+};
+
 const practicalsCache = new Map<number, Detail>();
 
 export function cachePractical(p: Detail) {
@@ -901,6 +1097,9 @@ export function cachePractical(p: Detail) {
 }
 
 export function findDepartmentPracticalById(id: number): Detail | null {
+  if (id === 8 || id === 808) {
+    return EXPERIMENT_8_NMAP;
+  }
   if (practicalsCache.has(id)) {
     return practicalsCache.get(id)!;
   }

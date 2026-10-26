@@ -119,6 +119,25 @@ export function SubmissionReviewPage() {
           <pre>{s.code}</pre>
           <h3>Program output</h3>
           <pre>{s.output || "No output was recorded."}</pre>
+
+          {((s.screenshots && s.screenshots.length > 0) || (data.submission?.screenshots && data.submission?.screenshots.length > 0)) && (
+            <div style={{ marginTop: "20px" }}>
+              <h3>Execution & Output Screenshots ({((s.screenshots || data.submission?.screenshots) || []).length})</h3>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "14px", marginTop: "10px" }}>
+                {((s.screenshots || data.submission?.screenshots) || []).map((sc: string, idx: number) => (
+                  <div key={idx} style={{ border: "1px solid var(--line)", borderRadius: "8px", overflow: "hidden", background: "var(--panel)" }}>
+                    <a href={sc} target="_blank" rel="noreferrer" title="Click to view full image">
+                      <img src={sc} alt={`Output Screenshot ${idx + 1}`} style={{ width: "100%", maxHeight: "200px", objectFit: "cover", display: "block" }} />
+                    </a>
+                    <div style={{ padding: "8px 12px", fontSize: "12px", color: "var(--muted)", display: "flex", justifyContent: "space-between" }}>
+                      <b>Fig {idx + 1}: Execution Evidence</b>
+                      <a href={sc} target="_blank" rel="noreferrer" style={{ color: "var(--primary, #2563eb)", textDecoration: "none" }}>Open ↗</a>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </section>
         <aside className="review-side">
           <div className="rail-card">

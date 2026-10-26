@@ -3,9 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { api } from "../services/api";
 import { useAuth } from "../state/authStore";
 import type { Detail } from "../types";
-import { date, humanStatus, statusClass } from "../utils/formatters";
-import tcetCompHeader from "../assets/tcet-comp-header.png";
-import tcetItHeader from "../assets/tcet-it-header.png";
+import { humanStatus, statusClass } from "../utils/formatters";
+import { PracticalReportDocument } from "./PracticalReportDocument";
 import "./../styles/pages/submitted-status.css";
 
 export function SubmittedStatus({
@@ -46,10 +45,6 @@ export function SubmittedStatus({
   const handlePrint = () => {
     window.print();
   };
-
-  const codeMarks = result?.codeMarks ?? (result?.marks ? Math.max(0, result.marks - 3) : 9);
-  const vivaMarks = result?.vivaMarks ?? (result?.marks ? result.marks - codeMarks : 3);
-  const totalMarks = result?.marks ?? 12;
 
   return (
     <>
@@ -98,7 +93,7 @@ export function SubmittedStatus({
           <button className="button secondary" onClick={() => nav("/")}>
             ← Return to my practicals
           </button>
-          {status === "EVALUATED" && (
+          {(status === "EVALUATED" || status === "SUBMITTED") && (
             <button
               className="button primary"
               onClick={() => setShowPdfModal(true)}
@@ -110,7 +105,7 @@ export function SubmittedStatus({
                 color: "white",
               }}
             >
-              📄 Export Evaluation PDF
+              📄 Export 6-Page Practical PDF
             </button>
           )}
         </div>
@@ -188,278 +183,12 @@ export function SubmittedStatus({
               </div>
             </div>
 
-            {/* Official Laboratory Grade Sheet (Printable Target) */}
-            <div
-              id="evaluation-report"
-              style={{
-                padding: "36px 40px",
-                color: "#1e293b",
-                fontFamily: "var(--sans, system-ui, sans-serif)",
-                lineHeight: "1.6",
-                background: "#ffffff",
-              }}
-            >
-              {/* Official Department Header Banner */}
-              {(() => {
-                const dept = (user?.department || (practical as any)?.department || (practical as any)?.subject || "").toLowerCase();
-                const isIt = dept.includes("information technology") || dept.includes("it");
-                const isComp = dept.includes("computer") || dept.includes("comp") || (!isIt && true);
-
-                if (isIt) {
-                  return (
-                    <div style={{ textAlign: "center", marginBottom: "16px" }}>
-                      <img
-                        src={tcetItHeader}
-                        alt="Department of Information Technology - TCET"
-                        style={{ width: "100%", maxHeight: "95px", objectFit: "contain", display: "block" }}
-                      />
-                    </div>
-                  );
-                }
-
-                if (isComp) {
-                  return (
-                    <div style={{ textAlign: "center", marginBottom: "16px" }}>
-                      <img
-                        src={tcetCompHeader}
-                        alt="Department of Computer Engineering - TCET"
-                        style={{ width: "100%", maxHeight: "95px", objectFit: "contain", display: "block" }}
-                      />
-                    </div>
-                  );
-                }
-
-                return (
-                  <div
-                    style={{
-                      textAlign: "center",
-                      borderBottom: "2px solid #b91c1c",
-                      paddingBottom: "14px",
-                      marginBottom: "16px",
-                    }}
-                  >
-                    <h2 style={{ margin: "0 0 4px", fontSize: "18px", fontWeight: 800, color: "#991b1b" }}>
-                      THAKUR COLLEGE OF ENGINEERING & TECHNOLOGY
-                    </h2>
-                    <p style={{ margin: "0 0 4px", fontSize: "11px", color: "#475569" }}>
-                      (Autonomous Institute Affiliated to University of Mumbai · NAAC 'A' Grade · NBA Accredited)
-                    </p>
-                    <p style={{ margin: 0, fontSize: "13px", fontWeight: 700, color: "#1e293b" }}>
-                      DEPARTMENT OF {(user?.department || "ENGINEERING").toUpperCase()}
-                    </p>
-                  </div>
-                );
-              })()}
-
-              <div style={{ textAlign: "center", marginBottom: "18px" }}>
-                <div
-                  style={{
-                    display: "inline-block",
-                    padding: "4px 16px",
-                    background: "#fef2f2",
-                    border: "1.5px solid #b91c1c",
-                    borderRadius: "4px",
-                    fontWeight: 800,
-                    fontSize: "12px",
-                    color: "#991b1b",
-                    letterSpacing: "0.5px",
-                  }}
-                >
-                  CONTINUOUS LABORATORY EVALUATION GRADE SHEET (CBCGS-HME 2023)
-                </div>
-              </div>
-
-              {/* Student and Course Information Table */}
-              <table
-                style={{
-                  width: "100%",
-                  borderCollapse: "collapse",
-                  marginBottom: "18px",
-                  fontSize: "12px",
-                  border: "1.5px solid #1e293b",
-                }}
-              >
-                <tbody>
-                  <tr>
-                    <td style={{ padding: "6px 10px", border: "1px solid #1e293b", background: "#f8fafc", fontWeight: 700, width: "18%" }}>
-                      Student Name:
-                    </td>
-                    <td style={{ padding: "6px 10px", border: "1px solid #1e293b", width: "32%", fontWeight: 600 }}>
-                      {user?.name || "Student"}
-                    </td>
-                    <td style={{ padding: "6px 10px", border: "1px solid #1e293b", background: "#f8fafc", fontWeight: 700, width: "18%" }}>
-                      Roll No / Div:
-                    </td>
-                    <td style={{ padding: "6px 10px", border: "1px solid #1e293b", width: "32%", fontWeight: 600 }}>
-                      {user?.rollNo || "13"} (Div {user?.division || "B"})
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style={{ padding: "6px 10px", border: "1px solid #1e293b", background: "#f8fafc", fontWeight: 700 }}>
-                      College Email:
-                    </td>
-                    <td style={{ padding: "6px 10px", border: "1px solid #1e293b" }}>
-                      {user?.email || "student@tcetmumbai.in"}
-                    </td>
-                    <td style={{ padding: "6px 10px", border: "1px solid #1e293b", background: "#f8fafc", fontWeight: 700 }}>
-                      Academic Year:
-                    </td>
-                    <td style={{ padding: "6px 10px", border: "1px solid #1e293b" }}>
-                      2026–2027 (Sem {practical?.semester || 4})
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style={{ padding: "6px 10px", border: "1px solid #1e293b", background: "#f8fafc", fontWeight: 700 }}>
-                      Course / Subject:
-                    </td>
-                    <td style={{ padding: "6px 10px", border: "1px solid #1e293b", fontWeight: 600 }}>
-                      {practical?.subject || "Core Engineering Laboratory"}
-                    </td>
-                    <td style={{ padding: "6px 10px", border: "1px solid #1e293b", background: "#f8fafc", fontWeight: 700 }}>
-                      Experiment No:
-                    </td>
-                    <td style={{ padding: "6px 10px", border: "1px solid #1e293b", fontWeight: 600 }}>
-                      Exp {practical?.experimentNumber || 1}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-              {/* Experiment Aim & Objective */}
-              <div style={{ marginBottom: "16px" }}>
-                <b style={{ fontSize: "13px", color: "#1e293b", display: "block", marginBottom: "4px" }}>
-                  Experiment Title:
-                </b>
-                <div style={{ padding: "8px 12px", background: "#f8fafc", border: "1px solid #cbd5e1", borderRadius: "6px", fontWeight: 700, fontSize: "13px" }}>
-                  {title}
-                </div>
-              </div>
-
-              {practical?.aim && (
-                <div style={{ marginBottom: "16px" }}>
-                  <b style={{ fontSize: "13px", color: "#1e293b", display: "block", marginBottom: "4px" }}>
-                    Aim & Objective:
-                  </b>
-                  <p style={{ margin: 0, fontSize: "12px", color: "#334155", textAlign: "justify" }}>
-                    {practical.aim}
-                  </p>
-                </div>
-              )}
-
-              {/* Official TCET Faculty Rubrics Assessment Table (25 Marks) */}
-              <div style={{ marginBottom: "18px" }}>
-                <b style={{ fontSize: "13px", color: "#1e293b", display: "block", marginBottom: "8px" }}>
-                  Continuous Evaluation Rubrics & Marks Awarded:
-                </b>
-                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px", border: "1.5px solid #1e293b" }}>
-                  <thead>
-                    <tr style={{ background: "#f1f5f9" }}>
-                      <th style={{ padding: "6px 8px", border: "1px solid #1e293b", textAlign: "center", width: "8%" }}>Sr.</th>
-                      <th style={{ padding: "6px 12px", border: "1px solid #1e293b", textAlign: "left" }}>Assessment Parameter / Rubrics</th>
-                      <th style={{ padding: "6px 8px", border: "1px solid #1e293b", textAlign: "center", width: "16%" }}>Max Marks</th>
-                      <th style={{ padding: "6px 8px", border: "1px solid #1e293b", textAlign: "center", width: "18%" }}>Marks Awarded</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td style={{ padding: "6px 8px", border: "1px solid #1e293b", textAlign: "center" }}>1</td>
-                      <td style={{ padding: "6px 12px", border: "1px solid #1e293b" }}>
-                        <b>Laboratory Performance & Execution:</b> Algorithm Implementation, Code Correctness & Test Results
-                      </td>
-                      <td style={{ padding: "6px 8px", border: "1px solid #1e293b", textAlign: "center" }}>10</td>
-                      <td style={{ padding: "6px 8px", border: "1px solid #1e293b", textAlign: "center", fontWeight: 700, color: "#15803d" }}>
-                        {codeMarks}
-                      </td>
-                    </tr>
-                    <tr>
-                      <td style={{ padding: "6px 8px", border: "1px solid #1e293b", textAlign: "center" }}>2</td>
-                      <td style={{ padding: "6px 12px", border: "1px solid #1e293b" }}>
-                        <b>Documentation & Write-Up:</b> Aim, Theory, Procedural Steps & Output Verification
-                      </td>
-                      <td style={{ padding: "6px 8px", border: "1px solid #1e293b", textAlign: "center" }}>05</td>
-                      <td style={{ padding: "6px 8px", border: "1px solid #1e293b", textAlign: "center", fontWeight: 700, color: "#15803d" }}>
-                        5
-                      </td>
-                    </tr>
-                    <tr>
-                      <td style={{ padding: "6px 8px", border: "1px solid #1e293b", textAlign: "center" }}>3</td>
-                      <td style={{ padding: "6px 12px", border: "1px solid #1e293b" }}>
-                        <b>Viva-Voce Examination:</b> Conceptual Clarity & Understanding of Core Principles
-                      </td>
-                      <td style={{ padding: "6px 8px", border: "1px solid #1e293b", textAlign: "center" }}>05</td>
-                      <td style={{ padding: "6px 8px", border: "1px solid #1e293b", textAlign: "center", fontWeight: 700, color: "#15803d" }}>
-                        {vivaMarks}
-                      </td>
-                    </tr>
-                    <tr>
-                      <td style={{ padding: "6px 8px", border: "1px solid #1e293b", textAlign: "center" }}>4</td>
-                      <td style={{ padding: "6px 12px", border: "1px solid #1e293b" }}>
-                        <b>Timely Submission & Professional Ethics</b>
-                      </td>
-                      <td style={{ padding: "6px 8px", border: "1px solid #1e293b", textAlign: "center" }}>05</td>
-                      <td style={{ padding: "6px 8px", border: "1px solid #1e293b", textAlign: "center", fontWeight: 700, color: "#15803d" }}>
-                        5
-                      </td>
-                    </tr>
-                    <tr style={{ background: "#fef2f2", fontWeight: 800 }}>
-                      <td style={{ padding: "8px", border: "1px solid #1e293b", textAlign: "center" }}>—</td>
-                      <td style={{ padding: "8px 12px", border: "1px solid #1e293b", color: "#991b1b" }}>
-                        TOTAL CONTINUOUS ASSESSMENT MARKS AWARDED
-                      </td>
-                      <td style={{ padding: "8px", border: "1px solid #1e293b", textAlign: "center" }}>25</td>
-                      <td style={{ padding: "8px", border: "1px solid #1e293b", textAlign: "center", fontSize: "15px", color: "#991b1b" }}>
-                        {Math.min(25, Number(totalMarks) + 10)} / 25
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Faculty Feedback Box */}
-              <div
-                style={{
-                  padding: "12px 16px",
-                  background: "#f0fdf4",
-                  border: "1px solid #bbf7d0",
-                  borderRadius: "6px",
-                  marginBottom: "28px",
-                }}
-              >
-                <b style={{ color: "#166534", fontSize: "13px" }}>Faculty Evaluation Feedback:</b>
-                <p style={{ margin: "4px 0 0", fontSize: "13px", color: "#14532d" }}>
-                  {result?.feedback || "Code logic is properly structured and successfully tested with optimal complexity."}
-                </p>
-              </div>
-
-              {/* Signatures Footer */}
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  marginTop: "40px",
-                  paddingTop: "20px",
-                  borderTop: "1px dashed #cbd5e1",
-                }}
-              >
-                <div style={{ textAlign: "center", width: "200px" }}>
-                  <div style={{ height: "40px" }} />
-                  <div style={{ borderTop: "1px solid #475569", paddingTop: "4px", fontSize: "12px", fontWeight: 600 }}>
-                    Student Signature
-                  </div>
-                </div>
-
-                <div style={{ textAlign: "center", width: "240px" }}>
-                  <b style={{ fontSize: "13px", color: "#1e293b", display: "block" }}>
-                    {result?.facultyName || "Prof. Samir Sawant"}
-                  </b>
-                  <div style={{ borderTop: "1px solid #475569", paddingTop: "4px", fontSize: "12px", fontWeight: 600 }}>
-                    Faculty In-Charge / Examiner
-                  </div>
-                  <small style={{ fontSize: "11px", color: "#64748b" }}>
-                    Date: {date(result?.reviewedAt || new Date().toISOString())}
-                  </small>
-                </div>
-              </div>
-            </div>
+            {/* Official 6-Page Laboratory Journal / Evaluation Document */}
+            <PracticalReportDocument
+              practical={practical}
+              result={result}
+              user={user}
+            />
           </div>
         </div>
       )}

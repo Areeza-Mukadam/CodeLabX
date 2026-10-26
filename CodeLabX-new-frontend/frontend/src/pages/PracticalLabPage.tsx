@@ -108,7 +108,9 @@ export function PracticalLabPage() {
     [terminal, setTerminal] = useState(""),
     [runState, setRunState] = useState(""),
     [busy, setBusy] = useState(false),
-    [flash, setFlash] = useState("");
+    [flash, setFlash] = useState(""),
+    [screenshots, setScreenshots] = useState<string[]>([]);
+
   useEffect(() => {
     if (prog.data && p) {
       const initialLanguage = p.semester === 5 ? "PYTHON" : "JAVA";
@@ -119,10 +121,55 @@ export function PracticalLabPage() {
       const isFullSolution = draft && (draft === p.javaStarterCode || draft === p.pythonStarterCode);
       setCode(!draft || isFullSolution ? starterForLanguage(initialLanguage, p) : draft);
       setConclusion(prog.data.conclusionText || "");
+      if (prog.data.screenshots && prog.data.screenshots.length > 0) {
+        setScreenshots(prog.data.screenshots);
+      } else {
+        try {
+          const cached = localStorage.getItem(`codelabx.screenshots.${id}`);
+          if (cached) setScreenshots(JSON.parse(cached));
+        } catch {}
+      }
     }
-  }, [prog.data, p]);
+  }, [prog.data, p, id]);
+
+  // Global paste handler to paste screenshot images directly from clipboard (Ctrl+V)
+  useEffect(() => {
+    const handlePaste = (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].type.indexOf("image") !== -1) {
+          const blob = items[i].getAsFile();
+          if (blob) {
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+              const res = ev.target?.result as string;
+              if (res) {
+                setScreenshots((prev) => {
+                  const updated = [...prev, res];
+                  try {
+                    localStorage.setItem(`codelabx.screenshots.${id}`, JSON.stringify(updated));
+                  } catch {}
+                  return updated;
+                });
+                setFlash("📸 Screenshot pasted from clipboard!");
+                setTimeout(() => setFlash(""), 2500);
+              }
+            };
+            reader.readAsDataURL(blob);
+          }
+        }
+      }
+    };
+    window.addEventListener("paste", handlePaste);
+    return () => window.removeEventListener("paste", handlePaste);
+  }, [id]);
+
   useEffect(() => {
     if (!prog.data) return;
+    try {
+      localStorage.setItem(`codelabx.screenshots.${id}`, JSON.stringify(screenshots));
+    } catch {}
     const timer = window.setTimeout(
       () =>
         api(`/practicals/${id}/progress`, {
@@ -132,12 +179,13 @@ export function PracticalLabPage() {
             draftLanguage: language,
             conclusionText: conclusion,
             practiceAnswers: answers,
+            screenshots,
           }),
         }).catch(() => {}),
       550,
     );
     return () => window.clearTimeout(timer);
-  }, [prog.data, code, language, conclusion, answers]);
+  }, [prog.data, code, language, conclusion, answers, screenshots, id]);
   if (loading || prog.loading) return <Loading />;
   if (error || prog.error)
     return (
@@ -158,10 +206,37 @@ export function PracticalLabPage() {
     const k = steps.findIndex((x) => x[0] === key);
     if (k <= idx || completed.includes(steps[k - 1]?.[0])) setStep(key);
   };
+  const handleScreenshotFile = (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    Array.from(files).forEach((file) => {
+      if (!file.type.startsWith("image/")) {
+        setFlash("Please upload image files (PNG, JPG, WebP) only.");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const res = ev.target?.result as string;
+        if (res) {
+          setScreenshots((prev) => {
+            const updated = [...prev, res];
+            try {
+              localStorage.setItem(`codelabx.screenshots.${id}`, JSON.stringify(updated));
+            } catch {}
+            return updated;
+          });
+          setFlash("📸 Screenshot attached!");
+          setTimeout(() => setFlash(""), 2500);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
   const save = async (nextStep: string) => {
     try {
       const request: any = {
         step,
+        screenshots,
         ...(step === "PRACTICE" ? { practiceAnswers: answers } : {}),
         ...(step === "CONCLUSION" ? { conclusionText: conclusion } : {}),
         ...(step === "CODE"
@@ -224,6 +299,7 @@ export function PracticalLabPage() {
         body: JSON.stringify({
           step: "CONCLUSION",
           conclusionText: conclusion,
+          screenshots,
         }),
       });
       prog.setData(completed);
@@ -236,6 +312,7 @@ export function PracticalLabPage() {
           output: terminal,
           executionStatus: runState,
           conclusionText: conclusion,
+          screenshots,
         }),
       });
       setFlash("Practical submitted successfully");
@@ -256,6 +333,161 @@ export function PracticalLabPage() {
       }),
     }).catch(() => {});
   };
+
+  const renderScreenshotEvidenceWidget = () => (
+    <div
+      style={{
+        marginTop: "1.25rem",
+        padding: "1rem 1.25rem",
+        borderRadius: "8px",
+        background: "var(--color-surface, #1e293b)",
+        border: "1px solid var(--color-border, #334155)",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: "0.5rem",
+          marginBottom: "0.75rem",
+        }}
+      >
+        <div>
+          <b style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.95rem" }}>
+            📸 Terminal Execution Screenshots & Evidence
+            <span
+              style={{
+                fontSize: "0.75rem",
+                padding: "2px 8px",
+                borderRadius: "12px",
+                background: "rgba(59, 130, 246, 0.15)",
+                color: "#60a5fa",
+                fontWeight: 600,
+              }}
+            >
+              {screenshots.length} attached
+            </span>
+          </b>
+          <p style={{ margin: "4px 0 0", fontSize: "0.8rem", color: "#94a3b8" }}>
+            Press <code>Ctrl + V</code> anywhere to paste screenshot from clipboard, or click Upload. These will be rendered in your 6-page practical journal PDF!
+          </p>
+        </div>
+        <label
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "0.4rem",
+            padding: "6px 14px",
+            borderRadius: "6px",
+            background: "#2563eb",
+            color: "#ffffff",
+            fontSize: "0.82rem",
+            cursor: "pointer",
+            fontWeight: 600,
+          }}
+        >
+          📷 Upload Screenshot
+          <input
+            type="file"
+            accept="image/*"
+            multiple
+            style={{ display: "none" }}
+            onChange={(e) => handleScreenshotFile(e.target.files)}
+          />
+        </label>
+      </div>
+
+      {screenshots.length === 0 ? (
+        <div
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={(e) => {
+            e.preventDefault();
+            handleScreenshotFile(e.dataTransfer.files);
+          }}
+          style={{
+            border: "2px dashed #475569",
+            borderRadius: "6px",
+            padding: "1.25rem",
+            textAlign: "center",
+            color: "#94a3b8",
+            fontSize: "0.82rem",
+            background: "rgba(0,0,0,0.15)",
+          }}
+        >
+          Drag & drop terminal output screenshot here, or copy image and press <b>Ctrl + V</b>
+        </div>
+      ) : (
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(170px, 1fr))",
+            gap: "0.75rem",
+            marginTop: "0.5rem",
+          }}
+        >
+          {screenshots.map((src, sIdx) => (
+            <div
+              key={sIdx}
+              style={{
+                position: "relative",
+                borderRadius: "6px",
+                overflow: "hidden",
+                border: "1px solid #475569",
+                background: "#0f172a",
+              }}
+            >
+              <img
+                src={src}
+                alt={`Evidence ${sIdx + 1}`}
+                style={{ width: "100%", height: "105px", objectFit: "cover", display: "block", cursor: "pointer" }}
+                onClick={() => window.open(src, "_blank")}
+                title="Click to view full image"
+              />
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  padding: "4px 8px",
+                  fontSize: "0.72rem",
+                  background: "rgba(15, 23, 42, 0.95)",
+                  color: "#e2e8f0",
+                }}
+              >
+                <span>Figure {sIdx + 1}</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setScreenshots((prev) => {
+                      const updated = prev.filter((_, i) => i !== sIdx);
+                      try {
+                        localStorage.setItem(`codelabx.screenshots.${id}`, JSON.stringify(updated));
+                      } catch {}
+                      return updated;
+                    });
+                  }}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "#ef4444",
+                    cursor: "pointer",
+                    fontSize: "0.85rem",
+                    fontWeight: 700,
+                  }}
+                  title="Remove screenshot"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
   const current = steps[idx];
   return (
     <div className="lab-page">
@@ -455,6 +687,7 @@ export function PracticalLabPage() {
                       {terminal || "Run your program to see output here."}
                     </pre>
                   </div>
+                  {renderScreenshotEvidenceWidget()}
                 </div>
               </>
             )}
@@ -474,6 +707,7 @@ export function PracticalLabPage() {
                 <span className="muted small">
                   {conclusion.trim().length} / 40 minimum characters
                 </span>
+                {renderScreenshotEvidenceWidget()}
               </>
             )}
           </div>
