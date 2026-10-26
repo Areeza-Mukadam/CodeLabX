@@ -71,16 +71,11 @@ public class PracticalService {
     public List<PracticalSummary> listAssignedToStudent(UserAccount student, Integer semester) {
         var direct = assignments.findByStudentId(student.getId()).stream().map(PracticalAssignment::getPractical).toList();
         var classWide = classSection(student) == null ? List.<Practical>of() : assignments.findByClassSection(classSection(student)).stream()
-                .filter(a -> a.getClassDepartment() == null || Objects.equals(a.getClassDepartment(), student.getDepartment()))
-                .map(PracticalAssignment::getPractical).toList();
-        var publishedAll = practicals.findAll().stream()
-                .filter(p -> p.getStatus() == PracticalStatus.PUBLISHED)
-                .toList();
+                .filter(a -> assignmentMatchesStudent(a, student)).map(PracticalAssignment::getPractical).toList();
 
-        return java.util.stream.Stream.concat(
-                    java.util.stream.Stream.concat(direct.stream(), classWide.stream()),
-                    publishedAll.stream()
-                ).distinct()
+        return java.util.stream.Stream.concat(direct.stream(), classWide.stream()).distinct()
+                .filter(p -> p.getCreatedBy() == null || p.getCreatedBy().getDepartment() == null
+                        || Objects.equals(p.getCreatedBy().getDepartment(), student.getDepartment()))
                 .filter(p -> p.getStatus() == PracticalStatus.PUBLISHED)
                 .filter(p -> semester == null || Objects.equals(p.getSemester(), semester))
                 .map(p -> {
@@ -157,6 +152,9 @@ public class PracticalService {
     @Transactional
     public void assign(Long practicalId, List<Long> studentIds, UserAccount teacher) {
         Practical practical = owned(practicalId, teacher);
+        if (teacher.getRole() != Role.ADMIN && (teacher.getDepartment() == null || teacher.getDepartment().isBlank())) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "Your faculty account must have a department before assigning practicals.");
+        }
         if (studentIds == null) {
             return;
         }
@@ -183,6 +181,13 @@ public class PracticalService {
         if (practical.getStatus() != PracticalStatus.PUBLISHED) {
             throw new ApiException(HttpStatus.FORBIDDEN, "This practical is not available.");
         }
+        boolean assigned = assignments.findByPracticalIdAndStudentId(id, student.getId()).isPresent()
+                || (classSection(student) != null && assignments.findByPracticalIdAndClassSection(id, classSection(student)).stream()
+                    .anyMatch(a -> assignmentMatchesStudent(a, student)));
+        if (!assigned || (practical.getCreatedBy() != null && practical.getCreatedBy().getDepartment() != null
+                && !Objects.equals(practical.getCreatedBy().getDepartment(), student.getDepartment()))) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "This practical is not assigned to your class.");
+        }
         return practical;
     }
 
@@ -191,12 +196,17 @@ public class PracticalService {
     }
 
     public List<UserAccount> students(UserAccount teacher) {
-        List<UserAccount> all = users.findByRole(Role.STUDENT);
-        if (teacher == null || teacher.getDepartment() == null) {
-            return all;
-        }
-        List<UserAccount> matching = all.stream().filter(s -> Objects.equals(teacher.getDepartment(), s.getDepartment())).toList();
-        return matching.isEmpty() ? all : matching;
+        if (teacher == null || teacher.getDepartment() == null || teacher.getDepartment().isBlank()) return List.of();
+        return users.findByRole(Role.STUDENT).stream()
+                .filter(s -> Objects.equals(teacher.getDepartment(), s.getDepartment())).toList();
+    }
+
+    private boolean assignmentMatchesStudent(PracticalAssignment assignment, UserAccount student) {
+        if (!Objects.equals(assignment.getClassSection(), classSection(student))) return false;
+        if (assignment.getClassDepartment() != null) return Objects.equals(assignment.getClassDepartment(), student.getDepartment());
+        Practical practical = assignment.getPractical();
+        return practical.getCreatedBy() == null || practical.getCreatedBy().getDepartment() == null
+                || Objects.equals(practical.getCreatedBy().getDepartment(), student.getDepartment());
     }
 
     private void apply(Practical practical, PracticalUpsertRequest request) {
@@ -292,6 +302,9 @@ public class PracticalService {
         if (classSection == null || classSection.isBlank()) throw new ApiException(HttpStatus.BAD_REQUEST, "Class is required.");
         String normalizedSection = classSection.trim();
         Practical practical = owned(practicalId, teacher);
+        if (teacher.getRole() != Role.ADMIN && (teacher.getDepartment() == null || teacher.getDepartment().isBlank())) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "Your faculty account must have a department before assigning practicals.");
+        }
         if (practical.getStatus() != PracticalStatus.PUBLISHED) {
             practical.setStatus(PracticalStatus.PUBLISHED);
             practicals.save(practical);
@@ -303,6 +316,11 @@ public class PracticalService {
         if (teacher.getRole() != Role.ADMIN && teacher.getDepartment() != null && !teacher.getDepartment().isBlank()) {
             normalizedDepartment = teacher.getDepartment().trim();
         }
+        final String targetDepartment = normalizedDepartment;
+        boolean classExists = users.findByRole(Role.STUDENT).stream().anyMatch(student ->
+                Objects.equals(targetDepartment, student.getDepartment())
+                        && Objects.equals(normalizedSection, classSection(student)));
+        if (!classExists) throw new ApiException(HttpStatus.BAD_REQUEST, "That class has no students in the selected department.");
         var existing = assignments.findByPracticalIdAndClassSectionAndClassDepartment(practicalId, normalizedSection, normalizedDepartment);
         PracticalAssignment assignment = existing.orElseGet(PracticalAssignment::new);
         assignment.setPractical(practical);
@@ -325,9 +343,6 @@ public class PracticalService {
             return practicals.save(practical);
         }
         if (!practical.getCreatedBy().getId().equals(teacher.getId())) {
-            if (teacher.getDepartment() == null || practical.getCreatedBy().getDepartment() == null || Objects.equals(teacher.getDepartment(), practical.getCreatedBy().getDepartment())) {
-                return practical;
-            }
             throw new ApiException(HttpStatus.FORBIDDEN, "You cannot manage another department's practical.");
         }
         return practical;

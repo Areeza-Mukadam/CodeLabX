@@ -39,40 +39,6 @@ const roleDetails: Record<
   },
 };
 
-const studentPresets = [
-  {
-    label: "Inzamam Khan (TE-B · Roll 13)",
-    email: "inzamam.khan.te.b@tcetmumbai.in",
-    division: "TE-B",
-  },
-  {
-    label: "Areeza Mukadam (SE-B)",
-    email: "student@tcetmumbai.in",
-    division: "SE-B",
-  },
-  {
-    label: "Sagar Mishra (TE-A)",
-    email: "student2@tcetmumbai.in",
-    division: "TE-A",
-  },
-];
-
-const facultyPresets = [
-  {
-    label: "Prof. Samir Sawant (CMPN)",
-    email: "teacher@tcetmumbai.in",
-    division: "CMPN",
-  },
-];
-
-const adminPresets = [
-  {
-    label: "CodeLabX Administrator",
-    email: "admin@tcetmumbai.in",
-    division: "Admin",
-  },
-];
-
 const DEPARTMENT_LIST = [
   "Computer Engineering",
   "Information Technology",
@@ -444,80 +410,6 @@ export function LoginPage() {
                 <span>→</span>
               </button>
 
-              {role === "student" && (
-                <div className="demo-box">
-                  <div className="demo-box-header">
-                    <b>Select a student demo account:</b>
-                  </div>
-                  <div className="preset-chip-list">
-                    {studentPresets.map((preset) => (
-                      <button
-                        type="button"
-                        key={preset.email}
-                        className={`preset-chip ${email === preset.email ? "active" : ""}`}
-                        onClick={() => {
-                          setEmail(preset.email);
-                          setPassword("CodeLabX123!");
-                          performLogin(preset.email, "CodeLabX123!");
-                        }}
-                      >
-                        <span>{preset.label}</span>
-                        <small>{preset.division}</small>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {role === "faculty" && (
-                <div className="demo-box">
-                  <div className="demo-box-header">
-                    <b>Select a faculty demo account:</b>
-                  </div>
-                  <div className="preset-chip-list">
-                    {facultyPresets.map((preset) => (
-                      <button
-                        type="button"
-                        key={preset.email}
-                        className={`preset-chip ${email === preset.email ? "active" : ""}`}
-                        onClick={() => {
-                          setEmail(preset.email);
-                          setPassword("CodeLabX123!");
-                          performLogin(preset.email, "CodeLabX123!");
-                        }}
-                      >
-                        <span>{preset.label}</span>
-                        <small>{preset.division}</small>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {role === "admin" && (
-                <div className="demo-box">
-                  <div className="demo-box-header">
-                    <b>Select an administrator demo account:</b>
-                  </div>
-                  <div className="preset-chip-list">
-                    {adminPresets.map((preset) => (
-                      <button
-                        type="button"
-                        key={preset.email}
-                        className={`preset-chip ${email === preset.email ? "active" : ""}`}
-                        onClick={() => {
-                          setEmail(preset.email);
-                          setPassword("CodeLabX123!");
-                          performLogin(preset.email, "CodeLabX123!");
-                        }}
-                      >
-                        <span>{preset.label}</span>
-                        <small>{preset.division}</small>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
             </form>
           </>
         ) : (

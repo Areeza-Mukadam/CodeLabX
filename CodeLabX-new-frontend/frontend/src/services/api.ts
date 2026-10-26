@@ -227,10 +227,11 @@ function getMockResponse<T>(path: string, init: RequestInit = {}): T | null {
 
   // /practicals/students
   if (cleanPath === "/practicals/students") {
+    const department = useAuth.getState().user?.department;
     const students = Array.from(
       new Map(
         Object.values(DEMO_USERS)
-          .filter((u) => u.role === "STUDENT")
+          .filter((u) => u.role === "STUDENT" && u.department === department)
           .map((u) => [u.id, u]),
       ).values(),
     );
@@ -344,7 +345,10 @@ function getMockResponse<T>(path: string, init: RequestInit = {}): T | null {
 
   // /teacher/classes
   if (cleanPath === "/teacher/classes") {
-    return ["SE-A", "SE-B", "TE-A", "TE-B"] as T;
+    const department = useAuth.getState().user?.department;
+    return [...new Set(Object.values(DEMO_USERS)
+      .filter((u) => u.role === "STUDENT" && u.department === department)
+      .map((u) => u.classSection).filter(Boolean))].sort() as T;
   }
 
   // /teacher/students
@@ -353,7 +357,7 @@ function getMockResponse<T>(path: string, init: RequestInit = {}): T | null {
     const students = Array.from(
       new Map(
         Object.values(DEMO_USERS)
-          .filter((u) => u.role === "STUDENT")
+          .filter((u) => u.role === "STUDENT" && u.department === useAuth.getState().user?.department)
           .map((u) => [u.id, u]),
       ).values(),
     );
