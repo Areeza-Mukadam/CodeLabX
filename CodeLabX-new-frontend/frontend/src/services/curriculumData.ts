@@ -473,16 +473,7 @@ const CURRICULUM_CATALOG: Record<string, Record<number, DeptSubjectDef[]>> = {
 export function getCurriculumSubjects(deptName: string, semester: number): AcademicSubject[] {
   const normDept = deptName.toLowerCase();
   
-  // Custom definitions for IT
-  if (normDept.includes("information technology") || normDept === "it") {
-    if (CURRICULUM_CATALOG["information-technology"]?.[semester]) {
-      return CURRICULUM_CATALOG["information-technology"][semester].map((s) => ({
-        code: s.code,
-        name: s.name,
-        semester,
-      }));
-    }
-  }
+  // Authentic department subjects resolved via subjectPresets (COMPS & IT)
 
   // Authentic subject generator by department
   const subjectPresets: Record<string, Record<number, Array<{ code: string; name: string }>>> = {
@@ -738,58 +729,126 @@ export function getCurriculumSubjects(deptName: string, semester: number): Acade
     },
     comps: {
       1: [
-        { code: "FEC101", name: "Applied Mathematics - I" },
-        { code: "FEC102", name: "Applied Physics - I" },
-        { code: "FEC103", name: "Applied Chemistry - I" },
-        { code: "FEC104", name: "Engineering Mechanics & Programming in C" },
+        { code: "FEC101", name: "Physics" },
+        { code: "FEC102", name: "Basic Electrical Engineering" },
+        { code: "FEC103", name: "Engineering Graphics & Design" },
+        { code: "FEC104", name: "Workshop & Manufacturing Practices-I" },
+        { code: "FEC105", name: "English for General & Professional Communication" },
       ],
       2: [
-        { code: "FEC201", name: "Applied Mathematics - II" },
-        { code: "FEC202", name: "Applied Physics - II" },
-        { code: "FEC203", name: "Object Oriented Programming using Java" },
-        { code: "FEC204", name: "Basic Electrical & Electronics Engineering" },
+        { code: "FEC201", name: "Chemistry" },
+        { code: "FEC202", name: "Programming for Problem-Solving" },
+        { code: "FEC203", name: "Engineering Mechanics" },
+        { code: "FEC204", name: "Workshop & Manufacturing Practices-II" },
+        { code: "FEC205", name: "Introduction to Indian Knowledge System" },
+        { code: "FEC206", name: "Professional Skills-I (Object Oriented Programming)" },
       ],
       3: [
-        { code: "CSC301", name: "Engineering Mathematics - III" },
-        { code: "CSC302", name: "Discrete Structures & Graph Theory" },
-        { code: "CSC303", name: "Data Structures & Algorithms" },
-        { code: "CSC304", name: "Digital Logic & Computer Organization" },
+        { code: "CSC301", name: "Digital Logic Design & Computer Architecture" },
+        { code: "CSC302", name: "Database Management System (DBMS)" },
+        { code: "CSC303", name: "Data Structure using Java" },
+        { code: "CSC304", name: "Professional Skills-II (Cloud Infrastructure Analysis-I)" },
+        { code: "CSC305", name: "Industry Practice-I (HTML/CSS)" },
       ],
       4: [
-        { code: "CSC401", name: "Engineering Mathematics - IV" },
-        { code: "CSC402", name: "Analysis of Algorithms" },
-        { code: "CSC403", name: "Database Management Systems" },
-        { code: "CSC404", name: "Operating System" },
+        { code: "CSC401", name: "Design and Analysis of Algorithm using Python" },
+        { code: "CSC402", name: "Operating System" },
+        { code: "CSC403", name: "Computer Networks" },
+        { code: "CSC404", name: "Professional Skills-III (Cloud Infrastructure Analysis-II)" },
+        { code: "CSC405", name: "Industry Practice-II (JavaScript/React)" },
+        { code: "CSC406", name: "Activity Based Learning" },
       ],
       5: [
-        { code: "CSC501", name: "Automata Theory & Compiler Design" },
-        { code: "CSC502", name: "Computer Networks" },
-        { code: "CSC503", name: "Software Engineering & Agile Methodology" },
-        { code: "CSC504", name: "Web Programming" },
+        { code: "CSC501", name: "Computer Graphics" },
+        { code: "CSC502", name: "Introduction to Intelligent Systems" },
+        { code: "CSC503", name: "Microprocessor" },
+        { code: "CSC504", name: "Professional Skills-IV (Cloud Architecture-I)" },
+        { code: "CSC505", name: "Industry Practice-III (Node/Express/JSON/MongoDB)" },
+        { code: "CSC506", name: "Project Based Learning (Mini-Project)" },
       ],
       6: [
-        { code: "CSC601", name: "Cryptography and Network Security" },
-        { code: "CSC602", name: "System Programming & Compiler Construction" },
-        { code: "CSC603", name: "Artificial Intelligence & Machine Learning" },
-        { code: "CSC604", name: "Mobile Application Development" },
+        { code: "CSC601", name: "System Programming & Compiler Construction" },
+        { code: "CSC602", name: "Software Engineering" },
+        { code: "CSC603", name: "Professional Skills-V (Cloud Architecture-II)" },
+        { code: "CSC604", name: "Industry Practice-IV (JavaScript OOP / Linear Data Structure & Algorithms)" },
+        { code: "CSC605", name: "Research Based Learning (Minor-Project)" },
       ],
       7: [
-        { code: "CSC701", name: "Machine Learning & Deep Learning" },
-        { code: "CSC702", name: "Big Data Analytics & Cloud Infrastructure" },
-        { code: "CSC703", name: "Blockchain Technology" },
-        { code: "CSC704", name: "Cyber Forensics & Information Assurance" },
+        { code: "CSC701", name: "Data Warehousing and Mining" },
+        { code: "CSC702", name: "Cryptography and System Security" },
+        { code: "CSC703", name: "Professional Elective-II" },
+        { code: "CSC704", name: "Project-I" },
+        { code: "CSC705", name: "Industry Certification-I" },
       ],
       8: [
-        { code: "CSC801", name: "Distributed Systems & High-Performance Computing" },
-        { code: "CSC802", name: "Quantum Computing & Advanced Architectures" },
-        { code: "CSC803", name: "Internet of Things & Embedded Systems" },
-        { code: "CSC804", name: "Major Project / Capstone Laboratory" },
+        { code: "CSC801", name: "Professional Elective-IV" },
+        { code: "CSC802", name: "Project-II" },
+        { code: "CSC803", name: "Industry Certification-II" },
+        { code: "CSC804", name: "Industry-oriented Professional Internship" },
+      ],
+    },
+    it: {
+      1: [
+        { code: "ITC101", name: "Physics" },
+        { code: "ITC102", name: "Basic Electrical Engineering" },
+        { code: "ITC103", name: "Engineering Graphics & Design" },
+        { code: "ITC104", name: "Workshop & Manufacturing Practices-I" },
+        { code: "ITC105", name: "English for General & Professional Communication" },
+      ],
+      2: [
+        { code: "ITC201", name: "Chemistry" },
+        { code: "ITC202", name: "Programming for Problem-Solving" },
+        { code: "ITC203", name: "Engineering Mechanics" },
+        { code: "ITC204", name: "Workshop & Manufacturing Practices-II" },
+        { code: "ITC205", name: "Introduction to Indian Knowledge System" },
+        { code: "ITC206", name: "Professional Skills-I (Object Oriented Programming)" },
+      ],
+      3: [
+        { code: "ITC301", name: "Digital Circuit Design" },
+        { code: "ITC302", name: "Database Management Systems (DBMS)" },
+        { code: "ITC303", name: "Data Structures" },
+        { code: "ITC304", name: "Industry Practice-I (Java and Web Foundations)" },
+        { code: "ITC305", name: "Professional Skills-II (Cloud Infrastructure Analysis-I)" },
+        { code: "ITC306", name: "AI/technology tools practicals" },
+      ],
+      4: [
+        { code: "ITC401", name: "Computer Networks" },
+        { code: "ITC402", name: "Operating Systems" },
+        { code: "ITC403", name: "Industry Practice-II" },
+        { code: "ITC404", name: "Professional Skills-III" },
+        { code: "ITC405", name: "Summer Internship" },
+      ],
+      5: [
+        { code: "ITC501", name: "Operating System" },
+        { code: "ITC502", name: "Web Programming" },
+        { code: "ITC503", name: "Cryptography & Network Security" },
+        { code: "ITC504", name: "Advance Internet Technology" },
+        { code: "ITC505", name: "Professional Skills-IV (Full Stack Development I — Basic)" },
+        { code: "ITC506", name: "Industry Practice-III (Full Stack Development I — Advanced)" },
+      ],
+      6: [
+        { code: "ITC601", name: "Data Mining and Business Intelligence" },
+        { code: "ITC602", name: "Industry Practice-IV (Full Stack Development II — Advanced)" },
+        { code: "ITC603", name: "Technical Elective Practical" },
+      ],
+      7: [
+        { code: "ITC701", name: "Machine Learning for IT Application Development" },
+        { code: "ITC702", name: "Big Data Analytics" },
+        { code: "ITC703", name: "DevOps" },
+        { code: "ITC704", name: "Project-I / Capstone" },
+      ],
+      8: [
+        { code: "ITC801", name: "Software Testing and Quality Assurance" },
+        { code: "ITC802", name: "Professional Elective-IV" },
+        { code: "ITC803", name: "Major Project / Project-II" },
+        { code: "ITC804", name: "Industry Internship / Certification" },
       ],
     },
   };
 
   let key = "comps";
-  if (normDept.includes("computer") || normDept.includes("comps") || normDept === "cmpn") key = "comps";
+  if (normDept.includes("information technology") || normDept === "it") key = "it";
+  else if (normDept.includes("computer") || normDept.includes("comps") || normDept === "cmpn") key = "comps";
   else if (normDept.includes("intelligence") && normDept.includes("data")) key = "aids";
   else if (normDept.includes("machine") || normDept.includes("aiml")) key = "aiml";
   else if (normDept.includes("iot") || normDept.includes("internet of things")) key = "cse-iot";
@@ -808,141 +867,6 @@ export function getCurriculumSubjects(deptName: string, semester: number): Acade
     name: s.name,
     semester,
   }));
-}
-
-// Generate 4-5 experiments for any subject
-export function getPracticalsForSubject(subjectName: string, semester: number, deptName: string): Detail[] {
-  const normDept = deptName.toLowerCase();
-  
-  // Check if explicit practicals exist in CURRICULUM_CATALOG
-  if (normDept.includes("information technology") || normDept === "it") {
-    const semList = CURRICULUM_CATALOG["information-technology"]?.[semester];
-    if (semList) {
-      const foundSub = semList.find((s) => s.name.toLowerCase() === subjectName.toLowerCase() || s.code.toLowerCase() === subjectName.toLowerCase());
-      if (foundSub) {
-        return foundSub.experiments.map((exp, idx) => ({
-          id: 50000 + semester * 1000 + idx * 10 + Math.abs(hashString(subjectName)) % 500,
-          title: exp.title,
-          subject: foundSub.name,
-          semester,
-          experimentNumber: idx + 1,
-          description: `Laboratory Experiment ${idx + 1} for ${foundSub.name}.`,
-          status: "PUBLISHED",
-          updatedAt: new Date().toISOString(),
-          aim: exp.aim,
-          theory: exp.theory,
-          algorithm: exp.algorithm,
-          codeInstructions: exp.instructions,
-          conclusion: "Experiment verified and outputs matched expected results.",
-          javaStarterCode: exp.lang === "JAVA" ? `// ${exp.title}\npublic class Solution {\n    public static void main(String[] args) {\n        // Write solution here\n        System.out.println("Result: Verified");\n    }\n}` : "",
-          pythonStarterCode: exp.lang === "PYTHON" ? `# ${exp.title}\ndef main():\n    # Write solution here\n    print("Result: Verified")\n\nif __name__ == '__main__':\n    main()` : "",
-          programmingLanguage: exp.lang,
-          practiceQuestions: exp.practice.map((q, qIdx) => ({ id: qIdx + 1, question: q, order: qIdx + 1 })),
-          vivaQuestions: exp.viva.map((v, vIdx) => ({ id: vIdx + 1, question: v.q, marks: v.marks, order: vIdx + 1 })),
-        }));
-      }
-    }
-  }
-
-  // General authentic generator for all departments
-  const expTopics = [
-    {
-      title: `${subjectName}: Fundamental Implementation & Setup`,
-      aim: `Understand the foundational principles, setup environment, and implement core primitives of ${subjectName}.`,
-      theory: `${subjectName} forms a core component of modern engineering. Mastering fundamental implementations establishes algorithmic competency and analytical reasoning.`,
-      algorithm: "1. Initialize execution parameters.\n2. Configure input data vectors.\n3. Execute primary transformation logic.\n4. Validate output against theoretical benchmarks.",
-      instructions: "Implement the foundational algorithm in Python or Java with comprehensive test cases.",
-      lang: "PYTHON",
-      practice: [
-        `Explain the core mathematical model governing ${subjectName}.`,
-        "Analyze the time and space complexity of the implementation.",
-      ],
-      viva: [
-        { q: `What are the primary performance trade-offs in ${subjectName}?`, marks: 2 },
-        { q: "How are boundary conditions handled in this setup?", marks: 2 },
-      ],
-    },
-    {
-      title: `${subjectName}: Algorithmic Optimization & Processing`,
-      aim: `Optimize data throughput, reduce algorithmic latency, and handle edge cases for ${subjectName}.`,
-      theory: "Optimization in engineering balances computational complexity, memory footprints, and convergence velocity under real-world constraints.",
-      algorithm: "1. Profile baseline execution metrics.\n2. Apply algorithmic refactoring and caching.\n3. Execute stress testing with edge inputs.\n4. Measure execution time improvements.",
-      instructions: "Write optimized production-grade code adhering to Clean Code standards.",
-      lang: "JAVA",
-      practice: [
-        "What asymptotic improvements were achieved by the optimized algorithm?",
-        "Explain memory hierarchy effects on performance.",
-      ],
-      viva: [
-        { q: "What is Amdahl's Law in algorithmic acceleration?", marks: 2 },
-        { q: "How do you detect and mitigate race conditions in concurrent processing?", marks: 2 },
-      ],
-    },
-    {
-      title: `${subjectName}: Data Modeling & Simulation Analysis`,
-      aim: `Construct simulation models, perform empirical testing, and evaluate experimental accuracy for ${subjectName}.`,
-      theory: "Simulations model physical and computational behaviors, enabling quantitative evaluation of complex systems prior to physical deployment.",
-      algorithm: "1. Define state variables and transition equations.\n2. Run iterative Monte Carlo or step-wise simulation.\n3. Log observational telemetry.\n4. Plot performance curves.",
-      instructions: "Implement simulation model and output structured statistical summaries.",
-      lang: "PYTHON",
-      practice: [
-        "Explain the sensitivity of the model to parameter variations.",
-        "How is empirical variance minimized across runs?",
-      ],
-      viva: [
-        { q: "What is validation vs verification in simulation modeling?", marks: 2 },
-        { q: "How are confidence intervals computed for experimental measurements?", marks: 2 },
-      ],
-    },
-    {
-      title: `${subjectName}: Comprehensive Practical Application & Case Study`,
-      aim: `Apply learned principles to solve an authentic end-to-end industrial case study in ${subjectName}.`,
-      theory: "Translating theoretical models into working production systems requires robust exception handling, modularity, and reproducible verification.",
-      algorithm: "1. Ingest input dataset from standard format.\n2. Apply preprocessing and normalization.\n3. Execute end-to-end processing pipeline.\n4. Emit verified report and diagnostic metrics.",
-      instructions: "Complete the end-to-end solution and demonstrate correct execution on all test cases.",
-      lang: "JAVA",
-      practice: [
-        "What architectural choices made the solution scalable?",
-        "How is data integrity maintained throughout the pipeline?",
-      ],
-      viva: [
-        { q: "Explain the failure recovery strategy in your implementation.", marks: 2 },
-        { q: "What industry standards apply to this category of systems?", marks: 2 },
-      ],
-    },
-  ];
-
-  const subHash = Math.abs(hashString(subjectName + deptName));
-
-  return expTopics.map((exp, idx) => ({
-    id: 60000 + semester * 1000 + (subHash % 800) * 10 + idx + 1,
-    title: exp.title,
-    subject: subjectName,
-    semester,
-    experimentNumber: idx + 1,
-    description: `Laboratory Experiment ${idx + 1} for ${subjectName} (${deptName}).`,
-    status: "PUBLISHED",
-    updatedAt: new Date().toISOString(),
-    aim: exp.aim,
-    theory: exp.theory,
-    algorithm: exp.algorithm,
-    codeInstructions: exp.instructions,
-    conclusion: "Experiment executed and validated against laboratory standards.",
-    javaStarterCode: `// TCET CodeLabX - ${exp.title}\npublic class Solution {\n    public static void main(String[] args) {\n        // Write your solution here\n        System.out.println("Completed successfully.");\n    }\n}`,
-    pythonStarterCode: `# TCET CodeLabX - ${exp.title}\ndef main():\n    # Write your solution here\n    print("Completed successfully.")\n\nif __name__ == '__main__':\n    main()`,
-    programmingLanguage: exp.lang,
-    practiceQuestions: exp.practice.map((q, qIdx) => ({ id: qIdx + 1, question: q, order: qIdx + 1 })),
-    vivaQuestions: exp.viva.map((v, vIdx) => ({ id: vIdx + 1, question: v.q, marks: v.marks, order: vIdx + 1 })),
-  }));
-}
-
-function hashString(str: string): number {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = (hash << 5) - hash + str.charCodeAt(i);
-    hash |= 0;
-  }
-  return hash;
 }
 
 export const EXPERIMENT_8_NMAP: Detail = {
@@ -1089,6 +1013,155 @@ if __name__ == '__main__':
     "Understand the importance of authorization and responsible use of network scanning tools."
   ]
 };
+
+// Generate 4-5 experiments for any subject
+export function getPracticalsForSubject(subjectName: string, semester: number, deptName: string): Detail[] {
+  const normDept = deptName.toLowerCase();
+  
+  // Check if explicit practicals exist in CURRICULUM_CATALOG
+  if (normDept.includes("information technology") || normDept === "it") {
+    const semList = CURRICULUM_CATALOG["information-technology"]?.[semester];
+    if (semList) {
+      const foundSub = semList.find((s) => s.name.toLowerCase() === subjectName.toLowerCase() || s.code.toLowerCase() === subjectName.toLowerCase());
+      if (foundSub) {
+        return foundSub.experiments.map((exp, idx) => ({
+          id: 50000 + semester * 1000 + idx * 10 + Math.abs(hashString(subjectName)) % 500,
+          title: exp.title,
+          subject: foundSub.name,
+          semester,
+          experimentNumber: idx + 1,
+          description: `Laboratory Experiment ${idx + 1} for ${foundSub.name}.`,
+          status: "PUBLISHED",
+          updatedAt: new Date().toISOString(),
+          aim: exp.aim,
+          theory: exp.theory,
+          algorithm: exp.algorithm,
+          codeInstructions: exp.instructions,
+          conclusion: "Experiment verified and outputs matched expected results.",
+          javaStarterCode: exp.lang === "JAVA" ? `// ${exp.title}\npublic class Solution {\n    public static void main(String[] args) {\n        // Write solution here\n        System.out.println("Result: Verified");\n    }\n}` : "",
+          pythonStarterCode: exp.lang === "PYTHON" ? `# ${exp.title}\ndef main():\n    # Write solution here\n    print("Result: Verified")\n\nif __name__ == '__main__':\n    main()` : "",
+          programmingLanguage: exp.lang,
+          practiceQuestions: exp.practice.map((q, qIdx) => ({ id: qIdx + 1, question: q, order: qIdx + 1 })),
+          vivaQuestions: exp.viva.map((v, vIdx) => ({ id: vIdx + 1, question: v.q, marks: v.marks, order: vIdx + 1 })),
+        }));
+      }
+    }
+  }
+
+  // General authentic generator for all departments
+  const expTopics = [
+    {
+      title: `${subjectName}: Fundamental Implementation & Setup`,
+      aim: `Understand the foundational principles, setup environment, and implement core primitives of ${subjectName}.`,
+      theory: `${subjectName} forms a core component of modern engineering. Mastering fundamental implementations establishes algorithmic competency and analytical reasoning.`,
+      algorithm: "1. Initialize execution parameters.\n2. Configure input data vectors.\n3. Execute primary transformation logic.\n4. Validate output against theoretical benchmarks.",
+      instructions: "Implement the foundational algorithm in Python or Java with comprehensive test cases.",
+      lang: "PYTHON",
+      practice: [
+        `Explain the core mathematical model governing ${subjectName}.`,
+        "Analyze the time and space complexity of the implementation.",
+      ],
+      viva: [
+        { q: `What are the primary performance trade-offs in ${subjectName}?`, marks: 2 },
+        { q: "How are boundary conditions handled in this setup?", marks: 2 },
+      ],
+    },
+    {
+      title: `${subjectName}: Algorithmic Optimization & Processing`,
+      aim: `Optimize data throughput, reduce algorithmic latency, and handle edge cases for ${subjectName}.`,
+      theory: "Optimization in engineering balances computational complexity, memory footprints, and convergence velocity under real-world constraints.",
+      algorithm: "1. Profile baseline execution metrics.\n2. Apply algorithmic refactoring and caching.\n3. Execute stress testing with edge inputs.\n4. Measure execution time improvements.",
+      instructions: "Write optimized production-grade code adhering to Clean Code standards.",
+      lang: "JAVA",
+      practice: [
+        "What asymptotic improvements were achieved by the optimized algorithm?",
+        "Explain memory hierarchy effects on performance.",
+      ],
+      viva: [
+        { q: "What is Amdahl's Law in algorithmic acceleration?", marks: 2 },
+        { q: "How do you detect and mitigate race conditions in concurrent processing?", marks: 2 },
+      ],
+    },
+    {
+      title: `${subjectName}: Data Modeling & Simulation Analysis`,
+      aim: `Construct simulation models, perform empirical testing, and evaluate experimental accuracy for ${subjectName}.`,
+      theory: "Simulations model physical and computational behaviors, enabling quantitative evaluation of complex systems prior to physical deployment.",
+      algorithm: "1. Define state variables and transition equations.\n2. Run iterative Monte Carlo or step-wise simulation.\n3. Log observational telemetry.\n4. Plot performance curves.",
+      instructions: "Implement simulation model and output structured statistical summaries.",
+      lang: "PYTHON",
+      practice: [
+        "Explain the sensitivity of the model to parameter variations.",
+        "How is empirical variance minimized across runs?",
+      ],
+      viva: [
+        { q: "What is validation vs verification in simulation modeling?", marks: 2 },
+        { q: "How are confidence intervals computed for experimental measurements?", marks: 2 },
+      ],
+    },
+    {
+      title: `${subjectName}: Comprehensive Practical Application & Case Study`,
+      aim: `Apply learned principles to solve an authentic end-to-end industrial case study in ${subjectName}.`,
+      theory: "Translating theoretical models into working production systems requires robust exception handling, modularity, and reproducible verification.",
+      algorithm: "1. Ingest input dataset from standard format.\n2. Apply preprocessing and normalization.\n3. Execute end-to-end processing pipeline.\n4. Emit verified report and diagnostic metrics.",
+      instructions: "Complete the end-to-end solution and demonstrate correct execution on all test cases.",
+      lang: "JAVA",
+      practice: [
+        "What architectural choices made the solution scalable?",
+        "How is data integrity maintained throughout the pipeline?",
+      ],
+      viva: [
+        { q: "Explain the failure recovery strategy in your implementation.", marks: 2 },
+        { q: "What industry standards apply to this category of systems?", marks: 2 },
+      ],
+    },
+  ];
+
+  const subHash = Math.abs(hashString(subjectName + deptName));
+
+  const generatedPracticals = expTopics.map((exp, idx) => ({
+    id: 60000 + semester * 1000 + (subHash % 800) * 10 + idx + 1,
+    title: exp.title,
+    subject: subjectName,
+    semester,
+    experimentNumber: idx + 1,
+    description: `Laboratory Experiment ${idx + 1} for ${subjectName} (${deptName}).`,
+    status: "PUBLISHED",
+    updatedAt: new Date().toISOString(),
+    aim: exp.aim,
+    theory: exp.theory,
+    algorithm: exp.algorithm,
+    codeInstructions: exp.instructions,
+    conclusion: "Experiment executed and validated against laboratory standards.",
+    javaStarterCode: `// TCET CodeLabX - ${exp.title}\npublic class Solution {\n    public static void main(String[] args) {\n        // Write your solution here\n        System.out.println("Completed successfully.");\n    }\n}`,
+    pythonStarterCode: `# TCET CodeLabX - ${exp.title}\ndef main():\n    # Write your solution here\n    print("Completed successfully.")\n\nif __name__ == '__main__':\n    main()`,
+    programmingLanguage: exp.lang,
+    practiceQuestions: exp.practice.map((q, qIdx) => ({ id: qIdx + 1, question: q, order: qIdx + 1 })),
+    vivaQuestions: exp.viva.map((v, vIdx) => ({ id: vIdx + 1, question: v.q, marks: v.marks, order: vIdx + 1 })),
+  }));
+
+  if (subjectName.toLowerCase().includes("cryptography") || subjectName.toLowerCase().includes("security")) {
+    return [
+      {
+        ...EXPERIMENT_8_NMAP,
+        id: 8,
+        subject: subjectName,
+        semester,
+        department: deptName,
+      },
+      ...generatedPracticals,
+    ];
+  }
+  return generatedPracticals;
+}
+
+function hashString(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash << 5) - hash + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return hash;
+}
 
 const practicalsCache = new Map<number, Detail>();
 

@@ -41,6 +41,14 @@ function App() {
               }
             />
             <Route
+              path="/activity"
+              element={
+                <RolePage role="STUDENT">
+                  <StudentDashboardPage initialTab="activity" />
+                </RolePage>
+              }
+            />
+            <Route
               path="/admin"
               element={
                 <RolePage role="ADMIN">

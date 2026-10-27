@@ -46,48 +46,52 @@ public class DemoDataInitializer {
             seedLanguages(languages);
             seedAllSubjects(subjects);
 
+            // Canonical Admin accounts
+            UserAccount adminSaurabh = user(users, passwordEncoder, "Saurabh", "saurabh@tcetmumbai.in", Role.ADMIN);
+            adminSaurabh.setDepartment("Administration");
             user(users, passwordEncoder, "CodeLabX Administrator", "admin@tcetmumbai.in", Role.ADMIN);
             user(users, passwordEncoder, "TCET Exam Cell Admin", "admin.exam@tcetmumbai.in", Role.ADMIN);
+
+            // Canonical Faculty accounts
+            UserAccount teacherSamir = user(users, passwordEncoder, "Samir Sawant", "samir.sawant@tcetmumbai.in", Role.TEACHER);
+            teacherSamir.setDepartment("Computer Engineering");
             UserAccount teacher = user(users, passwordEncoder, "Samir Sawant", "teacher@tcetmumbai.in", Role.TEACHER);
+            teacher.setDepartment("Computer Engineering");
             UserAccount teacherIt = user(users, passwordEncoder, "Rashmi Thakur", "faculty.it@tcetmumbai.in", Role.TEACHER);
             UserAccount teacherAiml = user(users, passwordEncoder, "Rajesh Patel", "faculty.aiml@tcetmumbai.in", Role.TEACHER);
+
+            // Canonical Student accounts
+            UserAccount studentInzamam = user(users, passwordEncoder, "Inzamam", "inzamam@tcetmumbai.in", Role.STUDENT);
+            UserAccount studentInzamamAlt = user(users, passwordEncoder, "Inzamam Khan", "inzamam.khan.te.b@tcetmumbai.in", Role.STUDENT);
             UserAccount student = user(users, passwordEncoder, "Areeza Mukadam", "student@tcetmumbai.in", Role.STUDENT);
             UserAccount student2 = user(users, passwordEncoder, "Sagar Mishra", "student2@tcetmumbai.in", Role.STUDENT);
             UserAccount studentRahul = user(users, passwordEncoder, "Rahul Verma", "rahul.verma.se.b@tcetmumbai.in", Role.STUDENT);
             UserAccount studentTanvi = user(users, passwordEncoder, "Tanvi Patil", "tanvi.patil.se.b@tcetmumbai.in", Role.STUDENT);
             UserAccount studentAarav = user(users, passwordEncoder, "Aarav Mehta", "aarav.mehta.se.a@tcetmumbai.in", Role.STUDENT);
             UserAccount studentSneha = user(users, passwordEncoder, "Sneha Deshmukh", "sneha.deshmukh.te.a@tcetmumbai.in", Role.STUDENT);
-            // Single canonical student account for Inzamam Khan (Roll 13, TE-B, Computer Engineering)
-            UserAccount studentInzamam = user(users, passwordEncoder, "Inzamam Khan", "inzamam.khan.te.b@tcetmumbai.in", Role.STUDENT);
-
-            // Clean up any old duplicate account if present
-            users.findByEmailIgnoreCase("inzamam@tcetmumbai.in").ifPresent(oldUser -> {
-                if (!oldUser.getId().equals(studentInzamam.getId())) {
-                    users.delete(oldUser);
-                }
-            });
 
             List<UserAccount> allStudents = new ArrayList<>(List.of(
-                    student, student2, studentRahul, studentTanvi, studentAarav, studentSneha,
-                    studentInzamam
+                    studentInzamam, studentInzamamAlt, student, student2, studentRahul, studentTanvi, studentAarav, studentSneha
             ));
 
+            roster(studentInzamam, "TE", "B", "Computer Engineering", "13");
+            roster(studentInzamamAlt, "TE", "B", "Computer Engineering", "13");
             roster(student, "SE", "B", "Computer Engineering", "SE-B-42");
             roster(student2, "TE", "A", "Computer Engineering", "TE-A-18");
             roster(studentRahul, "SE", "B", "Computer Engineering", "SE-B-23");
             roster(studentTanvi, "SE", "B", "Computer Engineering", "SE-B-55");
             roster(studentAarav, "SE", "A", "Computer Engineering", "SE-A-12");
             roster(studentSneha, "TE", "A", "Computer Engineering", "TE-A-34");
-            roster(studentInzamam, "TE", "B", "Computer Engineering", "13");
             users.saveAll(allStudents);
 
             teacher.setDepartment("Computer Engineering");
             teacherIt.setDepartment("Information Technology");
             teacherAiml.setDepartment("Artificial Intelligence & Machine Learning");
-            users.saveAll(List.of(teacher, teacherIt, teacherAiml));
+            users.saveAll(List.of(adminSaurabh, teacherSamir, teacher, teacherIt, teacherAiml));
 
-            seedFromJson(objectMapper, teacher, allStudents, practicals, assignments, practiceQuestions, vivaQuestions);
+            seedFromJson(objectMapper, teacherSamir, allStudents, practicals, assignments, practiceQuestions, vivaQuestions);
             seedSampleSubmission(studentInzamam, practicals, submissions, progressRepository);
+            seedSampleSubmission(studentInzamamAlt, practicals, submissions, progressRepository);
             seedStudentAreezaSubmission(student, practicals, submissions, progressRepository);
         };
     }

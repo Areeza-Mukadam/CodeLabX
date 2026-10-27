@@ -23,19 +23,19 @@ const roleDetails: Record<
     tab: "Student",
     eyebrow: "STUDENT PORTAL",
     title: "Your next practical starts here.",
-    email: "student@tcetmumbai.in",
+    email: "inzamam@tcetmumbai.in",
   },
   faculty: {
     tab: "Faculty",
     eyebrow: "FACULTY PORTAL",
     title: "Prepare the lab. Guide the work.",
-    email: "teacher@tcetmumbai.in",
+    email: "samir.sawant@tcetmumbai.in",
   },
   admin: {
     tab: "Admin",
     eyebrow: "ADMIN CONSOLE",
     title: "Manage your CodeLabX workspace.",
-    email: "admin@tcetmumbai.in",
+    email: "saurabh@tcetmumbai.in",
   },
 };
 
@@ -410,6 +410,88 @@ export function LoginPage() {
                 <span>→</span>
               </button>
 
+
+              <div style={{ marginTop: "16px", paddingTop: "14px", borderTop: "1px dashed #cbd5e1" }}>
+                <span style={{ fontSize: "11px", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.5px", display: "block", marginBottom: "8px" }}>
+                  ⚡ Quick Demo Accounts (1-Click Login):
+                </span>
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setRole("student");
+                      setEmail("inzamam@tcetmumbai.in");
+                      setPassword("CodeLabX123!");
+                      performLogin("inzamam@tcetmumbai.in", "CodeLabX123!");
+                    }}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      padding: "8px 12px",
+                      borderRadius: "6px",
+                      border: "1px solid #cbd5e1",
+                      background: "#f8fafc",
+                      cursor: "pointer",
+                      fontSize: "12px",
+                      textAlign: "left"
+                    }}
+                  >
+                    <span><b>👨‍🎓 Student: Inzamam</b> <span style={{ color: "#64748b" }}>(TE-B · Roll 13 · COMPS)</span></span>
+                    <span style={{ color: "var(--palette-red, #c02040)", fontWeight: 700 }}>Login →</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setRole("faculty");
+                      setEmail("samir.sawant@tcetmumbai.in");
+                      setPassword("CodeLabX123!");
+                      performLogin("samir.sawant@tcetmumbai.in", "CodeLabX123!");
+                    }}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      padding: "8px 12px",
+                      borderRadius: "6px",
+                      border: "1px solid #cbd5e1",
+                      background: "#f8fafc",
+                      cursor: "pointer",
+                      fontSize: "12px",
+                      textAlign: "left"
+                    }}
+                  >
+                    <span><b>👨‍🏫 Faculty: Samir Sawant</b> <span style={{ color: "#64748b" }}>(Computer Engineering)</span></span>
+                    <span style={{ color: "var(--palette-red, #c02040)", fontWeight: 700 }}>Login →</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setRole("admin");
+                      setEmail("saurabh@tcetmumbai.in");
+                      setPassword("CodeLabX123!");
+                      performLogin("saurabh@tcetmumbai.in", "CodeLabX123!");
+                    }}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      padding: "8px 12px",
+                      borderRadius: "6px",
+                      border: "1px solid #cbd5e1",
+                      background: "#f8fafc",
+                      cursor: "pointer",
+                      fontSize: "12px",
+                      textAlign: "left"
+                    }}
+                  >
+                    <span><b>🛡️ Admin: Saurabh</b> <span style={{ color: "#64748b" }}>(Institution Administrator)</span></span>
+                    <span style={{ color: "var(--palette-red, #c02040)", fontWeight: 700 }}>Login →</span>
+                  </button>
+                </div>
+              </div>
             </form>
           </>
         ) : (

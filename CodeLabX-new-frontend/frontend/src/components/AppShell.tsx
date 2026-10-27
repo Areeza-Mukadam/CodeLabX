@@ -29,7 +29,7 @@ export function AppShell() {
               <Link to="/" className="nav-link">
                 <span>▦</span> My dashboard
               </Link>
-              <Link to="/" className="nav-link">
+              <Link to="/activity" className="nav-link">
                 <span>◷</span> Recent activity
               </Link>
             </>
