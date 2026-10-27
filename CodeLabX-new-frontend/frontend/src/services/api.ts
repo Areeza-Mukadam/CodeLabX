@@ -8,7 +8,7 @@ import {
 import { findDepartmentPracticalById, EXPERIMENT_8_NMAP } from "./curriculumData";
 import type { User } from "../types";
 
-const API = import.meta.env.VITE_API_URL || "http://localhost:8080";
+const API = import.meta.env.VITE_API_URL || "";
 const demoMocksEnabled = import.meta.env.DEV || import.meta.env.VITE_ENABLE_MOCK_DATA === "true";
 
 interface StoredSubmission {
@@ -993,37 +993,6 @@ function getMockResponse<T>(path: string, init: RequestInit = {}): T | null {
       { id: 1, name: "Java", code: "JAVA", runtimeVersion: "17.x", enabled: true },
       { id: 2, name: "Python", code: "PYTHON", runtimeVersion: "3.x", enabled: true },
     ] as T;
-  }
-
-  // /practicals/parse-document
-  if (cleanPath === "/practicals/parse-document") {
-    return {
-      title: "Binary Search Tree Operations & Traversals",
-      subject: "Data Structures",
-      semester: 3,
-      experimentNumber: 3,
-      description: "Experiment extracted via Optical Character Recognition (OCR) engine.",
-      aim: "Implement Binary Search Tree (BST) operations including insertion, deletion, and in-order, pre-order, post-order traversals.",
-      theory: "A Binary Search Tree is a node-based binary tree data structure with the property that the key in each node is greater than all keys in its left subtree and less than all keys in its right subtree.",
-      algorithm: "1. Create node structure with key, left, and right pointers.\n2. Implement insert(root, key).\n3. Implement inOrder(root) recursive traversal.\n4. Demonstrate search(root, key).\n5. Return results.",
-      codeInstructions: "Write a complete program in Java or Python implementing BST insertion and traversals with sample test inputs.",
-      conclusion: "BST traversal algorithms successfully demonstrated with logarithmic average-case search complexity O(log n).",
-      programmingLanguage: "JAVA",
-      sourcePdfPath: "/api/practicals/source-pdf/demo-extracted.pdf",
-      sourcePdfName: "BST_Laboratory_Manual.pdf",
-      ocrApplied: true,
-      ocrMessage: "Optical Character Recognition (OCR) extracted and synthesized structured experiment data.",
-      javaStarterCode: "import java.util.*;\n\npublic class Main {\n    public static void main(String[] args) {\n        Scanner scanner = new Scanner(System.in);\n        // Write BST solution\n    }\n}",
-      pythonStarterCode: "def main():\n    # Write BST solution\n    pass\n\nif __name__ == '__main__':\n    main()\n",
-      practiceQuestions: [
-        "Explain the time complexity differences between balanced and degenerate BSTs.",
-        "How does in-order traversal of a BST produce elements in sorted order?",
-      ],
-      vivaQuestions: [
-        "What is the worst-case time complexity of searching in an unbalanced BST?",
-        "How is node deletion handled when the node has two children?",
-      ],
-    } as T;
   }
 
   return null;

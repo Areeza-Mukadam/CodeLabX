@@ -92,6 +92,7 @@ public class SubmissionService {
         submission.setSubmittedAt(Instant.now());
         submission = submissions.save(submission);
 
+        progress.setCompletedSteps("AIM,THEORY,ALGORITHM,CODE,PRACTICE,CONCLUSION");
         progress.setStatus(ProgressStatus.SUBMITTED);
         progress.setCurrentStep(PracticalStep.CONCLUSION);
         progressRepository.save(progress);

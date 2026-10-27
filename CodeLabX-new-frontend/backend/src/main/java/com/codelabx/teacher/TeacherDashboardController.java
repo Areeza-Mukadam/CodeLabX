@@ -53,7 +53,7 @@ public class TeacherDashboardController {
     @GetMapping({"/api/teacher/dashboard", "/teacher/dashboard"})
     public DashboardView dashboard(@AuthenticationPrincipal UserAccount teacher) {
         List<Practical> allPracticals = practicals.findAllByOrderByUpdatedAtDesc().stream()
-                .filter(p -> p.getCreatedBy() != null && Objects.equals(p.getCreatedBy().getId(), teacher.getId())).toList();
+                .filter(p -> (teacher.getRole() == Role.ADMIN || p.getCreatedBy() == null || Objects.equals(p.getCreatedBy().getId(), teacher.getId()) || (p.getCreatedBy().getDepartment() != null && Objects.equals(p.getCreatedBy().getDepartment(), teacher.getDepartment())))).toList();
         long active = allPracticals.stream().filter(p -> p.getStatus() == PracticalStatus.PUBLISHED).count();
         long studentCount = departmentStudents(teacher).size();
         long pendingEval = submissions.findAllByOrderBySubmittedAtDesc().stream()
@@ -81,7 +81,7 @@ public class TeacherDashboardController {
     @GetMapping({"/api/teacher/subjects", "/teacher/subjects"})
     public List<SubjectView> subjects(@AuthenticationPrincipal UserAccount teacher) {
         List<Practical> all = practicals.findAllByOrderByUpdatedAtDesc().stream()
-                .filter(p -> p.getCreatedBy() != null && Objects.equals(p.getCreatedBy().getId(), teacher.getId())).toList();
+                .filter(p -> (teacher.getRole() == Role.ADMIN || p.getCreatedBy() == null || Objects.equals(p.getCreatedBy().getId(), teacher.getId()) || (p.getCreatedBy().getDepartment() != null && Objects.equals(p.getCreatedBy().getDepartment(), teacher.getDepartment())))).toList();
         List<Practical> matching = all.stream()
                 .filter(p -> p.getSubject() != null && !p.getSubject().isBlank())
                 .toList();
@@ -98,7 +98,7 @@ public class TeacherDashboardController {
     public List<String> classes(@RequestParam(required = false) String subject, @RequestParam(required = false) Integer semester, @AuthenticationPrincipal UserAccount teacher) {
         final String sQuery = subject != null ? subject.trim().toLowerCase() : null;
         var ids = practicals.findAllByOrderByUpdatedAtDesc().stream()
-                .filter(p -> p.getCreatedBy() != null && Objects.equals(p.getCreatedBy().getId(), teacher.getId()))
+                .filter(p -> (teacher.getRole() == Role.ADMIN || p.getCreatedBy() == null || Objects.equals(p.getCreatedBy().getId(), teacher.getId()) || (p.getCreatedBy().getDepartment() != null && Objects.equals(p.getCreatedBy().getDepartment(), teacher.getDepartment()))))
                 .filter(p -> (sQuery == null || (p.getSubject() != null && p.getSubject().trim().toLowerCase().equals(sQuery)))
                         && (semester == null || Objects.equals(semester, p.getSemester())))
                 .map(Practical::getId).toList();
@@ -117,7 +117,7 @@ public class TeacherDashboardController {
     public List<UserDto> students(@RequestParam(required = false) String subject, @RequestParam(required = false) Integer semester, @RequestParam(required = false) String classSection, @AuthenticationPrincipal UserAccount teacher) {
         final String sQuery = subject != null ? subject.trim().toLowerCase() : null;
         var ids = practicals.findAllByOrderByUpdatedAtDesc().stream()
-                .filter(p -> p.getCreatedBy() != null && Objects.equals(p.getCreatedBy().getId(), teacher.getId()))
+                .filter(p -> (teacher.getRole() == Role.ADMIN || p.getCreatedBy() == null || Objects.equals(p.getCreatedBy().getId(), teacher.getId()) || (p.getCreatedBy().getDepartment() != null && Objects.equals(p.getCreatedBy().getDepartment(), teacher.getDepartment()))))
                 .filter(p -> (sQuery == null || (p.getSubject() != null && p.getSubject().trim().toLowerCase().equals(sQuery)))
                         && (semester == null || Objects.equals(semester, p.getSemester())))
                 .map(Practical::getId).toList();
@@ -145,7 +145,7 @@ public class TeacherDashboardController {
     public List<TeacherSubmission> studentSubmissions(@org.springframework.web.bind.annotation.PathVariable Long studentId, @RequestParam(required = false) String subject, @RequestParam(required = false) Integer semester, @AuthenticationPrincipal UserAccount teacher) {
         final String sQuery = subject != null ? subject.trim().toLowerCase() : null;
         var practicalIds = practicals.findAllByOrderByUpdatedAtDesc().stream()
-                .filter(p -> p.getCreatedBy() != null && Objects.equals(p.getCreatedBy().getId(), teacher.getId()))
+                .filter(p -> (teacher.getRole() == Role.ADMIN || p.getCreatedBy() == null || Objects.equals(p.getCreatedBy().getId(), teacher.getId()) || (p.getCreatedBy().getDepartment() != null && Objects.equals(p.getCreatedBy().getDepartment(), teacher.getDepartment()))))
                 .filter(p -> (sQuery == null || (p.getSubject() != null && p.getSubject().trim().toLowerCase().equals(sQuery)))
                         && (semester == null || Objects.equals(semester, p.getSemester())))
                 .map(Practical::getId).toList();

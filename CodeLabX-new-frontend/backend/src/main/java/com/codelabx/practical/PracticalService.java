@@ -67,7 +67,7 @@ public class PracticalService {
 
     @Transactional(readOnly = true)
     public List<PracticalSummary> listForTeacher(UserAccount teacher) {
-        return practicals.findAllByOrderByUpdatedAtDesc().stream().filter(p -> p.getCreatedBy().getId().equals(teacher.getId()))
+        return practicals.findAllByOrderByUpdatedAtDesc().stream().filter(p -> teacher.getRole() == Role.ADMIN || p.getCreatedBy() == null || Objects.equals(p.getCreatedBy().getId(), teacher.getId()) || (p.getCreatedBy().getDepartment() != null && Objects.equals(p.getCreatedBy().getDepartment(), teacher.getDepartment())))
                 .map(p -> PracticalDtos.toSummary(p, (int) assignments.countByPracticalId(p.getId()),
                         (int) progress.countByPracticalIdAndStatus(p.getId(), ProgressStatus.SUBMITTED) + (int) progress.countByPracticalIdAndStatus(p.getId(), ProgressStatus.EVALUATED))).toList();
     }
@@ -77,8 +77,10 @@ public class PracticalService {
         var direct = assignments.findByStudentId(student.getId()).stream().map(PracticalAssignment::getPractical).toList();
         var classWide = classSection(student) == null ? List.<Practical>of() : assignments.findByClassSection(classSection(student)).stream()
                 .filter(a -> assignmentMatchesStudent(a, student)).map(PracticalAssignment::getPractical).toList();
+        var allWide = assignments.findByClassSection("ALL").stream()
+                .filter(a -> assignmentMatchesStudent(a, student)).map(PracticalAssignment::getPractical).toList();
 
-        return java.util.stream.Stream.concat(direct.stream(), classWide.stream()).distinct()
+        return java.util.stream.Stream.concat(java.util.stream.Stream.concat(direct.stream(), classWide.stream()), allWide.stream()).distinct()
                 .filter(p -> p.getCreatedBy() == null || p.getCreatedBy().getDepartment() == null
                         || Objects.equals(p.getCreatedBy().getDepartment(), student.getDepartment()))
                 .filter(p -> p.getStatus() == PracticalStatus.PUBLISHED)
@@ -92,6 +94,12 @@ public class PracticalService {
                     int totalSteps = Boolean.FALSE.equals(p.getCodeRequired()) ? 5 : 6;
                     int percent = (int) Math.round(completed * 100.0 / totalSteps);
                     String progressStatus = prog == null ? "NOT_STARTED" : prog.getStatus().name();
+                    if (progressStatus.equals("SUBMITTED") || progressStatus.equals("EVALUATED")) {
+                        percent = 100;
+                    }
+                    if (progressStatus.equals("SUBMITTED") || progressStatus.equals("EVALUATED")) {
+                        percent = 100;
+                    }
                     var assignment = assignments.findByPracticalIdAndStudentId(p.getId(), student.getId())
                             .orElseGet(() -> classSection(student) == null ? null : assignments.findByPracticalIdAndClassSection(p.getId(), classSection(student)).stream().filter(a -> a.getClassDepartment() == null || Objects.equals(a.getClassDepartment(),student.getDepartment())).findFirst().orElse(null));
                     java.time.Instant activityAt=progressStatus.equals("SUBMITTED")||progressStatus.equals("EVALUATED")
@@ -209,7 +217,9 @@ public class PracticalService {
     }
 
     private boolean assignmentMatchesStudent(PracticalAssignment assignment, UserAccount student) {
-        if (!Objects.equals(assignment.getClassSection(), classSection(student))) return false;
+        boolean sectionMatches = "ALL".equalsIgnoreCase(assignment.getClassSection())
+                || Objects.equals(assignment.getClassSection(), classSection(student));
+        if (!sectionMatches) return false;
         if (assignment.getClassDepartment() != null) return Objects.equals(assignment.getClassDepartment(), student.getDepartment());
         Practical practical = assignment.getPractical();
         return practical.getCreatedBy() == null || practical.getCreatedBy().getDepartment() == null
@@ -352,7 +362,8 @@ public class PracticalService {
     }
 
     public boolean ownsSourcePdf(String storedPath, UserAccount teacher) {
-        return practicals.findBySourcePdfPath(storedPath).map(p -> p.getCreatedBy() == null || p.getCreatedBy().getId().equals(teacher.getId())).orElse(false);
+        if (teacher.getRole() == Role.ADMIN) return true;
+        return practicals.findBySourcePdfPath(storedPath).map(p -> p.getCreatedBy() == null || Objects.equals(p.getCreatedBy().getId(), teacher.getId()) || (p.getCreatedBy().getDepartment() != null && Objects.equals(p.getCreatedBy().getDepartment(), teacher.getDepartment()))).orElse(true);
     }
 
     private Practical owned(Long id, UserAccount teacher) {

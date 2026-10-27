@@ -134,12 +134,26 @@ function mimeType(path: string) {
 
 export default defineConfig({
   plugins: [traceJvmAssets('serve'), traceJvmAssets('build'), browserLanguageAssets('serve'), browserLanguageAssets('build'), react(), tailwindcss()],
-  server: {
+    server: {
     allowedHosts: true,
     headers: {
       'Cross-Origin-Opener-Policy': 'same-origin',
       'Cross-Origin-Embedder-Policy': 'credentialless',
     },
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+      },
+    },
   },
-  preview: { headers: { 'Cross-Origin-Opener-Policy': 'same-origin', 'Cross-Origin-Embedder-Policy': 'credentialless' } },
+  preview: {
+    headers: { 'Cross-Origin-Opener-Policy': 'same-origin', 'Cross-Origin-Embedder-Policy': 'credentialless' },
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+      },
+    },
+  },
 })

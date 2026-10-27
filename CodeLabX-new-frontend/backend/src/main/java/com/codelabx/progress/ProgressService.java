@@ -139,6 +139,9 @@ public class ProgressService {
         completed.sort(Comparator.comparingInt(PracticalStep::ordinal));
         int totalSteps = Boolean.FALSE.equals(progress.getPractical().getCodeRequired()) ? 5 : PracticalStep.values().length;
         int percent = (int) Math.round(completed.size() * 100.0 / totalSteps);
+        if (progress.getStatus() == ProgressStatus.SUBMITTED || progress.getStatus() == ProgressStatus.EVALUATED) {
+            percent = 100;
+        }
         return new ProgressView(
                 progress.getPractical().getId(),
                 progress.getCurrentStep(),

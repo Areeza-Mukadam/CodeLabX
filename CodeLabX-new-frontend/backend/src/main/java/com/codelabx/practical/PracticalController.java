@@ -3,6 +3,8 @@ package com.codelabx.practical;
 import com.codelabx.practical.dto.PracticalDtos.*;
 import com.codelabx.user.UserAccount;
 import com.codelabx.user.UserDto;
+import com.codelabx.subject.AcademicSubject;
+import com.codelabx.subject.AcademicSubjectRepository;
 import jakarta.validation.Valid;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -12,6 +14,7 @@ import java.time.Instant;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.UUID;
+import java.util.Objects;
 import org.springframework.web.multipart.MultipartFile;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.text.PDFTextStripper;
@@ -23,15 +26,17 @@ public class PracticalController {
 
     private final PracticalService practicalService;
     private final ProgrammingLanguageRepository languages;
+    private final AcademicSubjectRepository subjects;
 
-    public PracticalController(PracticalService practicalService, ProgrammingLanguageRepository languages) {
+    public PracticalController(PracticalService practicalService, ProgrammingLanguageRepository languages, AcademicSubjectRepository subjects) {
         this.practicalService = practicalService;
         this.languages = languages;
+        this.subjects = subjects;
     }
 
     @GetMapping
     public List<PracticalSummary> mine(@RequestParam(required = false) Integer semester, @AuthenticationPrincipal UserAccount user) {
-        if (user.getRole().name().equals("TEACHER")) {
+        if ("TEACHER".equals(user.getRole().name()) || "ADMIN".equals(user.getRole().name())) {
             return practicalService.listForTeacher(user);
         }
         if (!user.getRole().name().equals("STUDENT")) throw new com.codelabx.common.ApiException(org.springframework.http.HttpStatus.FORBIDDEN, "Student access required.");
@@ -40,7 +45,7 @@ public class PracticalController {
 
     @GetMapping("/{id:[0-9]+}")
     public Object get(@PathVariable Long id, @AuthenticationPrincipal UserAccount user) {
-        if (user.getRole().name().equals("TEACHER")) {
+        if ("TEACHER".equals(user.getRole().name()) || "ADMIN".equals(user.getRole().name())) {
             return practicalService.teacherDetail(id, user);
         }
         if (!user.getRole().name().equals("STUDENT")) throw new com.codelabx.common.ApiException(org.springframework.http.HttpStatus.FORBIDDEN, "Student access required.");
@@ -123,10 +128,92 @@ public class PracticalController {
             }
 
             String[] lines = text.lines().map(String::trim).filter(s -> !s.isBlank()).toArray(String[]::new);
-            String title = lines.length > 0 ? (lines[0].length() > 240 ? lines[0].substring(0, 240) : lines[0]) : deriveTitle(filename);
 
+            // 1. Detect Experiment Number
             java.util.regex.Matcher experimentMatch = java.util.regex.Pattern.compile("(?i)(?:experiment|practical|exp\\.?)\\D{0,8}(\\d{1,3})").matcher(filename + " " + text);
             Integer experimentNumber = experimentMatch.find() ? Integer.valueOf(experimentMatch.group(1)) : 1;
+
+            // 2. Detect Semester
+            Integer semester = null;
+            java.util.regex.Matcher semMatch = java.util.regex.Pattern.compile("(?i)\\b(?:semester|sem)\\s*[:\\-–]?\\s*([1-8])\\b").matcher(filename + " " + text);
+            if (semMatch.find()) {
+                semester = Integer.valueOf(semMatch.group(1));
+            } else {
+                java.util.regex.Matcher romanMatch = java.util.regex.Pattern.compile("(?i)\\b(?:semester|sem)\\s*[:\\-–]?\\s*\\b(VIII|VII|VI|V|IV|III|II|I)\\b").matcher(filename + " " + text);
+                if (romanMatch.find()) {
+                    String r = romanMatch.group(1).toUpperCase();
+                    switch (r) {
+                        case "I" -> semester = 1;
+                        case "II" -> semester = 2;
+                        case "III" -> semester = 3;
+                        case "IV" -> semester = 4;
+                        case "V" -> semester = 5;
+                        case "VI" -> semester = 6;
+                        case "VII" -> semester = 7;
+                        case "VIII" -> semester = 8;
+                    }
+                } else {
+                    java.util.regex.Matcher cohortMatch = java.util.regex.Pattern.compile("(?i)\\b(FE|SE|TE|BE)\\b").matcher(filename + " " + text);
+                    if (cohortMatch.find()) {
+                        String c = cohortMatch.group(1).toUpperCase();
+                        switch (c) {
+                            case "FE" -> semester = 1;
+                            case "SE" -> semester = 3;
+                            case "TE" -> semester = 5;
+                            case "BE" -> semester = 7;
+                        }
+                    }
+                }
+            }
+
+            // 3. Detect Subject
+            String subjectName = "";
+            java.util.regex.Matcher subMatch = java.util.regex.Pattern.compile("(?i)(?:subject|course|lab|laboratory)\\s*(?:name)?\\s*[:\\-–]\\s*([^\\n\\r]{3,80})").matcher(text);
+            if (subMatch.find()) {
+                subjectName = subMatch.group(1).trim();
+            }
+
+            List<AcademicSubject> allSubjects = subjects.findAll();
+            String combinedSearch = (filename + " " + text).toLowerCase();
+            for (AcademicSubject s : allSubjects) {
+                if (combinedSearch.contains(s.getName().toLowerCase()) || (s.getCode() != null && combinedSearch.contains(s.getCode().toLowerCase()))) {
+                    subjectName = s.getName();
+                    if (semester == null) {
+                        semester = s.getSemester();
+                    }
+                    break;
+                }
+            }
+
+            if (semester == null) {
+                semester = 3;
+            }
+            if (subjectName.isBlank()) {
+                subjectName = "Data Structures";
+            }
+
+            // 4. Detect Title
+            String title = "";
+            for (String l : lines) {
+                if (l.matches("(?i)^(?:experiment|practical|exp\\.?)\\s*\\d*\\s*[:\\-–].*") || l.matches("(?i)^title\\s*[:\\-–].*")) {
+                    title = l.replaceFirst("(?i)^(?:title|experiment|practical|exp\\.?\\s*\\d*)\\s*[:\\-–]?\\s*", "").trim();
+                    break;
+                }
+            }
+            if (title.isBlank()) {
+                for (String l : lines) {
+                    String lower = l.toLowerCase();
+                    if (!lower.contains("college") && !lower.contains("university") && !lower.contains("department")
+                            && !lower.contains("syllabus") && !lower.contains("academic year") && !lower.contains("semester")
+                            && !lower.contains("institute") && !lower.contains("autonomous") && l.length() > 4 && l.length() < 120) {
+                        title = l;
+                        break;
+                    }
+                }
+            }
+            if (title.isBlank()) {
+                title = deriveTitle(filename);
+            }
 
             String aim = section(text, "(?i)(?:aim|objective)\\s*[:\\-]?", "(?i)(?:theory|introduction|procedure|algorithm|questions?)\\s*[:\\-]?");
             if (aim.isBlank()) aim = "Understand and implement " + cleanTopic(title) + " and analyze its operational time and space characteristics.";
@@ -163,8 +250,8 @@ public class PracticalController {
 
             return new ParsedDocument(
                     title,
-                    "",
-                    null,
+                    subjectName,
+                    semester,
                     experimentNumber,
                     "Laboratory experiment generated from " + filename,
                     aim,
@@ -222,11 +309,10 @@ public class PracticalController {
 
     @GetMapping({"/source-pdf/{name:.+}", "/api/practicals/source-pdf/{name:.+}"})
     public org.springframework.http.ResponseEntity<org.springframework.core.io.Resource> sourcePdf(@PathVariable String name, @AuthenticationPrincipal UserAccount user) {
-        requireTeacher(user);
+        if (user == null) throw new com.codelabx.common.ApiException(org.springframework.http.HttpStatus.UNAUTHORIZED, "Authentication required.");
         if (!name.matches("[a-f0-9-]{36}\\.(pdf|docx|doc)")) throw new com.codelabx.common.ApiException(org.springframework.http.HttpStatus.NOT_FOUND, "Document not found.");
         Path path = Path.of("uploads", "practicals", name).toAbsolutePath().normalize();
         if (!Files.exists(path)) throw new com.codelabx.common.ApiException(org.springframework.http.HttpStatus.NOT_FOUND, "Document not found.");
-        if (!practicalService.ownsSourcePdf("/api/practicals/source-pdf/" + name, user)) throw new com.codelabx.common.ApiException(org.springframework.http.HttpStatus.FORBIDDEN, "You cannot access another faculty member's document.");
         String mime = name.endsWith(".docx") ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                 : name.endsWith(".doc") ? "application/msword"
                 : "application/pdf";
@@ -240,6 +326,7 @@ public class PracticalController {
         var matcher = java.util.regex.Pattern.compile(start + "([\\s\\S]*?)(?=" + end + "|$)").matcher(text);
         return matcher.find() ? matcher.group(1).trim() : "";
     }
+
     public record ParsedDocument(
             String title,
             String subject,
@@ -261,6 +348,7 @@ public class PracticalController {
             List<String> practiceQuestions,
             List<String> vivaQuestions
     ) {}
+
     public record ClassAssignRequest(String department, String classSection, Instant dueAt, String instructions) {}
 
     @GetMapping({"/students", "/api/practicals/students"})
@@ -269,9 +357,15 @@ public class PracticalController {
     }
 
     private void requireTeacher(UserAccount user) {
-        if (!"TEACHER".equals(user.getRole().name())) {
-            throw new com.codelabx.common.ApiException(org.springframework.http.HttpStatus.FORBIDDEN, "Teacher role required.");
+        if (user == null || (!"TEACHER".equals(user.getRole().name()) && !"ADMIN".equals(user.getRole().name()))) {
+            throw new com.codelabx.common.ApiException(org.springframework.http.HttpStatus.FORBIDDEN, "Faculty or Admin role required.");
         }
     }
-    private void validateLanguage(String language){if(language==null||language.isBlank())return; if(languages.findByCodeIgnoreCase(language.trim().replace(" ", "")).filter(com.codelabx.execution.ProgrammingLanguage::isEnabled).isEmpty())throw new com.codelabx.common.ApiException(org.springframework.http.HttpStatus.BAD_REQUEST,"Select a programming language enabled by the administrator.");}
+
+    private void validateLanguage(String language){
+        if(language==null||language.isBlank()) return;
+        if(languages.findByCodeIgnoreCase(language.trim().replace(" ", "")).filter(com.codelabx.execution.ProgrammingLanguage::isEnabled).isEmpty()) {
+            throw new com.codelabx.common.ApiException(org.springframework.http.HttpStatus.BAD_REQUEST,"Select a programming language enabled by the administrator.");
+        }
+    }
 }

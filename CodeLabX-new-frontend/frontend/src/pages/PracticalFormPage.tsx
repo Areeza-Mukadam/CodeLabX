@@ -270,8 +270,9 @@ export function PracticalFormPage() {
   const downloadSourcePdf = async () => {
     if (!form.sourcePdfPath) return;
     try {
-      const base = import.meta.env.VITE_API_URL || "http://localhost:8080";
-      const response = await fetch(`${base}/api${form.sourcePdfPath}`, { headers: { Authorization: `Bearer ${useAuth.getState().token}` } });
+      const base = import.meta.env.VITE_API_URL || "";
+      const urlPath = form.sourcePdfPath.startsWith("/api") ? `${base}${form.sourcePdfPath}` : `${base}/api${form.sourcePdfPath}`;
+      const response = await fetch(urlPath, { headers: { Authorization: `Bearer ${useAuth.getState().token}` } });
       if (!response.ok) throw new Error("Unable to download the original PDF.");
       const blob=await response.blob(), url=URL.createObjectURL(blob), anchor=document.createElement("a");
       anchor.href=url; anchor.download=form.sourcePdfName||"practical.pdf"; anchor.click(); URL.revokeObjectURL(url);

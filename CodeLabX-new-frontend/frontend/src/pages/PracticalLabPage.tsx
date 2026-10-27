@@ -384,18 +384,6 @@ export function PracticalLabPage() {
           screenshots,
         }),
       });
-      await api("/submissions", {
-        method: "POST",
-        body: JSON.stringify({
-          practicalId,
-          language,
-          code,
-          output: terminal,
-          executionStatus: runState === "RUNNING" ? "SUCCESS" : runState,
-          conclusionText: conclusion,
-          screenshots,
-        }),
-      });
 
       try {
         localStorage.setItem(`codelabx.progress.${id}`, JSON.stringify({
