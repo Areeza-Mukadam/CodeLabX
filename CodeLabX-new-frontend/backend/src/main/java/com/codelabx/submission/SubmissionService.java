@@ -55,7 +55,8 @@ public class SubmissionService {
         submission.setLanguage(request.language());
         submission.setCode(request.code());
         submission.setOutput(request.output() == null ? "" : request.output());
-        submission.setExecutionStatus(request.executionStatus() == null ? "SUCCESS" : request.executionStatus());
+        // Run results are client-submitted and can be forged; keep them informational only.
+        submission.setExecutionStatus("UNVERIFIED");
         submission.setConclusionText(progress.getConclusionText());
         submission.setScreenshots(request.screenshots());
         submission.setSubmittedAt(Instant.now());

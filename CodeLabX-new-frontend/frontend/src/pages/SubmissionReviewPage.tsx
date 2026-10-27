@@ -117,7 +117,8 @@ export function SubmissionReviewPage() {
         <section className="review-code">
           <h2>Submitted code</h2>
           <pre>{s.code}</pre>
-          <h3>Program output</h3>
+          <h3>Student-reported run output</h3>
+          <p className="muted small">This output is not verified for grading. Assess the submitted code independently.</p>
           <pre>{s.output || "No output was recorded."}</pre>
 
           {((s.screenshots && s.screenshots.length > 0) || (data.submission?.screenshots && data.submission?.screenshots.length > 0)) && (

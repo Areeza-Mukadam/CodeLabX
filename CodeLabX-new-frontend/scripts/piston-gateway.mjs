@@ -9,7 +9,7 @@ const EXECUTE_PATH = '/api/v2/execute';
 const MAX_REQUEST_BYTES = 2 * 1024 * 1024;
 const MAX_RESPONSE_BYTES = 2 * 1024 * 1024;
 const UPSTREAM_TIMEOUT_MS = 20_000;
-const ALLOWED_LANGUAGES = new Set(['java', 'python']);
+const ALLOWED_LANGUAGES = new Set(['java', 'python', 'sqlite3', 'nasm64']);
 
 function json(res, status, body, extraHeaders = {}) {
   const data = Buffer.from(JSON.stringify(body));

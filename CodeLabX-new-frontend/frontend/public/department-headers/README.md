@@ -4,6 +4,11 @@ Upload each department's official print header as a PNG in this folder. Use the
 filename matching the department slug below; the application uses a generic
 college/department heading until a matching image is present.
 
+For this project, paste the PNG files directly into
+`frontend/public/department-headers/` (alongside this README). PDF export
+automatically selects the image using the signed-in user's department. No code
+change is needed when adding a header for one of the listed departments.
+
 - `computer-engineering.png`
 - `information-technology.png`
 - `artificial-intelligence-data-science.png`

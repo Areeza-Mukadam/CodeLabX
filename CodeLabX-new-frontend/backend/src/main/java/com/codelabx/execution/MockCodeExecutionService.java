@@ -19,6 +19,9 @@ public class MockCodeExecutionService implements CodeExecutionService {
         if (source == null || source.isBlank()) {
             return ExecutionResult.malformed("Source code is required.");
         }
+        if (language != CodeLanguage.JAVA && language != CodeLanguage.PYTHON) {
+            return ExecutionResult.unavailable("The mock execution provider only supports Java and Python. Select Piston to run SQL or Assembly.");
+        }
         long startTime = System.currentTimeMillis();
 
         // 1. Try real local process execution via java or python

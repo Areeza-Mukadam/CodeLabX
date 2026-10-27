@@ -16,6 +16,8 @@ import org.springframework.web.client.RestClientException;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 @ConditionalOnProperty(name = "codelabx.execution.provider", havingValue = "piston", matchIfMissing = true)
@@ -25,6 +27,8 @@ public class ExternalApiCodeExecutionService implements CodeExecutionService {
     private final ObjectMapper objectMapper;
     private final String javaVersion;
     private final String pythonVersion;
+    private final String sqlVersion;
+    private final String assemblyVersion;
     private final int timeoutMs;
     private final String authorization;
     private final ProgrammingLanguageRepository languages;
@@ -34,12 +38,14 @@ public class ExternalApiCodeExecutionService implements CodeExecutionService {
             @Value("${codelabx.execution.piston.url}") String pistonUrl,
             @Value("${codelabx.execution.piston.java-version}") String javaVersion,
             @Value("${codelabx.execution.piston.python-version}") String pythonVersion,
+            @Value("${codelabx.execution.piston.sql-version}") String sqlVersion,
+            @Value("${codelabx.execution.piston.assembly-version}") String assemblyVersion,
             @Value("${codelabx.execution.timeout-ms}") int timeoutMs,
             @Value("${codelabx.execution.piston.authorization:}") String authorization,
             ObjectMapper objectMapper,
             ProgrammingLanguageRepository languages
     ) {
-        this(pistonUrl, javaVersion, pythonVersion, timeoutMs, authorization, objectMapper, languages,
+        this(pistonUrl, javaVersion, pythonVersion, sqlVersion, assemblyVersion, timeoutMs, authorization, objectMapper, languages,
                 createRestClient(pistonUrl, timeoutMs));
     }
 
@@ -47,6 +53,8 @@ public class ExternalApiCodeExecutionService implements CodeExecutionService {
             String pistonUrl,
             String javaVersion,
             String pythonVersion,
+            String sqlVersion,
+            String assemblyVersion,
             int timeoutMs,
             String authorization,
             ObjectMapper objectMapper,
@@ -55,6 +63,8 @@ public class ExternalApiCodeExecutionService implements CodeExecutionService {
     ) {
         this.javaVersion = javaVersion;
         this.pythonVersion = pythonVersion;
+        this.sqlVersion = sqlVersion;
+        this.assemblyVersion = assemblyVersion;
         this.timeoutMs = timeoutMs;
         this.authorization = authorization;
         this.languages = languages;
@@ -80,17 +90,27 @@ public class ExternalApiCodeExecutionService implements CodeExecutionService {
         String lang;
         String version;
         String fileName;
-        if (language == CodeLanguage.JAVA) {
-            lang = "java";
-            version = languages.findByCodeIgnoreCase("JAVA").filter(ProgrammingLanguage::isEnabled).map(ProgrammingLanguage::getRuntimeVersion).orElse(javaVersion);
-            fileName = "Main.java";
-        } else if (language == CodeLanguage.PYTHON) {
-            lang = "python";
-            version = languages.findByCodeIgnoreCase("PYTHON").filter(ProgrammingLanguage::isEnabled).map(ProgrammingLanguage::getRuntimeVersion).orElse(pythonVersion);
-            fileName = "main.py";
-        } else {
-            return ExecutionResult.malformed("Unsupported language.");
-        }
+        String code = language.name();
+        String configuredVersion = switch (language) {
+            case JAVA -> javaVersion;
+            case PYTHON -> pythonVersion;
+            case SQL -> sqlVersion;
+            case ASSEMBLY -> assemblyVersion;
+        };
+        lang = switch (language) {
+            case JAVA -> "java";
+            case PYTHON -> "python";
+            case SQL -> "sqlite3";
+            case ASSEMBLY -> "nasm64";
+        };
+        version = languages.findByCodeIgnoreCase(code).filter(ProgrammingLanguage::isEnabled)
+                .map(ProgrammingLanguage::getRuntimeVersion).orElse(configuredVersion);
+        fileName = switch (language) {
+            case JAVA -> javaSourceFile(source);
+            case PYTHON -> "main.py";
+            case SQL -> "main.sql";
+            case ASSEMBLY -> "main.asm";
+        };
 
         Map<String, Object> payload = Map.of(
                 "language", lang,
@@ -145,6 +165,7 @@ public class ExternalApiCodeExecutionService implements CodeExecutionService {
             String stderr = text(run, "stderr");
             String signal = run.path("signal").asText("");
             int code = run.path("code").asInt(0);
+            String status = run.path("status").asText("");
 
             String javaCompilerOutput = stderr == null || stderr.isBlank() ? text(run, "output") : stderr;
             if (language == CodeLanguage.JAVA && code != 0
@@ -154,7 +175,7 @@ public class ExternalApiCodeExecutionService implements CodeExecutionService {
                         javaCompilerOutput, "", elapsed);
             }
 
-            if ("SIGKILL".equals(signal) || "timeout".equalsIgnoreCase(signal)) {
+            if ("SIGKILL".equals(signal) || "timeout".equalsIgnoreCase(signal) || "TO".equals(status)) {
                 return new ExecutionResult("TIMEOUT", stdout, stderr, "", "Execution timed out.", elapsed);
             }
             if (code != 0) {
@@ -165,6 +186,12 @@ public class ExternalApiCodeExecutionService implements CodeExecutionService {
         } catch (Exception ex) {
             return ExecutionResult.apiFailure("Malformed response from execution service.");
         }
+    }
+
+    private String javaSourceFile(String source) {
+        Matcher matcher = Pattern.compile("\\bpublic\\s+(?:final\\s+)?class\\s+([A-Za-z_$][\\w$]*)")
+                .matcher(source);
+        return matcher.find() ? matcher.group(1) + ".java" : "Main.java";
     }
 
     private String text(JsonNode node, String field) {

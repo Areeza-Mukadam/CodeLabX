@@ -62,6 +62,45 @@ class PistonExecutionServiceTest {
 
     @Test
     @Timeout(value = 10, unit = TimeUnit.SECONDS)
+    void forwardsSqliteAndNasm64RequestsToConfiguredRuntimes() {
+        RestClient.Builder builder = RestClient.builder().baseUrl(EXECUTE_URL);
+        MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
+        var service = service(builder.build(), "");
+
+        server.expect(requestTo(EXECUTE_URL))
+                .andExpect(jsonPath("$.language").value("sqlite3"))
+                .andExpect(jsonPath("$.version").value("3.36.0"))
+                .andExpect(jsonPath("$.files[0].name").value("main.sql"))
+                .andExpect(jsonPath("$.files[0].content").value("SELECT 1;"))
+                .andRespond(withSuccess(SUCCESS_RESPONSE, MediaType.APPLICATION_JSON));
+        server.expect(requestTo(EXECUTE_URL))
+                .andExpect(jsonPath("$.language").value("nasm64"))
+                .andExpect(jsonPath("$.version").value("2.15.5"))
+                .andExpect(jsonPath("$.files[0].name").value("main.asm"))
+                .andExpect(jsonPath("$.files[0].content").value("section .text"))
+                .andRespond(withSuccess(SUCCESS_RESPONSE, MediaType.APPLICATION_JSON));
+
+        assertEquals("SUCCESS", service.execute(CodeLanguage.SQL, "SELECT 1;", "").status());
+        assertEquals("SUCCESS", service.execute(CodeLanguage.ASSEMBLY, "section .text", "").status());
+        server.verify();
+    }
+
+    @Test
+    @Timeout(value = 10, unit = TimeUnit.SECONDS)
+    void usesThePublicJavaClassNameAsTheSourceFilename() {
+        RestClient.Builder builder = RestClient.builder().baseUrl(EXECUTE_URL);
+        MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
+        server.expect(requestTo(EXECUTE_URL))
+                .andExpect(jsonPath("$.files[0].name").value("Solution.java"))
+                .andRespond(withSuccess(SUCCESS_RESPONSE, MediaType.APPLICATION_JSON));
+
+        assertEquals("SUCCESS", service(builder.build(), "").execute(
+                CodeLanguage.JAVA, "public class Solution { public static void main(String[] args) {} }", "").status());
+        server.verify();
+    }
+
+    @Test
+    @Timeout(value = 10, unit = TimeUnit.SECONDS)
     void mapsPistonsJavaCompilerErrorReturnedInRunStage() {
         RestClient.Builder builder = RestClient.builder().baseUrl(EXECUTE_URL);
         MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
@@ -116,7 +155,7 @@ class PistonExecutionServiceTest {
 
     private ExternalApiCodeExecutionService service(RestClient restClient, String authorization) {
         return new ExternalApiCodeExecutionService(
-                EXECUTE_URL, "15.0.2", "3.12.0", 12000, authorization,
+                EXECUTE_URL, "15.0.2", "3.12.0", "3.36.0", "2.15.5", 12000, authorization,
                 new ObjectMapper(), languageRepository(), restClient);
     }
 

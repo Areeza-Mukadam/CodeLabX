@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import computerHeader from "../assets/tcet-comp-header.png";
 import itHeader from "../assets/tcet-it-header.png";
 
@@ -21,6 +21,7 @@ export function DepartmentPrintHeader({ department }: { department?: string | nu
     : slug === "information-technology" ? itHeader
       : `/department-headers/${slug}.png`;
   const [failed, setFailed] = useState(false);
+  useEffect(() => setFailed(false), [existingHeader]);
 
   return (
     <div style={{ textAlign: "center", marginBottom: 16 }}>

@@ -5,6 +5,8 @@ import { ErrorBox, Loading } from "../components/Feedback";
 import { SubmittedStatus } from "../components/SubmittedStatus";
 import { useLoad } from "../hooks/useLoad";
 import { api } from "../services/api";
+import { runBrowserCode } from "../services/browserExecution";
+import { BrowserRuntimeUnavailable } from "../services/browserExecution.types";
 import type { Detail, Progress } from "../types";
 import { steps } from "../types";
 import { humanStatus, statusClass } from "../utils/formatters";
@@ -58,25 +60,18 @@ int main() {
 SELECT 1;
 `;
     case "ASSEMBLY":
-      return `; TCET CodeLabX - Assembly (NASM) Starter Template
-section .data
-    msg db "Hello, World!", 10
-    len equ $ - msg
+      return `; TCET CodeLabX - 8086 Assembly (NASM-style)
+org 100h
 
-section .text
-    global _start
+start:
+    mov dx, message
+    mov ah, 09h
+    int 21h
 
-_start:
-    ; Write your code here
-    mov rax, 1
-    mov rdi, 1
-    mov rsi, msg
-    mov rdx, len
-    syscall
+    mov ax, 4C00h
+    int 21h
 
-    mov rax, 60
-    xor rdi, rdi
-    syscall
+message db 'Hello, World!', 13, 10, '$'
 `;
     default:
       return `// Write your solution here\n`;
@@ -85,6 +80,7 @@ _start:
 
 const monacoLanguage = (language: string) => {
   if (language === "ASSEMBLY") return "plaintext";
+  if (language === "SQL") return "sql";
   return language.toLowerCase();
 };
 
@@ -260,10 +256,25 @@ export function PracticalLabPage() {
     setRunState("RUNNING");
     setTerminal("Running your program…");
     try {
-      const r = await api<any>("/execution/run", {
-        method: "POST",
-        body: JSON.stringify({ practicalId, language, source: code, stdin }),
-      });
+      let r: any;
+      const legacyNasm64 = language === "ASSEMBLY" && /\b(?:section\s+\.|global\s+_start|syscall|rax|rdi|rsi|rdx)\b/i.test(code);
+      if (!legacyNasm64) {
+        try {
+          r = await runBrowserCode(language, code, stdin);
+        } catch (error) {
+          if (!(error instanceof BrowserRuntimeUnavailable)) throw error;
+          if (language === "ASSEMBLY") throw error;
+          r = await api<any>("/execution/run", {
+            method: "POST",
+            body: JSON.stringify({ practicalId, language, source: code, stdin }),
+          });
+        }
+      } else {
+        r = await api<any>("/execution/run", {
+          method: "POST",
+          body: JSON.stringify({ practicalId, language, source: code, stdin }),
+        });
+      }
       setRunState(r.status);
       setTerminal(
         [
@@ -599,13 +610,14 @@ export function PracticalLabPage() {
                         onChange={(e) => {
                           const v = e.target.value;
                           setLanguage(v);
+                          if (v === "SQL") setStdin("");
                           setCode(starterForLanguage(v, p));
                         }}
                       >
                         <option value="JAVA">Java</option>
                         <option value="PYTHON">Python</option>
                         <option value="SQL">SQL (SQLite)</option>
-                        <option value="ASSEMBLY">Assembly (NASM)</option>
+                        <option value="ASSEMBLY">Assembly (8086, browser)</option>
                       </select>
                     </label>
                     <div className="editor-actions">
@@ -665,7 +677,7 @@ export function PracticalLabPage() {
                       }}
                     />
                   </div>
-                  <label className="editor-stdin-label">
+                  {language !== "SQL" && <label className="editor-stdin-label">
                     Program input{" "}
                     <span className="muted">(one value per line)</span>
                     <textarea
@@ -675,7 +687,7 @@ export function PracticalLabPage() {
                       placeholder="Input passed to Scanner / input() when the program runs"
                       rows={3}
                     />
-                  </label>
+                  </label>}
                   <div className="terminal">
                     <div className="terminal-title">
                       <span>
