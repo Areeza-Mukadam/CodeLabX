@@ -517,7 +517,7 @@ function getMockResponse<T>(path: string, init: RequestInit = {}): T | null {
       vivaMarks: s.vivaMarks,
       feedback: s.feedback,
       reviewedAt: s.submittedAt,
-      facultyName: "Prof. Samir Sawant",
+      facultyName: "Mr. Sameer Sawant",
       submittedAt: s.submittedAt,
       screenshots: s.screenshots || [],
       code: s.code,
@@ -773,7 +773,7 @@ function getMockResponse<T>(path: string, init: RequestInit = {}): T | null {
       ],
       facultyAssignments: [
         {
-          faculty: "Prof. Samir Sawant",
+          faculty: "Mr. Sameer Sawant",
           department: "Computer Engineering",
           classSection: "SE-B",
           practical: "Array Operations",
@@ -783,7 +783,7 @@ function getMockResponse<T>(path: string, init: RequestInit = {}): T | null {
           reviewed: 4,
         },
         {
-          faculty: "Prof. Samir Sawant",
+          faculty: "Mr. Sameer Sawant",
           department: "Computer Engineering",
           classSection: "SE-B",
           practical: "Searching Algorithms",
@@ -808,7 +808,7 @@ function getMockResponse<T>(path: string, init: RequestInit = {}): T | null {
       divisions: ["A", "B", "C"],
       subjects: ["Data Structures & Algorithms", "Data Structures", "Introduction to Intelligent Systems", "Database Management Systems"],
       faculty: [
-        { id: 2, name: "Prof. Samir Sawant" },
+        { id: 2, name: "Mr. Sameer Sawant" },
         { id: 3, name: "Prof. Rashmi Thakur" },
         { id: 4, name: "Prof. Rajesh Patel" },
       ],

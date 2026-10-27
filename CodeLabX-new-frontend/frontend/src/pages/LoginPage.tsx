@@ -29,7 +29,7 @@ const roleDetails: Record<
     tab: "Faculty",
     eyebrow: "FACULTY PORTAL",
     title: "Prepare the lab. Guide the work.",
-    email: "samir.sawant@tcetmumbai.in",
+    email: "sameer.sawant@tcetmumbai.in",
   },
   admin: {
     tab: "Admin",
@@ -462,7 +462,7 @@ export function LoginPage() {
                       textAlign: "left"
                     }}
                   >
-                    <span><b>👨‍🏫 Faculty: Samir Sawant</b> <span style={{ color: "#64748b" }}>(Computer Engineering)</span></span>
+                    <span><b>👨‍🏫 Faculty: Mr. Sameer Sawant</b> <span style={{ color: "#64748b" }}>(Computer Engineering)</span></span>
                     <span style={{ color: "var(--palette-red, #c02040)", fontWeight: 700 }}>Login →</span>
                   </button>
 
@@ -487,7 +487,7 @@ export function LoginPage() {
                       textAlign: "left"
                     }}
                   >
-                    <span><b>🛡️ Admin: Saurabh</b> <span style={{ color: "#64748b" }}>(Institution Administrator)</span></span>
+                    <span><b>🛡️ Admin: Mr. Saurabh Shrivastava</b> <span style={{ color: "#64748b" }}>(Institution Administrator)</span></span>
                     <span style={{ color: "var(--palette-red, #c02040)", fontWeight: 700 }}>Login →</span>
                   </button>
                 </div>

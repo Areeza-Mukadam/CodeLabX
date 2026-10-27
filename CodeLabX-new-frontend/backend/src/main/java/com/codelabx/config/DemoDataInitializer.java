@@ -47,15 +47,17 @@ public class DemoDataInitializer {
             seedAllSubjects(subjects);
 
             // Canonical Admin accounts
-            UserAccount adminSaurabh = user(users, passwordEncoder, "Saurabh", "saurabh@tcetmumbai.in", Role.ADMIN);
+            UserAccount adminSaurabh = user(users, passwordEncoder, "Mr. Saurabh Shrivastava", "saurabh@tcetmumbai.in", Role.ADMIN);
             adminSaurabh.setDepartment("Administration");
             user(users, passwordEncoder, "CodeLabX Administrator", "admin@tcetmumbai.in", Role.ADMIN);
             user(users, passwordEncoder, "TCET Exam Cell Admin", "admin.exam@tcetmumbai.in", Role.ADMIN);
 
             // Canonical Faculty accounts
-            UserAccount teacherSamir = user(users, passwordEncoder, "Samir Sawant", "samir.sawant@tcetmumbai.in", Role.TEACHER);
+            UserAccount teacherSamir = user(users, passwordEncoder, "Mr. Sameer Sawant", "samir.sawant@tcetmumbai.in", Role.TEACHER);
+            UserAccount teacherSameer = user(users, passwordEncoder, "Mr. Sameer Sawant", "sameer.sawant@tcetmumbai.in", Role.TEACHER);
+            teacherSameer.setDepartment("Computer Engineering");
             teacherSamir.setDepartment("Computer Engineering");
-            UserAccount teacher = user(users, passwordEncoder, "Samir Sawant", "teacher@tcetmumbai.in", Role.TEACHER);
+            UserAccount teacher = user(users, passwordEncoder, "Mr. Sameer Sawant", "teacher@tcetmumbai.in", Role.TEACHER);
             teacher.setDepartment("Computer Engineering");
             UserAccount teacherIt = user(users, passwordEncoder, "Rashmi Thakur", "faculty.it@tcetmumbai.in", Role.TEACHER);
             UserAccount teacherAiml = user(users, passwordEncoder, "Rajesh Patel", "faculty.aiml@tcetmumbai.in", Role.TEACHER);

@@ -107,7 +107,7 @@ export function StudentDashboardPage({ initialTab = "overview" }: StudentDashboa
       timeAgo: "2 hours ago",
       badge: `Evaluated · ${res.marks ?? 14}/14 Marks`,
       badgeClass: "badge-success",
-      description: `Graded by ${res.facultyName || "Prof. Samir Sawant"} with remarks: "${res.feedback || "Good laboratory submission"}"`,
+      description: `Graded by ${res.facultyName || "Mr. Sameer Sawant"} with remarks: "${res.feedback || "Good laboratory submission"}"`,
       details: `Code: ${res.codeMarks ?? 10}/10 pts · Viva: ${res.vivaMarks ?? 4}/4 pts · Continuous Assessment verified`,
       marks: `${res.marks ?? 14} / 14`,
       resultRef: res,

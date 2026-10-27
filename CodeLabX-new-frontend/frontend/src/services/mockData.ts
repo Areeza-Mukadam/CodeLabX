@@ -138,16 +138,23 @@ export const DEMO_USERS: Record<string, User> = {
   },
 
   // Faculty
+  "sameer.sawant@tcetmumbai.in": {
+    id: 101,
+    name: "Mr. Sameer Sawant",
+    email: "sameer.sawant@tcetmumbai.in",
+    role: "TEACHER",
+    department: "Computer Engineering",
+  },
   "samir.sawant@tcetmumbai.in": {
     id: 101,
-    name: "Samir Sawant",
+    name: "Mr. Sameer Sawant",
     email: "samir.sawant@tcetmumbai.in",
     role: "TEACHER",
     department: "Computer Engineering",
   },
   "teacher@tcetmumbai.in": {
     id: 101,
-    name: "Samir Sawant",
+    name: "Mr. Sameer Sawant",
     email: "teacher@tcetmumbai.in",
     role: "TEACHER",
     department: "Computer Engineering",
@@ -170,14 +177,14 @@ export const DEMO_USERS: Record<string, User> = {
   // Admin
   "saurabh@tcetmumbai.in": {
     id: 201,
-    name: "Saurabh",
+    name: "Mr. Saurabh Shrivastava",
     email: "saurabh@tcetmumbai.in",
     role: "ADMIN",
     department: "Administration",
   },
   "admin@tcetmumbai.in": {
     id: 201,
-    name: "Saurabh",
+    name: "Mr. Saurabh Shrivastava",
     email: "admin@tcetmumbai.in",
     role: "ADMIN",
     department: "Administration",
