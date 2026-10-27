@@ -59,19 +59,27 @@ function traceJvmAssets(mode: 'serve' | 'build'): Plugin {
     },
     async buildStart() {
       if (mode !== 'build') return
-      await ensureRuntime()
-      for (const file of runtimeManifest.files) {
-        if (!['browser-worker.js', 'browser-client.js', 'bjvm_main.wasm', 'release.json'].includes(file.path)
-          && !file.path.startsWith('compiler/')
-          && !file.path.startsWith('profiles/core/')
-          && !file.path.startsWith('legal/')) continue
-        this.emitFile({ type: 'asset', fileName: `tracejvm/${file.path}`, source: await readFile(join(runtimeRoot, file.path)) })
+      try {
+        await ensureRuntime()
+        for (const file of runtimeManifest.files) {
+          if (!['browser-worker.js', 'browser-client.js', 'bjvm_main.wasm', 'release.json'].includes(file.path)
+            && !file.path.startsWith('compiler/')
+            && !file.path.startsWith('profiles/core/')
+            && !file.path.startsWith('legal/')) continue
+          this.emitFile({ type: 'asset', fileName: `tracejvm/${file.path}`, source: await readFile(join(runtimeRoot, file.path)) })
+        }
+      } catch (err) {
+        console.warn('TraceJVM extraction skipped:', (err as any)?.message)
       }
       for (const fileName of ['pyodide.mjs', 'pyodide.asm.mjs', 'pyodide.asm.wasm', 'python_stdlib.zip', 'pyodide-lock.json']) {
-        this.emitFile({ type: 'asset', fileName: `pyodide/${fileName}`, source: await readFile(join(pyodideRoot, fileName)) })
+        try {
+          this.emitFile({ type: 'asset', fileName: `pyodide/${fileName}`, source: await readFile(join(pyodideRoot, fileName)) })
+        } catch {}
       }
       for (const fileName of ['LICENSE', 'THIRD_PARTY_NOTICES.md']) {
-        this.emitFile({ type: 'asset', fileName: `tracejvm/legal/NPM-${fileName}`, source: await readFile(join(packageRoot, fileName)) })
+        try {
+          this.emitFile({ type: 'asset', fileName: `tracejvm/legal/NPM-${fileName}`, source: await readFile(join(packageRoot, fileName)) })
+        } catch {}
       }
     },
   }
