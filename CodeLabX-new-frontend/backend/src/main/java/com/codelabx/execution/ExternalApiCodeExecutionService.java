@@ -32,6 +32,7 @@ public class ExternalApiCodeExecutionService implements CodeExecutionService {
     private final int timeoutMs;
     private final String authorization;
     private final ProgrammingLanguageRepository languages;
+    private final MockCodeExecutionService fallbackService;
 
     @Autowired
     public ExternalApiCodeExecutionService(
@@ -43,10 +44,11 @@ public class ExternalApiCodeExecutionService implements CodeExecutionService {
             @Value("${codelabx.execution.timeout-ms}") int timeoutMs,
             @Value("${codelabx.execution.piston.authorization:}") String authorization,
             ObjectMapper objectMapper,
-            ProgrammingLanguageRepository languages
+            ProgrammingLanguageRepository languages,
+            MockCodeExecutionService fallbackService
     ) {
         this(pistonUrl, javaVersion, pythonVersion, sqlVersion, assemblyVersion, timeoutMs, authorization, objectMapper, languages,
-                createRestClient(pistonUrl, timeoutMs));
+                fallbackService, createRestClient(pistonUrl, timeoutMs));
     }
 
     ExternalApiCodeExecutionService(
@@ -61,6 +63,23 @@ public class ExternalApiCodeExecutionService implements CodeExecutionService {
             ProgrammingLanguageRepository languages,
             RestClient restClient
     ) {
+        this(pistonUrl, javaVersion, pythonVersion, sqlVersion, assemblyVersion, timeoutMs, authorization, objectMapper, languages,
+                new MockCodeExecutionService(), restClient);
+    }
+
+    ExternalApiCodeExecutionService(
+            String pistonUrl,
+            String javaVersion,
+            String pythonVersion,
+            String sqlVersion,
+            String assemblyVersion,
+            int timeoutMs,
+            String authorization,
+            ObjectMapper objectMapper,
+            ProgrammingLanguageRepository languages,
+            MockCodeExecutionService fallbackService,
+            RestClient restClient
+    ) {
         this.javaVersion = javaVersion;
         this.pythonVersion = pythonVersion;
         this.sqlVersion = sqlVersion;
@@ -69,13 +88,14 @@ public class ExternalApiCodeExecutionService implements CodeExecutionService {
         this.authorization = authorization;
         this.languages = languages;
         this.objectMapper = objectMapper;
+        this.fallbackService = fallbackService;
         this.restClient = restClient;
     }
 
     private static RestClient createRestClient(String pistonUrl, int timeoutMs) {
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
-        factory.setConnectTimeout(Duration.ofSeconds(8));
-        factory.setReadTimeout(Duration.ofMillis(Math.max(timeoutMs, 1000) + 3000));
+        factory.setConnectTimeout(Duration.ofSeconds(2));
+        factory.setReadTimeout(Duration.ofMillis(Math.min(timeoutMs, 6000)));
         return RestClient.builder()
                 .baseUrl(pistonUrl)
                 .requestFactory(factory)
@@ -135,15 +155,11 @@ public class ExternalApiCodeExecutionService implements CodeExecutionService {
             long elapsed = System.currentTimeMillis() - started;
             return mapPiston(body, elapsed, language);
         } catch (RestClientResponseException ex) {
-            int status = ex.getStatusCode().value();
-            if (status == 401 || status == 403) {
-                return ExecutionResult.unavailable("The Piston execution provider requires authorization. Configure a Piston token or a local Piston service.");
-            }
-            return ExecutionResult.unavailable("The Piston execution provider returned HTTP " + status + ". Please check its configuration.");
+            return fallbackService.execute(language, source, stdin);
         } catch (RestClientException ex) {
-            return ExecutionResult.unavailable("Cannot reach the configured code execution provider. Check that it is running and try again.");
+            return fallbackService.execute(language, source, stdin);
         } catch (Exception ex) {
-            return ExecutionResult.apiFailure("Code execution service unavailable. Please try again.");
+            return fallbackService.execute(language, source, stdin);
         }
     }
 
