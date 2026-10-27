@@ -107,35 +107,81 @@ public class SubmissionService {
 
     @Transactional(readOnly = true)
     public List<SubmissionListItem> forTeacher(UserAccount teacher) {
-        return submissions.findAllByOrderBySubmittedAtDesc().stream().map(s -> {
-            var evaluation = evaluations.findBySubmissionId(s.getId()).orElse(null);
-            return new SubmissionListItem(
-                    s.getId(),
-                    s.getStudent().getId(),
-                    s.getStudent().getName(),
-                    s.getStudent().getEmail(),
-                    s.getStudent().getRollNo(),
-                    classSection(s.getStudent()),
-                    s.getPractical().getId(),
-                    s.getPractical().getTitle(),
-                    s.getLanguage(),
-                    s.getExecutionStatus(),
-                    s.getSubmittedAt(),
-                    evaluation != null,
-                    evaluation != null ? evaluation.getTotalMarks() : null
-            );
-        }).toList();
+        final String tDept = teacher.getDepartment() != null ? teacher.getDepartment().trim().toLowerCase() : "";
+        final String tEmail = teacher.getEmail() != null ? teacher.getEmail().trim().toLowerCase() : "";
+        final boolean isItTeacher = tDept.contains("information technology") || tDept.contains("it") || tEmail.contains("faculty.it@");
+        final boolean isCompTeacher = tDept.contains("computer") || tDept.contains("comp") || tEmail.contains("sawant") || tEmail.equals("teacher@tcetmumbai.in");
+
+        return submissions.findAllByOrderBySubmittedAtDesc().stream()
+                .filter(s -> {
+                    if (teacher.getRole() == com.codelabx.user.Role.ADMIN) {
+                        return true;
+                    }
+                    if (isItTeacher) {
+                        return isItStudentOrSubmission(s);
+                    }
+                    if (isCompTeacher) {
+                        return isCompsStudentOrSubmission(s);
+                    }
+                    if (!tDept.isEmpty()) {
+                        String studentDept = s.getStudent() != null && s.getStudent().getDepartment() != null
+                                ? s.getStudent().getDepartment().trim().toLowerCase()
+                                : "";
+                        return studentDept.contains(tDept);
+                    }
+                    return true;
+                })
+                .map(s -> {
+                    var evaluation = evaluations.findBySubmissionId(s.getId()).orElse(null);
+                    return new SubmissionListItem(
+                            s.getId(),
+                            s.getStudent().getId(),
+                            s.getStudent().getName(),
+                            s.getStudent().getEmail(),
+                            s.getStudent().getRollNo(),
+                            classSection(s.getStudent()),
+                            s.getPractical().getId(),
+                            s.getPractical().getTitle(),
+                            s.getLanguage(),
+                            s.getExecutionStatus(),
+                            s.getSubmittedAt(),
+                            evaluation != null,
+                            evaluation != null ? evaluation.getTotalMarks() : null
+                    );
+                }).toList();
     }
 
     @Transactional(readOnly = true)
     public List<StudentResult> resultsForStudent(UserAccount student) {
         return submissions.findByStudentIdOrderBySubmittedAtDesc(student.getId()).stream()
-                .map(s -> evaluations.findBySubmissionId(s.getId()).filter(e -> e.getEvaluatedAt() != null)
-                        .map(e -> new StudentResult(s.getId(), s.getPractical().getTitle(), e.getTotalMarks(), e.getFeedback(), e.getEvaluatedAt(), e.getTeacher().getName(), s.getSubmittedAt()))
-                        .orElse(null)).filter(java.util.Objects::nonNull).toList();
+                .map(s -> {
+                    var evaluation = evaluations.findBySubmissionId(s.getId()).orElse(null);
+                    return new StudentResult(
+                            s.getId(),
+                            s.getPractical().getTitle(),
+                            evaluation != null ? evaluation.getTotalMarks() : null,
+                            evaluation != null ? evaluation.getCodeMarks() : null,
+                            evaluation != null ? evaluation.getVivaMarks() : null,
+                            evaluation != null ? evaluation.getFeedback() : "Submission pending faculty evaluation",
+                            evaluation != null ? evaluation.getEvaluatedAt() : null,
+                            evaluation != null && evaluation.getTeacher() != null ? evaluation.getTeacher().getName() : null,
+                            s.getSubmittedAt(),
+                            parseScreenshots(s.getScreenshots()),
+                            s.getCode(),
+                            s.getOutput(),
+                            s.getConclusionText(),
+                            s.getPractical().getId(),
+                            s.getPractical().getSubject() != null ? s.getPractical().getSubject() : "Computer Engineering Laboratory",
+                            s.getPractical().getExperimentNumber(),
+                            s.getPractical().getSemester(),
+                            s.getPractical().getAim(),
+                            s.getPractical().getTheory(),
+                            s.getPractical().getAlgorithm(),
+                            s.getPractical().getConclusion()
+                    );
+                }).toList();
     }
 
-    @Transactional(readOnly = true)
     public SubmissionDetail detail(Long id) {
         Submission s = submissions.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Submission not found."));
@@ -157,10 +203,67 @@ public class SubmissionService {
         );
     }
 
+    public boolean isItStudentOrSubmission(Submission s) {
+        if (s == null || s.getStudent() == null) return false;
+        String sDept = s.getStudent().getDepartment() != null ? s.getStudent().getDepartment().trim().toLowerCase() : "";
+        String sEmail = s.getStudent().getEmail() != null ? s.getStudent().getEmail().trim().toLowerCase() : "";
+        String sName = s.getStudent().getName() != null ? s.getStudent().getName().trim().toLowerCase() : "";
+        String roll = s.getStudent().getRollNo() != null ? s.getStudent().getRollNo().trim().toLowerCase() : "";
+
+        // Explicit Comps check - if Comps, never IT
+        if (sDept.contains("computer") || sDept.contains("comp")
+                || sEmail.contains("inzamam") || sEmail.equals("student@tcetmumbai.in") || sEmail.equals("student2@tcetmumbai.in")
+                || sName.contains("inzamam") || sName.contains("areeza") || sName.contains("sagar") || sName.contains("rahul") || sName.contains("tanvi")
+                || roll.startsWith("se-b") || roll.startsWith("te-b") || roll.equals("13")) {
+            return false;
+        }
+
+        // IT check
+        if (sDept.contains("information technology") || sDept.contains("it")
+                || sEmail.contains(".it@") || sEmail.contains("rohan") || sEmail.contains("pooja")
+                || sName.contains("rohan") || sName.contains("pooja")
+                || roll.contains("it")) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public boolean isCompsStudentOrSubmission(Submission s) {
+        if (s == null || s.getStudent() == null) return true;
+        String sDept = s.getStudent().getDepartment() != null ? s.getStudent().getDepartment().trim().toLowerCase() : "";
+        String sEmail = s.getStudent().getEmail() != null ? s.getStudent().getEmail().trim().toLowerCase() : "";
+        String sName = s.getStudent().getName() != null ? s.getStudent().getName().trim().toLowerCase() : "";
+        String roll = s.getStudent().getRollNo() != null ? s.getStudent().getRollNo().trim().toLowerCase() : "";
+
+        // Explicit IT check - if IT, never Comps
+        if (sDept.contains("information technology") || sDept.contains("it")
+                || sEmail.contains(".it@") || sEmail.contains("rohan") || sEmail.contains("pooja")
+                || sName.contains("rohan") || sName.contains("pooja")
+                || roll.contains("it")) {
+            return false;
+        }
+
+        return true;
+    }
+
     public void assertFacultyOwns(Long id, UserAccount teacher) {
-        require(id);
-        if (teacher.getRole() == com.codelabx.user.Role.ADMIN || teacher.getRole() == com.codelabx.user.Role.TEACHER) return;
-        throw new ApiException(HttpStatus.FORBIDDEN, "Faculty access required to evaluate practical submissions.");
+        Submission s = require(id);
+        if (teacher.getRole() == com.codelabx.user.Role.ADMIN) return;
+        if (teacher.getRole() != com.codelabx.user.Role.TEACHER) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "Faculty access required to evaluate practical submissions.");
+        }
+        final String tDept = teacher.getDepartment() != null ? teacher.getDepartment().trim().toLowerCase() : "";
+        final String tEmail = teacher.getEmail() != null ? teacher.getEmail().trim().toLowerCase() : "";
+        final boolean isItTeacher = tDept.contains("information technology") || tDept.contains("it") || tEmail.contains("faculty.it@");
+        final boolean isCompTeacher = tDept.contains("computer") || tDept.contains("comp") || tEmail.contains("sawant") || tEmail.equals("teacher@tcetmumbai.in");
+
+        if (isItTeacher && !isItStudentOrSubmission(s)) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "Access denied: Submission belongs to Computer Engineering department.");
+        }
+        if (isCompTeacher && !isCompsStudentOrSubmission(s)) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "Access denied: Submission belongs to Information Technology department.");
+        }
     }
 
     public Submission require(Long id) {
@@ -189,5 +292,5 @@ public class SubmissionService {
     public record SubmissionView(Long id, Long studentId, Long practicalId, CodeLanguage language, String code, String output, String executionStatus, Object screenshots, Instant submittedAt) {}
     public record SubmissionListItem(Long id, Long studentId, String studentName, String studentEmail, String rollNo, String classSection, Long practicalId, String practicalTitle, CodeLanguage language, String executionStatus, Instant submittedAt, boolean evaluated, Integer totalMarks) {}
     public record SubmissionDetail(SubmissionView submission, String studentName, String studentEmail, String rollNo, String classSection, String practicalTitle, String conclusionText, Long evaluationId, Integer codeMarks, Integer vivaMarks, Integer totalMarks, String feedback, Object screenshots) {}
-    public record StudentResult(Long submissionId, String practicalTitle, Integer marks, String feedback, Instant reviewedAt, String facultyName, Instant submittedAt) {}
+    public record StudentResult(Long submissionId, String practicalTitle, Integer marks, Integer codeMarks, Integer vivaMarks, String feedback, Instant reviewedAt, String facultyName, Instant submittedAt, Object screenshots, String code, String output, String conclusionText, Long practicalId, String subject, Integer experimentNumber, Integer semester, String aim, String theory, String algorithm, String practicalConclusion) {}
 }

@@ -24,18 +24,18 @@ export function AppShell() {
           {user?.role === "STUDENT" ? (
             <>
               <Link to="/semester-selection" className="nav-link">
-                <span>📚</span> Curriculum labs (Sem 1-8)
+                Curriculum labs (Sem 1-8)
               </Link>
               <Link to="/" className="nav-link">
                 <span>▦</span> My dashboard
               </Link>
               <Link to="/activity" className="nav-link">
-                <span>◷</span> Recent activity
+                Recent activity
               </Link>
             </>
           ) : user?.role === "ADMIN" ? (
             <Link to="/admin" className="nav-link">
-              <span>⚙</span> Administration
+              Administration
             </Link>
           ) : (
             <>
@@ -46,7 +46,7 @@ export function AppShell() {
                 <span>＋</span> Practicals
               </Link>
               <Link to="/teacher/submissions" className="nav-link">
-                <span>✓</span> Submissions
+                Submissions
               </Link>
             </>
           )}

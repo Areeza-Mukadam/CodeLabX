@@ -104,7 +104,7 @@ export function SubmissionReviewPage() {
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <span className={`status ${isEvaluated ? "done" : "active"}`}>
-            {isEvaluated ? "✓ Evaluated" : "Awaiting review"}
+            {isEvaluated ? "Evaluated" : "Awaiting review"}
           </span>
           {isEvaluated && (
             <span style={{ fontWeight: 700, fontSize: "13px", padding: "4px 10px", background: "rgba(19, 115, 51, 0.12)", color: "#137333", borderRadius: "4px", border: "1px solid rgba(19, 115, 51, 0.25)" }}>
@@ -236,7 +236,7 @@ export function SubmissionReviewPage() {
               disabled={saving}
               style={{ marginTop: "14px" }}
             >
-              {saving ? "Saving…" : isEvaluated ? "✓ Update Evaluation" : "Save Evaluation"}
+              {saving ? "Saving…" : isEvaluated ? "Update Evaluation" : "Save Evaluation"}
             </button>
             {message && (
               <div
@@ -262,7 +262,7 @@ export function SubmissionReviewPage() {
                   gap: "8px",
                 }}
               >
-                <span><b>✓</b> {message}</span>
+                <span><b>[Saved]</b> {message}</span>
                 <button
                   type="button"
                   className="text-link"

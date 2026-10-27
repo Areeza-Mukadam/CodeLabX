@@ -4,7 +4,7 @@ import { api } from "../services/api";
 import { useAuth } from "../state/authStore";
 import type { Detail } from "../types";
 import { humanStatus, statusClass } from "../utils/formatters";
-import { PracticalReportDocument } from "./PracticalReportDocument";
+import { PracticalReportDocument, printReportDocument } from "./PracticalReportDocument";
 import "./../styles/pages/submitted-status.css";
 
 export function SubmittedStatus({
@@ -19,32 +19,35 @@ export function SubmittedStatus({
   const nav = useNavigate();
   const user = useAuth((s) => s.user);
   const [result, setResult] = useState<{
+    submissionId?: number;
     marks: number | null;
     feedback: string | null;
     facultyName: string;
     reviewedAt?: string;
+    submittedAt?: string;
     codeMarks?: number;
     vivaMarks?: number;
+    screenshots?: string[];
+    code?: string;
+    output?: string;
+    conclusionText?: string;
   } | null>(null);
 
   const [showPdfModal, setShowPdfModal] = useState(false);
+  const [printMode, setPrintMode] = useState<"color" | "bw">("color");
 
   useEffect(() => {
-    if (status === "EVALUATED") {
-      api<any[]>("/submissions/results")
-        .then((items) => {
-          const match = (items || []).find(
-            (x) => x.practicalTitle?.toLowerCase() === title?.toLowerCase(),
-          );
-          if (match) setResult(match);
-        })
-        .catch(() => {});
-    }
-  }, [status, title]);
-
-  const handlePrint = () => {
-    window.print();
-  };
+    api<any[]>("/submissions/results")
+      .then((items) => {
+        const match = (items || []).find(
+          (x) =>
+            x.practicalTitle?.toLowerCase() === title?.toLowerCase() ||
+            x.practicalId === practical?.id,
+        );
+        if (match) setResult(match);
+      })
+      .catch(() => {});
+  }, [status, title, practical?.id]);
 
   return (
     <>
@@ -76,22 +79,39 @@ export function SubmittedStatus({
                 <b>Faculty Feedback:</b>{" "}
                 {result.feedback || "Good laboratory submission."}
               </p>
-              <small className="muted">
-                Evaluated by {result.facultyName || "Faculty instructor"}
+              <small className="muted" style={{ display: "block", marginTop: "4px" }}>
+                Evaluated by {result.facultyName || "Mr. Sameer Sawant"}
               </small>
+              <div style={{ display: "flex", gap: "12px", marginTop: "6px", fontSize: "12px", color: "var(--muted)", flexWrap: "wrap" }}>
+                {result.submittedAt && (
+                  <span>
+                    <b>Submitted:</b> {new Date(result.submittedAt).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}
+                  </span>
+                )}
+                {result.reviewedAt && (
+                  <span>
+                    <b>Evaluated:</b> {new Date(result.reviewedAt).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}
+                  </span>
+                )}
+              </div>
             </div>
           ) : (
-            <p>
-              {status === "EVALUATED"
-                ? "Your teacher has reviewed this practical. Check your dashboard for detailed feedback."
-                : "Your code and conclusion have been submitted for teacher review."}
-            </p>
+            <div>
+              <p style={{ margin: 0 }}>
+                Your code, execution output, and screenshots have been successfully submitted for faculty evaluation.
+              </p>
+              {result?.submittedAt && (
+                <small className="muted" style={{ display: "block", marginTop: "6px" }}>
+                  <b>Submission Recorded:</b> {new Date(result.submittedAt).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}
+                </small>
+              )}
+            </div>
           )}
         </div>
 
         <div style={{ display: "flex", gap: "12px", marginTop: "16px", flexWrap: "wrap" }}>
           <button className="button secondary" onClick={() => nav("/")}>
-            ← Return to my practicals
+            Return to my practicals
           </button>
           {(status === "EVALUATED" || status === "SUBMITTED") && (
             <button
@@ -105,7 +125,7 @@ export function SubmittedStatus({
                 color: "white",
               }}
             >
-              📄 Export 6-Page Practical PDF
+              Export Official 7-Page Practical PDF
             </button>
           )}
         </div>
@@ -164,30 +184,117 @@ export function SubmittedStatus({
                   Click "Print / Save PDF" to download the official assessment report.
                 </p>
               </div>
-              <div style={{ display: "flex", gap: "10px" }}>
+              <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                <div style={{ display: "flex", alignItems: "center", background: "#f1f5f9", borderRadius: "6px", padding: "2px", border: "1px solid #cbd5e1" }}>
+                  <button
+                    type="button"
+                    onClick={() => setPrintMode("color")}
+                    style={{
+                      padding: "5px 10px",
+                      borderRadius: "4px",
+                      fontSize: "11px",
+                      fontWeight: 600,
+                      cursor: "pointer",
+                      border: "none",
+                      background: printMode === "color" ? "#ffffff" : "transparent",
+                      color: printMode === "color" ? "#1d4ed8" : "#64748b",
+                      boxShadow: printMode === "color" ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
+                    }}
+                  >
+                    Color View
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPrintMode("bw")}
+                    style={{
+                      padding: "5px 10px",
+                      borderRadius: "4px",
+                      fontSize: "11px",
+                      fontWeight: 600,
+                      cursor: "pointer",
+                      border: "none",
+                      background: printMode === "bw" ? "#ffffff" : "transparent",
+                      color: printMode === "bw" ? "#0f172a" : "#64748b",
+                      boxShadow: printMode === "bw" ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
+                    }}
+                  >
+                    B/W View
+                  </button>
+                </div>
+
                 <button
                   type="button"
-                  className="button primary"
-                  onClick={handlePrint}
-                  style={{ background: "#2563eb", color: "#fff", display: "inline-flex", gap: "6px" }}
+                  onClick={() => {
+                    setPrintMode("color");
+                    printReportDocument("color");
+                  }}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    padding: "7px 14px",
+                    borderRadius: "6px",
+                    background: "#2563eb",
+                    color: "#ffffff",
+                    fontSize: "12px",
+                    fontWeight: 700,
+                    border: "none",
+                    cursor: "pointer",
+                  }}
                 >
-                  🖨️ Print / Save PDF
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                    <polyline points="6 9 6 2 18 2 18 9" />
+                    <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+                    <rect x="6" y="14" width="12" height="8" />
+                  </svg>
+                  Print Color PDF
                 </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPrintMode("bw");
+                    printReportDocument("bw");
+                  }}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    padding: "7px 14px",
+                    borderRadius: "6px",
+                    background: "#334155",
+                    color: "#ffffff",
+                    fontSize: "12px",
+                    fontWeight: 700,
+                    border: "none",
+                    cursor: "pointer",
+                  }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                    <polyline points="6 9 6 2 18 2 18 9" />
+                    <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+                    <rect x="6" y="14" width="12" height="8" />
+                  </svg>
+                  Print B/W PDF
+                </button>
+
                 <button
                   type="button"
                   className="button secondary"
                   onClick={() => setShowPdfModal(false)}
                 >
-                  ✕ Close
+                  Close
                 </button>
               </div>
             </div>
 
-            {/* Official 6-Page Laboratory Journal / Evaluation Document */}
+            {/* Official Laboratory Journal / Evaluation Document */}
             <PracticalReportDocument
               practical={practical}
               result={result}
               user={user}
+              screenshots={result?.screenshots || (practical as any)?.screenshots}
+              printMode={printMode}
             />
           </div>
         </div>

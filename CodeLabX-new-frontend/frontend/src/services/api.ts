@@ -183,6 +183,44 @@ export function saveCustomPracticals(list: any[]) {
   } catch {}
 }
 
+
+export function filterTeacherSubmissions<U extends { studentName?: string; studentEmail?: string; rollNo?: string; classSection?: string; department?: string }>(items: U[]): U[] {
+  const currentUser = useAuth.getState().user;
+  if (!currentUser || currentUser.role === "ADMIN") return items;
+  const tDept = (currentUser.department || "").toLowerCase();
+  const tEmail = (currentUser.email || "").toLowerCase();
+  const isItTeacher = tDept.includes("information technology") || tDept.includes("it") || tEmail.includes("faculty.it@");
+  const isCompTeacher = tDept.includes("computer") || tDept.includes("comp") || tEmail.includes("sawant") || tEmail === "teacher@tcetmumbai.in";
+
+  return items.filter((s) => {
+    const sName = (s.studentName || "").toLowerCase();
+    const sEmail = (s.studentEmail || "").toLowerCase();
+    const sClass = (s.classSection || "").toLowerCase();
+    const sRoll = (s.rollNo || "").toLowerCase();
+    const sDept = (s.department || "").toLowerCase();
+
+    const isComps = sDept.includes("computer") || sDept.includes("comp")
+      || sEmail.includes("inzamam") || sEmail === "student@tcetmumbai.in" || sEmail === "student2@tcetmumbai.in"
+      || sName.includes("inzamam") || sName.includes("areeza") || sName.includes("sagar") || sName.includes("rahul") || sName.includes("tanvi")
+      || sRoll.startsWith("se-b") || sRoll.startsWith("te-b") || sRoll === "13" || sClass.includes("b");
+
+    const isIt = sDept.includes("information technology") || sDept.includes("it")
+      || sEmail.includes(".it@") || sEmail.includes("rohan") || sEmail.includes("pooja")
+      || sName.includes("rohan") || sName.includes("pooja")
+      || sRoll.includes("it") || sClass.includes("it");
+
+    if (isItTeacher) {
+      if (isComps) return false;
+      return isIt;
+    }
+    if (isCompTeacher) {
+      if (isIt) return false;
+      return true;
+    }
+    return true;
+  });
+}
+
 export function getMockSubmissions(): StoredSubmission[] {
   try {
     const raw = localStorage.getItem("codelabx_submissions");
@@ -696,7 +734,7 @@ function getMockResponse<T>(path: string, init: RequestInit = {}): T | null {
 
   // /teacher/submissions
   if (cleanPath === "/teacher/submissions") {
-    const subs = getMockSubmissions();
+    const subs = filterTeacherSubmissions(getMockSubmissions());
     return subs.map((s) => ({
       id: s.id,
       studentId: s.studentId,
@@ -1058,8 +1096,9 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
     }
 
     if (path.startsWith("/teacher/submissions") && Array.isArray(parsedData)) {
-      const mockSubs = getMockSubmissions();
-      const combined = [...parsedData];
+      const mockSubs = filterTeacherSubmissions(getMockSubmissions());
+      const filteredParsed = filterTeacherSubmissions(parsedData as any[]);
+      const combined = [...filteredParsed];
       for (const ms of mockSubs) {
         if (!combined.some((item: any) => item.id === ms.id || (item.studentId === ms.studentId && item.practicalId === ms.practicalId))) {
           combined.push({

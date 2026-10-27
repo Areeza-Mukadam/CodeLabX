@@ -32,7 +32,7 @@ export default function SemesterSelection({
             </button>
           ) : (
             <span style={{ fontSize: "13px", color: "#64748b", fontWeight: 600 }}>
-              🎓 Enrolled Department Curriculum
+              Enrolled Department Curriculum
             </span>
           )}
           <div className="dept-badge-pill">

@@ -28,7 +28,7 @@ export function ErrorBox({
 export function Empty({ title, text }: { title: string; text: string }) {
   return (
     <div className="empty-state">
-      <span className="empty-icon">⌁</span>
+      
       <b>{title}</b>
       <p>{text}</p>
     </div>

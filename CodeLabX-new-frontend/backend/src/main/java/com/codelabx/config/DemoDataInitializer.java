@@ -72,8 +72,12 @@ public class DemoDataInitializer {
             UserAccount studentAarav = user(users, passwordEncoder, "Aarav Mehta", "aarav.mehta.se.a@tcetmumbai.in", Role.STUDENT);
             UserAccount studentSneha = user(users, passwordEncoder, "Sneha Deshmukh", "sneha.deshmukh.te.a@tcetmumbai.in", Role.STUDENT);
 
+            UserAccount studentRohan = user(users, passwordEncoder, "Rohan Sharma", "rohan.sharma.te.it@tcetmumbai.in", Role.STUDENT);
+            UserAccount studentPooja = user(users, passwordEncoder, "Pooja Gupta", "pooja.gupta.se.it@tcetmumbai.in", Role.STUDENT);
+
             List<UserAccount> allStudents = new ArrayList<>(List.of(
-                    studentInzamam, studentInzamamAlt, student, student2, studentRahul, studentTanvi, studentAarav, studentSneha
+                    studentInzamam, studentInzamamAlt, student, student2, studentRahul, studentTanvi, studentAarav, studentSneha,
+                    studentRohan, studentPooja
             ));
 
             roster(studentInzamam, "TE", "B", "Computer Engineering", "13");
@@ -84,6 +88,8 @@ public class DemoDataInitializer {
             roster(studentTanvi, "SE", "B", "Computer Engineering", "SE-B-55");
             roster(studentAarav, "SE", "A", "Computer Engineering", "SE-A-12");
             roster(studentSneha, "TE", "A", "Computer Engineering", "TE-A-34");
+            roster(studentRohan, "TE", "A", "Information Technology", "TE-IT-07");
+            roster(studentPooja, "SE", "A", "Information Technology", "SE-IT-14");
             users.saveAll(allStudents);
 
             teacher.setDepartment("Computer Engineering");
@@ -97,6 +103,7 @@ public class DemoDataInitializer {
             seedSampleSubmission(studentInzamam, practicals, submissions, progressRepository);
             seedSampleSubmission(studentInzamamAlt, practicals, submissions, progressRepository);
             seedStudentAreezaSubmission(student, practicals, submissions, progressRepository);
+            seedItSampleSubmission(studentRohan, practicals, submissions, progressRepository);
         };
     }
 
@@ -117,6 +124,39 @@ public class DemoDataInitializer {
         lang.setRuntimeVersion(version);
         lang.setEnabled(enabled);
         repo.save(lang);
+    }
+
+    private void seedItSampleSubmission(UserAccount student, PracticalRepository practicals,
+                                       SubmissionRepository submissions,
+                                       StudentProgressRepository progressRepository) {
+        practicals.findAllByOrderByUpdatedAtDesc().stream()
+                .filter(p -> p.getSubject() != null && (p.getSubject().toLowerCase().contains("web") || p.getSubject().toLowerCase().contains("internet") || p.getSubject().toLowerCase().contains("cloud") || p.getSubject().toLowerCase().contains("network") || p.getSubject().toLowerCase().contains("data")))
+                .findFirst()
+                .ifPresent(p -> {
+                    if (submissions.findByStudentIdOrderBySubmittedAtDesc(student.getId()).isEmpty()) {
+                        com.codelabx.progress.StudentProgress progress = progressRepository.findByStudentIdAndPracticalId(student.getId(), p.getId())
+                                .orElseGet(com.codelabx.progress.StudentProgress::new);
+                        progress.setStudent(student);
+                        progress.setPractical(p);
+                        progress.setStatus(com.codelabx.progress.ProgressStatus.SUBMITTED);
+                        progress.setCurrentStep(com.codelabx.progress.PracticalStep.CONCLUSION);
+                        progress.setConclusionText("Successfully implemented and deployed natural language API services and evaluated response latency.");
+                        progress.setDraftCode("// TCET Department of Information Technology Lab Implementation\nconsole.log('IT Lab Service active on port 8080');");
+                        progress.setCompletedSteps("AIM,THEORY,ALGORITHM,CODE,PRACTICE,CONCLUSION");
+                        progressRepository.save(progress);
+
+                        com.codelabx.submission.Submission s = new com.codelabx.submission.Submission();
+                        s.setStudent(student);
+                        s.setPractical(p);
+                        s.setLanguage(com.codelabx.execution.CodeLanguage.PYTHON);
+                        s.setCode(progress.getDraftCode());
+                        s.setOutput("IT Lab Service active on port 8080\nConnected to AWS Bedrock and Lambda endpoints\n[Process completed successfully]");
+                        s.setExecutionStatus("SUCCESS");
+                        s.setConclusionText(progress.getConclusionText());
+                        s.setSubmittedAt(java.time.Instant.now());
+                        submissions.save(s);
+                    }
+                });
     }
 
     private void seedStudentAreezaSubmission(UserAccount student, PracticalRepository practicals,

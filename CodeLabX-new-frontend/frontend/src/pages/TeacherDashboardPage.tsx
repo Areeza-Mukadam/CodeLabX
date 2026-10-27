@@ -190,7 +190,7 @@ export function TeacherDashboardPage() {
             to="/teacher/practicals/new?mode=upload"
             style={{ padding: "10px 20px", borderRadius: "8px", fontWeight: 700 }}
           >
-            📄 Upload Laboratory Manual
+            Upload Laboratory Manual
           </Link>
           <Link
             className="button secondary"
@@ -204,7 +204,7 @@ export function TeacherDashboardPage() {
               color: "#1e293b",
             }}
           >
-            ✍️ Manual Practical Generator
+            Manual Practical Generator
           </Link>
         </div>
       </div>

@@ -215,13 +215,19 @@ public class PracticalController {
                 title = deriveTitle(filename);
             }
 
-            String aim = section(text, "(?i)(?:aim|objective)\\s*[:\\-]?", "(?i)(?:theory|introduction|procedure|algorithm|questions?)\\s*[:\\-]?");
+            String aim = extractSection(text, "(?im)^\\s*(?:[0-9]+[.\\-)]\\s*)?(?:aim|objective|purpose)\\b[:\\s\\-]?",
+                    "(?im)^\\s*(?:[0-9]+[.\\-)]\\s*)?(?:theory|introduction|procedure|algorithm|instructions?|questions?|code)\\b[:\\s\\-]?");
             if (aim.isBlank()) aim = "Understand and implement " + cleanTopic(title) + " and analyze its operational time and space characteristics.";
 
-            String theory = section(text, "(?i)(?:theory|introduction)\\s*[:\\-]?", "(?i)(?:procedure|algorithm|instructions?|code|questions?)\\s*[:\\-]?");
-            if (theory.isBlank()) theory = cleanTopic(title) + " provides core computational primitives. Understanding its invariants, traversal guarantees, and complexity trade-offs is essential for efficient software engineering.";
+            String theory = extractSection(text, "(?im)^\\s*(?:[0-9]+[.\\-)]\\s*)?(?:theory|theoretical background|concepts?|introduction)\\b[:\\s\\-]?",
+                    "(?im)^\\s*(?:[0-9]+[.\\-)]\\s*)?(?:procedure|algorithm|step-by-step|steps|instructions?|code|observation|conclusion|questions?)\\b[:\\s\\-]?");
+            if (theory.isBlank()) {
+                theory = text.length() > 150 ? text.trim()
+                        : cleanTopic(title) + " provides core computational primitives. Understanding its invariants, traversal guarantees, and complexity trade-offs is essential for efficient software engineering.";
+            }
 
-            String algorithm = section(text, "(?i)(?:procedure|algorithm|instructions?)\\s*[:\\-]?", "(?i)(?:output|conclusion|result|questions?)\\s*[:\\-]?");
+            String algorithm = extractSection(text, "(?im)^\\s*(?:[0-9]+[.\\-)]\\s*)?(?:procedure|algorithm|step-by-step procedure|steps|methodology|instructions?)\\b[:\\s\\-]?",
+                    "(?im)^\\s*(?:[0-9]+[.\\-)]\\s*)?(?:code|implementation|observation|output|conclusion|result|questions?|viva)\\b[:\\s\\-]?");
             if (algorithm.isBlank()) algorithm = "1. Parse and initialize inputs.\n2. Allocate required data structures.\n3. Execute the algorithm steps iteratively.\n4. Verify boundary and edge cases.\n5. Output formatted results.";
 
             final String finalText = text;
@@ -231,7 +237,9 @@ public class PracticalController {
             }
 
             String codeInstructions = "Implement the algorithm adhering strictly to standard I/O format. Ensure zero-based indexing and edge-case handling.";
-            String conclusion = "Successfully implemented and evaluated " + cleanTopic(title) + " demonstrating expected performance constraints.";
+            String conclusion = extractSection(text, "(?im)^\\s*(?:[0-9]+[.\\-)]\\s*)?(?:conclusion|inference|result|summary)\\b[:\\s\\-]?",
+                    "(?im)^\\s*(?:[0-9]+[.\\-)]\\s*)?(?:questions?|viva|practice|references?)\\b[:\\s\\-]?");
+            if (conclusion.isBlank()) conclusion = "Successfully implemented and evaluated " + cleanTopic(title) + " demonstrating expected performance constraints.";
             String contentUpper = (finalText + " " + filename).toUpperCase();
             String language = contentUpper.contains("PYTHON") ? "PYTHON" : "JAVA";
 
@@ -322,9 +330,16 @@ public class PracticalController {
                 .body(new org.springframework.core.io.FileSystemResource(path));
     }
 
-    private String section(String text, String start, String end) {
-        var matcher = java.util.regex.Pattern.compile(start + "([\\s\\S]*?)(?=" + end + "|$)").matcher(text);
-        return matcher.find() ? matcher.group(1).trim() : "";
+    private String extractSection(String text, String startRegex, String endRegex) {
+        if (text == null || text.isBlank()) return "";
+        var startMatcher = java.util.regex.Pattern.compile(startRegex).matcher(text);
+        if (!startMatcher.find()) return "";
+        int contentStart = startMatcher.end();
+        var endMatcher = java.util.regex.Pattern.compile(endRegex).matcher(text);
+        if (endMatcher.find(contentStart)) {
+            return text.substring(contentStart, endMatcher.start()).trim();
+        }
+        return text.substring(contentStart).trim();
     }
 
     public record ParsedDocument(

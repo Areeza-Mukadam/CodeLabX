@@ -413,7 +413,7 @@ export function LoginPage() {
 
               <div style={{ marginTop: "16px", paddingTop: "14px", borderTop: "1px dashed #cbd5e1" }}>
                 <span style={{ fontSize: "11px", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.5px", display: "block", marginBottom: "8px" }}>
-                  ⚡ Quick Demo Accounts (1-Click Login):
+                  Quick Demo Accounts (1-Click Login):
                 </span>
                 <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                   <button
@@ -437,17 +437,17 @@ export function LoginPage() {
                       textAlign: "left"
                     }}
                   >
-                    <span><b>👨‍🎓 Student: Inzamam</b> <span style={{ color: "#64748b" }}>(TE-B · Roll 13 · COMPS)</span></span>
+                    <span><b>Student: Inzamam</b> <span style={{ color: "#64748b" }}>(TE-B · Roll 13 · COMPS)</span></span>
                     <span style={{ color: "var(--palette-red, #c02040)", fontWeight: 700 }}>Login →</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => {
-                      setRole("faculty");
-                      setEmail("samir.sawant@tcetmumbai.in");
+                      setRole("student");
+                      setEmail("rohan.sharma.te.it@tcetmumbai.in");
                       setPassword("CodeLabX123!");
-                      performLogin("samir.sawant@tcetmumbai.in", "CodeLabX123!");
+                      performLogin("rohan.sharma.te.it@tcetmumbai.in", "CodeLabX123!");
                     }}
                     style={{
                       display: "flex",
@@ -462,7 +462,57 @@ export function LoginPage() {
                       textAlign: "left"
                     }}
                   >
-                    <span><b>👨‍🏫 Faculty: Mr. Sameer Sawant</b> <span style={{ color: "#64748b" }}>(Computer Engineering)</span></span>
+                    <span><b>Student: Rohan Sharma</b> <span style={{ color: "#64748b" }}>(TE-A · Roll TE-IT-07 · IT)</span></span>
+                    <span style={{ color: "var(--palette-red, #c02040)", fontWeight: 700 }}>Login →</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setRole("faculty");
+                      setEmail("sameer.sawant@tcetmumbai.in");
+                      setPassword("CodeLabX123!");
+                      performLogin("sameer.sawant@tcetmumbai.in", "CodeLabX123!");
+                    }}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      padding: "8px 12px",
+                      borderRadius: "6px",
+                      border: "1px solid #cbd5e1",
+                      background: "#f8fafc",
+                      cursor: "pointer",
+                      fontSize: "12px",
+                      textAlign: "left"
+                    }}
+                  >
+                    <span><b>Faculty: Mr. Sameer Sawant</b> <span style={{ color: "#64748b" }}>(Computer Engineering)</span></span>
+                    <span style={{ color: "var(--palette-red, #c02040)", fontWeight: 700 }}>Login →</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setRole("faculty");
+                      setEmail("faculty.it@tcetmumbai.in");
+                      setPassword("CodeLabX123!");
+                      performLogin("faculty.it@tcetmumbai.in", "CodeLabX123!");
+                    }}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      padding: "8px 12px",
+                      borderRadius: "6px",
+                      border: "1px solid #cbd5e1",
+                      background: "#f8fafc",
+                      cursor: "pointer",
+                      fontSize: "12px",
+                      textAlign: "left"
+                    }}
+                  >
+                    <span><b>Faculty: Prof. Rashmi Thakur</b> <span style={{ color: "#64748b" }}>(Information Technology)</span></span>
                     <span style={{ color: "var(--palette-red, #c02040)", fontWeight: 700 }}>Login →</span>
                   </button>
 
@@ -487,7 +537,7 @@ export function LoginPage() {
                       textAlign: "left"
                     }}
                   >
-                    <span><b>🛡️ Admin: Mr. Saurabh Shrivastava</b> <span style={{ color: "#64748b" }}>(Institution Administrator)</span></span>
+                    <span><b>Admin: Mr. Saurabh Shrivastava</b> <span style={{ color: "#64748b" }}>(Institution Administrator)</span></span>
                     <span style={{ color: "var(--palette-red, #c02040)", fontWeight: 700 }}>Login →</span>
                   </button>
                 </div>

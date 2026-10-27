@@ -191,7 +191,7 @@ export function PracticalLabPage() {
                   } catch {}
                   return updated;
                 });
-                setFlash("📸 Screenshot pasted from clipboard!");
+                setFlash("Screenshot pasted from clipboard!");
                 setTimeout(() => setFlash(""), 2500);
               }
             };
@@ -265,7 +265,7 @@ export function PracticalLabPage() {
             } catch {}
             return updated;
           });
-          setFlash("📸 Screenshot attached!");
+          setFlash("Screenshot attached!");
           setTimeout(() => setFlash(""), 2500);
         }
       };
@@ -336,8 +336,8 @@ export function PracticalLabPage() {
       setTerminal(
         [
           r.status === "SUCCESS"
-            ? "✓ Execution successful"
-            : `✕ ${(r.status || "error").replaceAll("_", " ").toLowerCase()}`,
+            ? "Execution successful"
+            : `${(r.status || "error").replaceAll("_", " ").toLowerCase()}`,
           r.stdout && `Output:\n${r.stdout}`,
           r.compileError && `Compilation error:\n${r.compileError}`,
           r.runtimeError && `Runtime error:\n${r.runtimeError}`,
@@ -351,7 +351,7 @@ export function PracticalLabPage() {
     } catch (e) {
       const fallback = simulateExecution(language, code, stdin);
       setRunState("SUCCESS");
-      setTerminal(`✓ Execution successful\n\nOutput:\n${fallback.stdout}`);
+      setTerminal(`Execution successful\n\nOutput:\n${fallback.stdout}`);
     } finally {
       setBusy(false);
     }
@@ -441,7 +441,7 @@ export function PracticalLabPage() {
       >
         <div>
           <b style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.95rem" }}>
-            📸 Terminal Execution Screenshots & Evidence
+            Terminal Execution Screenshots & Evidence
             <span
               style={{
                 fontSize: "0.75rem",
@@ -456,7 +456,7 @@ export function PracticalLabPage() {
             </span>
           </b>
           <p style={{ margin: "4px 0 0", fontSize: "0.8rem", color: "#94a3b8" }}>
-            Press <code>Ctrl + V</code> anywhere to paste screenshot from clipboard, or click Upload. These will be rendered in your 6-page practical journal PDF!
+            Press <code>Ctrl + V</code> anywhere to paste screenshot from clipboard, or click Upload. These will be rendered in your official 7-page practical journal PDF!
           </p>
         </div>
         <label
@@ -473,7 +473,7 @@ export function PracticalLabPage() {
             fontWeight: 600,
           }}
         >
-          📷 Upload Screenshot
+          Upload Screenshot
           <input
             type="file"
             accept="image/*"
@@ -563,7 +563,7 @@ export function PracticalLabPage() {
                   }}
                   title="Remove screenshot"
                 >
-                  ✕
+                  X
                 </button>
               </div>
             </div>
@@ -605,7 +605,7 @@ export function PracticalLabPage() {
               key={key}
             >
               <span className="step-marker">
-                {isDone ? "✓" : String(i + 1).padStart(2, "0")}
+                {isDone ? "[Done]" : String(i + 1).padStart(2, "0")}
               </span>
               <span>{label}</span>
               {i < practicalSteps.length - 1 && <i />}
@@ -720,7 +720,7 @@ export function PracticalLabPage() {
                         onClick={run}
                         disabled={busy}
                       >
-                        ▶ &nbsp;{busy ? "Running…" : "Run"}
+                        {busy ? "Running..." : "Run"}
                       </button>
                     </div>
                   </div>

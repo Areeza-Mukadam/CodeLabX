@@ -644,7 +644,7 @@ export function PracticalFormPage() {
               boxShadow: activeMode === "document" ? "0 4px 12px rgba(37, 99, 235, 0.12)" : "0 1px 3px rgba(0,0,0,0.05)",
             }}
           >
-            📄 Upload & Auto-Generate Practical (from PDF / Word)
+            Upload & Auto-Generate Practical (from PDF / Word)
           </button>
           <button
             type="button"
@@ -664,7 +664,7 @@ export function PracticalFormPage() {
               boxShadow: activeMode === "manual" ? "0 4px 12px rgba(192, 32, 64, 0.12)" : "0 1px 3px rgba(0,0,0,0.05)",
             }}
           >
-            ✍️ Manual Practical Generator
+            Manual Practical Generator
           </button>
         </div>
       )}
@@ -750,7 +750,7 @@ export function PracticalFormPage() {
                       fontSize: "14px",
                     }}
                   >
-                    <span>🔍</span> Intelligent OCR (Optical Character Recognition) Engine
+                    Intelligent OCR (Optical Character Recognition) Engine
                   </b>
                   <p
                     style={{
@@ -785,28 +785,102 @@ export function PracticalFormPage() {
                 </label>
               </div>
 
-              <div className="doc-dropzone">
-                <input
-                  type="file"
-                  accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                  disabled={parsingBusy}
-                  onChange={(e) => void handleFileChange(e.target.files?.[0])}
-                />
-                <span className="dropzone-icon">📄</span>
-                <div className="dropzone-text">
-                  <b>
+              <div
+                style={{
+                  border: "2px dashed #94a3b8",
+                  borderRadius: "12px",
+                  background: uploadedFile ? "#f0fdf4" : "#f8fafc",
+                  borderColor: uploadedFile ? "#86efac" : "#cbd5e1",
+                  padding: "32px 24px",
+                  textAlign: "center",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "16px",
+                  transition: "all 0.2s ease",
+                  position: "relative",
+                }}
+              >
+                <div
+                  style={{
+                    width: "56px",
+                    height: "56px",
+                    borderRadius: "50%",
+                    background: uploadedFile ? "#dcfce7" : "#e0e7ff",
+                    color: uploadedFile ? "#15803d" : "#4338ca",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  {uploadedFile ? (
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                      <polyline points="22 4 12 14.01 9 11.01" />
+                    </svg>
+                  ) : (
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                      <polyline points="14 2 14 8 20 8" />
+                      <line x1="12" y1="18" x2="12" y2="12" />
+                      <line x1="9" y1="15" x2="12" y2="12" />
+                      <line x1="15" y1="15" x2="12" y2="12" />
+                    </svg>
+                  )}
+                </div>
+
+                <div>
+                  <h3 style={{ margin: "0 0 6px 0", fontSize: "16px", fontWeight: 700, color: "#1e293b" }}>
+                    {uploadedFile ? `Manual Loaded: ${uploadedFile.name}` : "Upload Practical Manual (PDF / Word)"}
+                  </h3>
+                  <p style={{ margin: 0, fontSize: "13px", color: "#64748b", maxWidth: "460px" }}>
                     {uploadedFile
-                      ? `Selected: ${uploadedFile.name}`
-                      : "Drop PDF or Word document here, or click to browse"}
-                  </b>
-                  <p>
-                    Supports text-based and scanned image PDFs up to 15MB. Intelligent OCR processes and restores document sections.
+                      ? `File size: ${(uploadedFile.size / 1024).toFixed(1)} KB. Click button below to choose a different document.`
+                      : "Upload your syllabus lab manual (PDF or DOCX). AI OCR parses Aim, Theory, Algorithm, Starter Code & Questions automatically."}
                   </p>
                 </div>
+
+                <label
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "10px",
+                    padding: "12px 28px",
+                    borderRadius: "8px",
+                    background: uploadedFile ? "#15803d" : "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)",
+                    color: "#ffffff",
+                    fontSize: "14px",
+                    fontWeight: 600,
+                    cursor: parsingBusy ? "not-allowed" : "pointer",
+                    boxShadow: "0 4px 14px rgba(15, 23, 42, 0.15)",
+                    border: "none",
+                    opacity: parsingBusy ? 0.7 : 1,
+                    transition: "transform 0.1s ease, background 0.2s ease",
+                  }}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="17 8 12 3 7 8" />
+                    <line x1="12" y1="3" x2="12" y2="15" />
+                  </svg>
+                  <span>{uploadedFile ? "Replace File (Upload New Manual)" : "Upload Experiment Manual (PDF / DOCX)"}</span>
+                  <input
+                    type="file"
+                    accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                    disabled={parsingBusy}
+                    style={{ display: "none" }}
+                    onChange={(e) => void handleFileChange(e.target.files?.[0])}
+                  />
+                </label>
+
                 {parsingBusy && (
-                  <span style={{ font: "12px var(--mono)", color: "#2563eb" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#2563eb", fontSize: "13px", fontWeight: 600 }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <circle cx="12" cy="12" r="10" strokeDasharray="32" strokeDashoffset="12" />
+                    </svg>
                     Reading document and running OCR extraction…
-                  </span>
+                  </div>
                 )}
               </div>
 
@@ -858,7 +932,7 @@ export function PracticalFormPage() {
                           fontWeight: 600,
                         }}
                       >
-                        {parsedDoc.ocrApplied ? "⚡ OCR Restored" : "📄 Text Extracted"}
+                        {parsedDoc.ocrApplied ? "OCR Restored" : "Text Extracted"}
                       </span>
                     </div>
                   </div>
@@ -908,7 +982,7 @@ export function PracticalFormPage() {
                     >
                       {generatingAndPublishing
                         ? "Publishing & assigning to class…"
-                        : "🚀 Generate & Publish Practical"}
+                        : "Generate & Publish Practical"}
                     </button>
                     <button
                       type="button"
@@ -921,7 +995,7 @@ export function PracticalFormPage() {
                         gap: 6,
                       }}
                     >
-                      {generatingDraft ? "Saving…" : "💾 Save Draft Practical"}
+                      {generatingDraft ? "Saving…" : "Save Draft Practical"}
                     </button>
                     <button
                       type="button"
@@ -929,7 +1003,7 @@ export function PracticalFormPage() {
                       disabled={generatingAndPublishing || generatingDraft}
                       onClick={transferToManualEditor}
                     >
-                      ✏️ Open in Manual Editor to Customize
+                      Open in Manual Editor to Customize
                     </button>
                   </div>
                 </div>
@@ -1050,7 +1124,7 @@ export function PracticalFormPage() {
                         fontWeight: 600,
                       }}
                     >
-                      🗑️ Delete Box
+                      Delete Box
                     </button>
                   </div>
                 </div>
@@ -1399,12 +1473,12 @@ export function PracticalFormPage() {
                 Aim, theory, algorithm, code instructions and conclusion
                 requirements are required.
               </p>
-              <div className="checkline">✓ &nbsp; Six-step student flow</div>
+              <div className="checkline">Six-step student flow</div>
               <div className="checkline">
-                ✓ &nbsp; Java and Python starter code
+                Java and Python starter code
               </div>
               <div className="checkline">
-                ✓ &nbsp; Optional practice and viva questions
+                Optional practice and viva questions
               </div>
             </div>
           </aside>

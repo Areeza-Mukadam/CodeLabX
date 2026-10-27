@@ -336,12 +336,12 @@ export function SemesterSelectionPage() {
                     </div>
                     <div>
                       <div className="practical-card-tags">
-                        <span className="practical-card-tag">☕ Java</span>
-                        <span className="practical-card-tag">🐍 Python</span>
+                        <span className="practical-card-tag">Java</span>
+                        <span className="practical-card-tag">Python</span>
                         <span className="practical-card-tag">
-                          🎯 Theory & Algo
+                          Theory & Algo
                         </span>
-                        <span className="practical-card-tag">📝 Viva</span>
+                        <span className="practical-card-tag">Viva</span>
                       </div>
                       <div className="practical-card-footer">
                         <span className="practical-card-cta">

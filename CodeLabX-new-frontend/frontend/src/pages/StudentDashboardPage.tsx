@@ -6,7 +6,7 @@ import { api } from "../services/api";
 import { useAuth } from "../state/authStore";
 import type { Practical } from "../types";
 import { date, humanStatus, statusClass } from "../utils/formatters";
-import { PracticalReportDocument } from "../components/PracticalReportDocument";
+import { PracticalReportDocument, printReportDocument } from "../components/PracticalReportDocument";
 import "../styles/pages/dashboards.css";
 
 interface StudentDashboardProps {
@@ -52,6 +52,7 @@ export function StudentDashboardPage({ initialTab = "overview" }: StudentDashboa
   const [results, setResults] = useState<EvaluationResult[]>([]);
 
   const [activePdfResult, setActivePdfResult] = useState<EvaluationResult | null>(null);
+  const [printMode, setPrintMode] = useState<"color" | "bw">("color");
 
   const { data, error, loading, refresh } = useLoad(
     () => api<Practical[]>("/practicals"),
@@ -183,7 +184,7 @@ export function StudentDashboardPage({ initialTab = "overview" }: StudentDashboa
             TCET Academic Programming Laboratory Workspace
           </p>
         </div>
-        <div className="date-chip">⌑ &nbsp; AY 2026–27</div>
+        <div className="date-chip">AY 2026-27</div>
       </div>
 
       {/* STUDENT PROFILE CARD */}
@@ -277,7 +278,7 @@ export function StudentDashboardPage({ initialTab = "overview" }: StudentDashboa
             gap: "8px",
           }}
         >
-          <span>◷</span> Recent Laboratory Activity & Submission Feed
+          Recent Laboratory Activity & Submission Feed
           <span
             style={{
               padding: "2px 7px",
@@ -394,13 +395,13 @@ export function StudentDashboardPage({ initialTab = "overview" }: StudentDashboa
               }}
             >
               <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                <span style={{ fontSize: "24px" }}>🏆</span>
+                
                 <div>
                   <b style={{ color: "#166534", fontSize: "14px" }}>
-                    Latest Evaluation: {results[0].practicalTitle}
+                    {results[0].marks != null ? `Latest Evaluation: ${results[0].practicalTitle}` : `Latest Submission: ${results[0].practicalTitle}`}
                   </b>
                   <p style={{ margin: 0, fontSize: "12px", color: "#15803d" }}>
-                    Awarded <b>{results[0].marks ?? 14}/14 Marks</b> by {results[0].facultyName} · "{results[0].feedback}"
+                    {results[0].marks != null ? `Awarded ${results[0].marks}/14 Marks by ${results[0].facultyName || "Faculty"} · "${results[0].feedback || "Evaluated"}"` : "Status: SUBMITTED · Pending Faculty Evaluation"}
                   </p>
                 </div>
               </div>
@@ -411,7 +412,7 @@ export function StudentDashboardPage({ initialTab = "overview" }: StudentDashboa
                   onClick={() => setActivePdfResult(results[0])}
                   style={{ background: "#ffffff", color: "#166534", borderColor: "#86efac", fontWeight: 700 }}
                 >
-                  📄 Export 6-Page PDF
+                  Export Official 7-Page PDF
                 </button>
                 <button
                   type="button"
@@ -495,25 +496,35 @@ export function StudentDashboardPage({ initialTab = "overview" }: StudentDashboa
               <div className="practical-grid">
                 {results.map((result) => (
                   <article className="practical-card" key={result.submissionId}>
-                    <span className="status done">Reviewed & Evaluated</span>
+                    <span className={`status ${result.marks != null ? "done" : "in-progress"}`}>{result.marks != null ? "Reviewed & Evaluated" : "Submitted · Pending Evaluation"}</span>
                     <h3>{result.practicalTitle}</h3>
                     <p style={{ margin: "6px 0", fontSize: "16px", fontWeight: 700, color: "var(--palette-red, #c02040)" }}>
-                      Marks Awarded: {result.marks ?? "14"} / 14
+                      Marks Awarded: {result.marks != null ? `${result.marks} / 14` : "— / 14 (Pending Evaluation)"}
                     </p>
                     <p style={{ margin: "4px 0", color: "var(--text)" }}>
-                      <b>Faculty Feedback:</b> {result.feedback || "Good laboratory submission."}
+                      <b>Faculty Feedback:</b> {result.marks != null ? (result.feedback || "Good laboratory submission.") : "Submission received. Pending faculty evaluation."}
                     </p>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "12px", flexWrap: "wrap", gap: "8px" }}>
-                      <small className="muted">
-                        Reviewed by {result.facultyName} · {date(result.reviewedAt || result.submittedAt)}
-                      </small>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginTop: "12px", flexWrap: "wrap", gap: "8px" }}>
+                      <div style={{ fontSize: "11.5px", color: "#64748b" }}>
+                        <div>Evaluated by <b>{result.facultyName || "Mr. Sameer Sawant"}</b></div>
+                        {result.submittedAt && (
+                          <div style={{ color: "#0369a1", marginTop: "2px" }}>
+                            Submitted: {new Date(result.submittedAt).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}
+                          </div>
+                        )}
+                        {result.reviewedAt && (
+                          <div style={{ color: "#15803d", marginTop: "1px" }}>
+                            Evaluated: {new Date(result.reviewedAt).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}
+                          </div>
+                        )}
+                      </div>
                       <button
                         type="button"
                         className="button secondary compact"
                         onClick={() => setActivePdfResult(result)}
                         style={{ fontWeight: 700, color: "#0f766e" }}
                       >
-                        📄 Export PDF Report
+                        Export Official 7-Page PDF
                       </button>
                     </div>
                   </article>
@@ -621,13 +632,30 @@ export function StudentDashboardPage({ initialTab = "overview" }: StudentDashboa
                         flexShrink: 0,
                       }}
                     >
-                      {ev.type === "evaluation"
-                        ? "🏆"
-                        : ev.type === "submission"
-                          ? "📤"
-                          : ev.type === "execution"
-                            ? "⚡"
-                            : "📋"}
+                      {ev.type === "evaluation" ? (
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M9 11l3 3L22 4" />
+                          <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+                        </svg>
+                      ) : ev.type === "submission" ? (
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                          <polyline points="17 8 12 3 7 8" />
+                          <line x1="12" y1="3" x2="12" y2="15" />
+                        </svg>
+                      ) : ev.type === "execution" ? (
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="4 17 10 11 4 5" />
+                          <line x1="12" y1="19" x2="20" y2="19" />
+                        </svg>
+                      ) : (
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                          <polyline points="14 2 14 8 20 8" />
+                          <line x1="16" y1="13" x2="8" y2="13" />
+                          <line x1="16" y1="17" x2="8" y2="17" />
+                        </svg>
+                      )}
                     </div>
 
                     <div style={{ flex: 1 }}>
@@ -688,7 +716,7 @@ export function StudentDashboardPage({ initialTab = "overview" }: StudentDashboa
                         onClick={() => setActivePdfResult(ev.resultRef!)}
                         style={{ fontWeight: 700, color: "#0f766e", fontSize: "12px" }}
                       >
-                        📄 View 6-Page Report
+                        View Official 7-Page Report
                       </button>
                     )}
                     {ev.practicalId && (
@@ -760,36 +788,128 @@ export function StudentDashboardPage({ initialTab = "overview" }: StudentDashboa
                   Click "Print / Save PDF" to generate the signed laboratory sheet.
                 </p>
               </div>
-              <div style={{ display: "flex", gap: "10px" }}>
+              <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                <div style={{ display: "flex", alignItems: "center", background: "#f1f5f9", borderRadius: "6px", padding: "2px", border: "1px solid #cbd5e1" }}>
+                  <button
+                    type="button"
+                    onClick={() => setPrintMode("color")}
+                    style={{
+                      padding: "5px 10px",
+                      borderRadius: "4px",
+                      fontSize: "11px",
+                      fontWeight: 600,
+                      cursor: "pointer",
+                      border: "none",
+                      background: printMode === "color" ? "#ffffff" : "transparent",
+                      color: printMode === "color" ? "#1d4ed8" : "#64748b",
+                      boxShadow: printMode === "color" ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
+                    }}
+                  >
+                    Color View
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPrintMode("bw")}
+                    style={{
+                      padding: "5px 10px",
+                      borderRadius: "4px",
+                      fontSize: "11px",
+                      fontWeight: 600,
+                      cursor: "pointer",
+                      border: "none",
+                      background: printMode === "bw" ? "#ffffff" : "transparent",
+                      color: printMode === "bw" ? "#0f172a" : "#64748b",
+                      boxShadow: printMode === "bw" ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
+                    }}
+                  >
+                    B/W View
+                  </button>
+                </div>
+
                 <button
                   type="button"
-                  className="button primary"
-                  onClick={() => window.print()}
-                  style={{ background: "#2563eb", color: "#fff" }}
+                  onClick={() => {
+                    setPrintMode("color");
+                    printReportDocument("color");
+                  }}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    padding: "7px 14px",
+                    borderRadius: "6px",
+                    background: "#2563eb",
+                    color: "#ffffff",
+                    fontSize: "12px",
+                    fontWeight: 700,
+                    border: "none",
+                    cursor: "pointer",
+                  }}
                 >
-                  🖨️ Print / Save PDF
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                    <polyline points="6 9 6 2 18 2 18 9" />
+                    <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+                    <rect x="6" y="14" width="12" height="8" />
+                  </svg>
+                  Print Color PDF
                 </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPrintMode("bw");
+                    printReportDocument("bw");
+                  }}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    padding: "7px 14px",
+                    borderRadius: "6px",
+                    background: "#334155",
+                    color: "#ffffff",
+                    fontSize: "12px",
+                    fontWeight: 700,
+                    border: "none",
+                    cursor: "pointer",
+                  }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                    <polyline points="6 9 6 2 18 2 18 9" />
+                    <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+                    <rect x="6" y="14" width="12" height="8" />
+                  </svg>
+                  Print B/W PDF
+                </button>
+
                 <button
                   type="button"
                   className="button secondary"
                   onClick={() => setActivePdfResult(null)}
                 >
-                  ✕ Close
+                  Close
                 </button>
               </div>
             </div>
 
-            {/* Official 6-Page Laboratory Journal / Evaluation Document */}
+            {/* Official 7-Page Laboratory Journal / Evaluation Document */}
             <PracticalReportDocument
               practical={{
+                id: (activePdfResult as any).practicalId,
                 title: activePdfResult.practicalTitle,
-                subject: (activePdfResult as any).subject || "Cryptography & Network Security",
-                experimentNumber: (activePdfResult as any).experimentNumber || 8,
-                semester: (activePdfResult as any).semester || 6,
+                subject: (activePdfResult as any).subject || (user?.department?.toLowerCase().includes("it") ? "Information Technology Laboratory" : "Computer Engineering Laboratory"),
+                experimentNumber: (activePdfResult as any).experimentNumber || 1,
+                semester: (activePdfResult as any).semester || 5,
+                aim: (activePdfResult as any).aim,
+                theory: (activePdfResult as any).theory,
+                algorithm: (activePdfResult as any).algorithm,
+                conclusion: (activePdfResult as any).conclusionText || (activePdfResult as any).practicalConclusion,
+                pythonStarterCode: (activePdfResult as any).code,
               }}
               result={activePdfResult}
               user={user}
               screenshots={(activePdfResult as any).screenshots}
+              printMode={printMode}
             />
           </div>
         </div>

@@ -154,6 +154,7 @@ public class EvaluationService {
                 });
         p.setStatus(ProgressStatus.EVALUATED);
         p.setCurrentStep(com.codelabx.progress.PracticalStep.CONCLUSION);
+        p.setCompletedSteps("AIM,THEORY,ALGORITHM,CODE,PRACTICE,CONCLUSION");
         progress.save(p);
     }
 
