@@ -32,7 +32,10 @@ public class PracticalDtos {
             String sourcePdfPath,
             String sourcePdfName,
             List<PracticeQuestionInput> practiceQuestions,
-            List<VivaQuestionInput> vivaQuestions
+            List<VivaQuestionInput> vivaQuestions,
+            Boolean codeRequired,
+            List<String> observationColumns,
+            Integer observationRowCount
     ) {}
 
     public record AssignRequest(List<Long> studentIds) {}
@@ -83,7 +86,10 @@ public class PracticalDtos {
             String assignmentInstructions,
             String facultyName,
             Integer experimentNumber,
-            String programmingLanguage
+            String programmingLanguage,
+            Boolean codeRequired,
+            List<String> observationColumns,
+            Integer observationRowCount
     ) {}
 
     public record PracticalTeacherDetail(
@@ -108,7 +114,10 @@ public class PracticalDtos {
             Integer experimentNumber,
             String programmingLanguage,
             String sourcePdfName,
-            String sourcePdfPath
+            String sourcePdfPath,
+            Boolean codeRequired,
+            List<String> observationColumns,
+            Integer observationRowCount
     ) {}
 
     public static PracticalSummary toSummary(Practical p, int assigned, int completed) {

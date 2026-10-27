@@ -49,14 +49,14 @@ public class SubmissionService {
             progressService.assertStepUnlocked(student, request.practicalId(), PracticalStep.CONCLUSION);
         } catch (Exception ignored) {}
 
-        if (request.code() == null || request.code().isBlank()) {
+        if (!Boolean.FALSE.equals(progress.getPractical().getCodeRequired()) && (request.code() == null || request.code().isBlank())) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Code is required to submit.");
         }
         if (progress.getStatus() == ProgressStatus.EVALUATED) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "This practical has already been evaluated by faculty and cannot be modified.");
         }
 
-        progress.setDraftCode(request.code());
+        progress.setDraftCode(request.code() == null ? "" : request.code());
         if (request.language() != null) {
             progress.setDraftLanguage(request.language().name());
         }
@@ -71,7 +71,7 @@ public class SubmissionService {
         submission.setStudent(student);
         submission.setPractical(progress.getPractical());
         submission.setLanguage(request.language());
-        submission.setCode(request.code());
+        submission.setCode(request.code() == null ? "" : request.code());
         submission.setOutput(request.output() == null ? "" : request.output());
         submission.setExecutionStatus("UNVERIFIED");
         submission.setConclusionText(progress.getConclusionText());

@@ -36,6 +36,9 @@ public class StudentProgress {
     @Column(length = 16000)
     private String practiceAnswersJson = "{}";
 
+    @Column(length = 100000)
+    private String observationEntriesJson = "{}";
+
     @Column(length = 16000)
     private String conclusionText = "";
 
@@ -68,6 +71,8 @@ public class StudentProgress {
     public void setStatus(ProgressStatus status) { this.status = status; }
     public String getPracticeAnswersJson() { return practiceAnswersJson; }
     public void setPracticeAnswersJson(String practiceAnswersJson) { this.practiceAnswersJson = practiceAnswersJson; }
+    public String getObservationEntriesJson() { return observationEntriesJson; }
+    public void setObservationEntriesJson(String observationEntriesJson) { this.observationEntriesJson = observationEntriesJson; }
     public String getConclusionText() { return conclusionText; }
     public void setConclusionText(String conclusionText) { this.conclusionText = conclusionText; }
     public String getDraftCode() { return draftCode; }

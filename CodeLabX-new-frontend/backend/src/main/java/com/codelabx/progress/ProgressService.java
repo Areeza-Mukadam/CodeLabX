@@ -68,6 +68,9 @@ public class ProgressService {
         if (request.practiceAnswers() != null) {
             progress.setPracticeAnswersJson(writeJson(request.practiceAnswers()));
         }
+        if (request.observationEntries() != null) {
+            progress.setObservationEntriesJson(writeJson(request.observationEntries()));
+        }
         return toView(repository.save(progress));
     }
 
@@ -81,6 +84,9 @@ public class ProgressService {
 
         if (step == PracticalStep.PRACTICE && request.practiceAnswers() != null) {
             progress.setPracticeAnswersJson(writeJson(request.practiceAnswers()));
+        }
+        if (request.observationEntries() != null) {
+            progress.setObservationEntriesJson(writeJson(request.observationEntries()));
         }
         if (step == PracticalStep.CONCLUSION && request.conclusionText() != null && !request.conclusionText().isBlank()) {
             progress.setConclusionText(request.conclusionText().trim());
@@ -98,7 +104,11 @@ public class ProgressService {
                 .map(Enum::name).collect(Collectors.joining(",")));
         progress.setStatus(ProgressStatus.IN_PROGRESS);
         if (step != PracticalStep.CONCLUSION) {
-            progress.setCurrentStep(step.next());
+            PracticalStep next = step.next();
+            if (step == PracticalStep.PRACTICE && Boolean.FALSE.equals(progress.getPractical().getCodeRequired())) {
+                next = PracticalStep.CONCLUSION;
+            }
+            progress.setCurrentStep(next);
         }
         return toView(repository.save(progress));
     }
@@ -123,8 +133,12 @@ public class ProgressService {
 
     public ProgressView toView(StudentProgress progress) {
         List<PracticalStep> completed = new ArrayList<>(parseCompleted(progress.getCompletedSteps()));
+        if (Boolean.FALSE.equals(progress.getPractical().getCodeRequired())) {
+            completed.remove(PracticalStep.CODE);
+        }
         completed.sort(Comparator.comparingInt(PracticalStep::ordinal));
-        int percent = (int) Math.round(completed.size() * 100.0 / PracticalStep.values().length);
+        int totalSteps = Boolean.FALSE.equals(progress.getPractical().getCodeRequired()) ? 5 : PracticalStep.values().length;
+        int percent = (int) Math.round(completed.size() * 100.0 / totalSteps);
         return new ProgressView(
                 progress.getPractical().getId(),
                 progress.getCurrentStep(),
@@ -132,6 +146,9 @@ public class ProgressService {
                 progress.getStatus(),
                 percent,
                 readJson(progress.getPracticeAnswersJson()),
+                readJson(progress.getObservationEntriesJson()),
+                readColumns(progress.getPractical().getObservationColumnsJson()),
+                progress.getPractical().getObservationRowCount() == null ? 5 : progress.getPractical().getObservationRowCount(),
                 progress.getConclusionText(),
                 progress.getDraftCode(),
                 progress.getDraftLanguage(),
@@ -181,6 +198,15 @@ public class ProgressService {
             return objectMapper.readValue(json, new TypeReference<>() {});
         } catch (Exception ex) {
             return Map.of();
+        }
+    }
+
+    private List<String> readColumns(String json) {
+        try {
+            if (json == null || json.isBlank()) return List.of();
+            return objectMapper.readValue(json, new TypeReference<>() {});
+        } catch (Exception ex) {
+            return List.of();
         }
     }
 }
