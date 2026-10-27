@@ -80,8 +80,14 @@ public class TeacherDashboardController {
 
     @GetMapping({"/api/teacher/subjects", "/teacher/subjects"})
     public List<SubjectView> subjects(@AuthenticationPrincipal UserAccount teacher) {
+        final String dept = (teacher.getDepartment() != null && !teacher.getDepartment().isBlank()) ? teacher.getDepartment() : "Computer Engineering";
         List<Practical> all = practicals.findAllByOrderByUpdatedAtDesc().stream()
-                .filter(p -> (teacher.getRole() == Role.ADMIN || p.getCreatedBy() == null || Objects.equals(p.getCreatedBy().getId(), teacher.getId()) || (p.getCreatedBy().getDepartment() != null && Objects.equals(p.getCreatedBy().getDepartment(), teacher.getDepartment())))).toList();
+                .filter(p -> (teacher.getRole() == Role.ADMIN
+                        || p.getCreatedBy() == null
+                        || Objects.equals(p.getCreatedBy().getId(), teacher.getId())
+                        || (p.getCreatedBy().getDepartment() != null && Objects.equals(p.getCreatedBy().getDepartment(), dept))
+                        || (p.getCreatedBy().getName() != null && Objects.equals(p.getCreatedBy().getName(), teacher.getName()))
+                )).toList();
         List<Practical> matching = all.stream()
                 .filter(p -> p.getSubject() != null && !p.getSubject().isBlank())
                 .toList();
@@ -97,8 +103,14 @@ public class TeacherDashboardController {
     @GetMapping({"/api/teacher/classes", "/teacher/classes"})
     public List<String> classes(@RequestParam(required = false) String subject, @RequestParam(required = false) Integer semester, @AuthenticationPrincipal UserAccount teacher) {
         final String sQuery = subject != null ? subject.trim().toLowerCase() : null;
+        final String dept = (teacher.getDepartment() != null && !teacher.getDepartment().isBlank()) ? teacher.getDepartment() : "Computer Engineering";
         var ids = practicals.findAllByOrderByUpdatedAtDesc().stream()
-                .filter(p -> (teacher.getRole() == Role.ADMIN || p.getCreatedBy() == null || Objects.equals(p.getCreatedBy().getId(), teacher.getId()) || (p.getCreatedBy().getDepartment() != null && Objects.equals(p.getCreatedBy().getDepartment(), teacher.getDepartment()))))
+                .filter(p -> (teacher.getRole() == Role.ADMIN
+                        || p.getCreatedBy() == null
+                        || Objects.equals(p.getCreatedBy().getId(), teacher.getId())
+                        || (p.getCreatedBy().getDepartment() != null && Objects.equals(p.getCreatedBy().getDepartment(), dept))
+                        || (p.getCreatedBy().getName() != null && Objects.equals(p.getCreatedBy().getName(), teacher.getName()))
+                ))
                 .filter(p -> (sQuery == null || (p.getSubject() != null && p.getSubject().trim().toLowerCase().equals(sQuery)))
                         && (semester == null || Objects.equals(semester, p.getSemester())))
                 .map(Practical::getId).toList();
@@ -116,8 +128,14 @@ public class TeacherDashboardController {
     @GetMapping({"/api/teacher/students", "/teacher/students"})
     public List<UserDto> students(@RequestParam(required = false) String subject, @RequestParam(required = false) Integer semester, @RequestParam(required = false) String classSection, @AuthenticationPrincipal UserAccount teacher) {
         final String sQuery = subject != null ? subject.trim().toLowerCase() : null;
+        final String dept = (teacher.getDepartment() != null && !teacher.getDepartment().isBlank()) ? teacher.getDepartment() : "Computer Engineering";
         var ids = practicals.findAllByOrderByUpdatedAtDesc().stream()
-                .filter(p -> (teacher.getRole() == Role.ADMIN || p.getCreatedBy() == null || Objects.equals(p.getCreatedBy().getId(), teacher.getId()) || (p.getCreatedBy().getDepartment() != null && Objects.equals(p.getCreatedBy().getDepartment(), teacher.getDepartment()))))
+                .filter(p -> (teacher.getRole() == Role.ADMIN
+                        || p.getCreatedBy() == null
+                        || Objects.equals(p.getCreatedBy().getId(), teacher.getId())
+                        || (p.getCreatedBy().getDepartment() != null && Objects.equals(p.getCreatedBy().getDepartment(), dept))
+                        || (p.getCreatedBy().getName() != null && Objects.equals(p.getCreatedBy().getName(), teacher.getName()))
+                ))
                 .filter(p -> (sQuery == null || (p.getSubject() != null && p.getSubject().trim().toLowerCase().equals(sQuery)))
                         && (semester == null || Objects.equals(semester, p.getSemester())))
                 .map(Practical::getId).toList();

@@ -87,9 +87,11 @@ public class DemoDataInitializer {
             users.saveAll(allStudents);
 
             teacher.setDepartment("Computer Engineering");
+            teacherSameer.setDepartment("Computer Engineering");
+            teacherSamir.setDepartment("Computer Engineering");
             teacherIt.setDepartment("Information Technology");
             teacherAiml.setDepartment("Artificial Intelligence & Machine Learning");
-            users.saveAll(List.of(adminSaurabh, teacherSamir, teacher, teacherIt, teacherAiml));
+            users.saveAll(List.of(adminSaurabh, teacherSamir, teacherSameer, teacher, teacherIt, teacherAiml));
 
             seedFromJson(objectMapper, teacherSamir, allStudents, practicals, assignments, practiceQuestions, vivaQuestions);
             seedSampleSubmission(studentInzamam, practicals, submissions, progressRepository);

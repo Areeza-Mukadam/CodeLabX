@@ -67,7 +67,8 @@ public class PracticalService {
 
     @Transactional(readOnly = true)
     public List<PracticalSummary> listForTeacher(UserAccount teacher) {
-        return practicals.findAllByOrderByUpdatedAtDesc().stream().filter(p -> teacher.getRole() == Role.ADMIN || p.getCreatedBy() == null || Objects.equals(p.getCreatedBy().getId(), teacher.getId()) || (p.getCreatedBy().getDepartment() != null && Objects.equals(p.getCreatedBy().getDepartment(), teacher.getDepartment())))
+        final String dept = (teacher.getDepartment() != null && !teacher.getDepartment().isBlank()) ? teacher.getDepartment() : "Computer Engineering";
+        return practicals.findAllByOrderByUpdatedAtDesc().stream().filter(p -> teacher.getRole() == Role.ADMIN || p.getCreatedBy() == null || Objects.equals(p.getCreatedBy().getId(), teacher.getId()) || (p.getCreatedBy().getDepartment() != null && Objects.equals(p.getCreatedBy().getDepartment(), dept)) || (p.getCreatedBy().getName() != null && Objects.equals(p.getCreatedBy().getName(), teacher.getName())))
                 .map(p -> PracticalDtos.toSummary(p, (int) assignments.countByPracticalId(p.getId()),
                         (int) progress.countByPracticalIdAndStatus(p.getId(), ProgressStatus.SUBMITTED) + (int) progress.countByPracticalIdAndStatus(p.getId(), ProgressStatus.EVALUATED))).toList();
     }
