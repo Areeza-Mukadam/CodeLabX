@@ -1188,13 +1188,31 @@ export function PracticalFormPage() {
                   ＋ Add observation table
                 </button>
               ) : <>
-                {(form.observationColumns || []).map((column, index) => (
-                  <div className="inline-question" key={index}>
-                    <span>Column {index + 1}</span>
-                    <input value={column} onChange={(e) => update("observationColumns", (form.observationColumns || []).map((item, i) => i === index ? e.target.value : item))} placeholder="Column heading" />
-                    <button type="button" className="icon-button" onClick={() => update("observationColumns", (form.observationColumns || []).filter((_, i) => i !== index))}>×</button>
-                  </div>
-                ))}
+                <div style={{ overflowX: "auto", marginBottom: 12 }}>
+                  <table style={{ width: "100%", minWidth: 480, borderCollapse: "collapse", tableLayout: "fixed" }}>
+                    <thead>
+                      <tr>
+                        <th style={{ width: 48, padding: 8, border: "1px solid #cbd5e1", background: "#f1f5f9" }}>#</th>
+                        {(form.observationColumns || []).map((column, index) => (
+                          <th key={index} style={{ padding: 6, border: "1px solid #cbd5e1", background: "#f1f5f9" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                              <input aria-label={`Observation column ${index + 1} heading`} value={column} onChange={(e) => update("observationColumns", (form.observationColumns || []).map((item, i) => i === index ? e.target.value : item))} placeholder={`Column ${index + 1}`} style={{ minWidth: 0, width: "100%", padding: 7, border: "1px solid #cbd5e1", borderRadius: 4 }} />
+                              <button type="button" aria-label={`Remove column ${index + 1}`} onClick={() => update("observationColumns", (form.observationColumns || []).filter((_, i) => i !== index))} style={{ border: 0, background: "transparent", cursor: "pointer", fontSize: 18 }}>×</button>
+                            </div>
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {Array.from({ length: form.observationRowCount || 5 }, (_, row) => (
+                        <tr key={row}>
+                          <td style={{ padding: 8, border: "1px solid #cbd5e1", textAlign: "center" }}>{row + 1}</td>
+                          {(form.observationColumns || []).map((_, col) => <td key={col} style={{ height: 38, padding: 6, border: "1px solid #cbd5e1" }} />)}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
                   <button type="button" className="button secondary" disabled={(form.observationColumns || []).length >= 12} onClick={() => update("observationColumns", [...(form.observationColumns || []), `Column ${(form.observationColumns || []).length + 1}`])}>＋ Add column</button>
                   <button type="button" className="button secondary" onClick={() => update("observationColumns", [])}>Remove table</button>
