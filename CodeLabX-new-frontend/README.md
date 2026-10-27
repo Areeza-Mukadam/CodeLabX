@@ -92,6 +92,10 @@ Put Semester 3 Data Structures practical PDFs in [docs/seed-materials/semester-3
 
 The frontend only calls `POST /api/execution/run`; it never receives the Piston URL or credentials. The backend forwards Java and Python requests to the endpoint in `PISTON_API_URL`. `PISTON_AUTHORIZATION` is an optional complete HTTP `Authorization` header value for a protected proxy or Piston endpoint (for example, `Bearer …` or `Basic …`). Keep it only in the backend environment or an ignored local `.env` file. Do not put credentials in frontend variables, source files, logs, or responses.
 
+### Vercel frontend
+
+Set the Vercel project root directory to `CodeLabX-new-frontend/frontend` so Vercel loads that folder's `vercel.json`. It sets the COOP/COEP response headers required by the browser Java, Python, C, and C++ WebAssembly runners; Vite and the Docker/Nginx deployment already set the same headers. Set `VITE_API_URL` in Vercel to the public HTTPS origin of the deployed backend (for example, the Render service URL), never `localhost`. Browser runtimes run locally in each user's browser; the backend/Piston path remains their fallback for unsupported cases and requests such as Java standard input.
+
 ### Start and verify local Piston
 
 Prerequisites: Docker Desktop's Linux engine must be running, Node.js must be installed, and `cloudflared` must be available (on this laptop it is at `C:\Program Files (x86)\cloudflared\cloudflared.exe`). If `docker info` shows client details followed by a Server connection error, start Docker Desktop and retry. Docker Compose binds Piston's host port to `127.0.0.1` only. The internal container port, Piston image, persistent package volume, temporary execution storage, and runtime initialization service are retained. From the project root:

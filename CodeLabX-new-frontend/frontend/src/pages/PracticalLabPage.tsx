@@ -264,10 +264,15 @@ export function PracticalLabPage() {
         } catch (error) {
           if (!(error instanceof BrowserRuntimeUnavailable)) throw error;
           if (language === "ASSEMBLY") throw error;
-          r = await api<any>("/execution/run", {
-            method: "POST",
-            body: JSON.stringify({ practicalId, language, source: code, stdin }),
-          });
+          try {
+            r = await api<any>("/execution/run", {
+              method: "POST",
+              body: JSON.stringify({ practicalId, language, source: code, stdin }),
+            });
+          } catch (fallbackError) {
+            const reason = fallbackError instanceof Error ? fallbackError.message : "Server runner failed.";
+            throw new Error(`${error.message} Server fallback failed: ${reason}`);
+          }
         }
       } else {
         r = await api<any>("/execution/run", {
@@ -616,6 +621,8 @@ export function PracticalLabPage() {
                       >
                         <option value="JAVA">Java</option>
                         <option value="PYTHON">Python</option>
+                        <option value="C">C</option>
+                        <option value="CPP">C++</option>
                         <option value="SQL">SQL (SQLite)</option>
                         <option value="ASSEMBLY">Assembly (8086, browser)</option>
                       </select>
