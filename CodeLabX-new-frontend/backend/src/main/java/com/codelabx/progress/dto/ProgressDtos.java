@@ -15,6 +15,9 @@ public class ProgressDtos {
             ProgressStatus status,
             int percent,
             Map<String, String> practiceAnswers,
+            Map<String, String> observationEntries,
+            List<String> observationColumns,
+            int observationRowCount,
             String conclusionText,
             String draftCode,
             String draftLanguage,
@@ -24,10 +27,11 @@ public class ProgressDtos {
     public record CompleteStepRequest(
             PracticalStep step,
             Map<String, String> practiceAnswers,
+            Map<String, String> observationEntries,
             String conclusionText,
             String draftCode,
             String draftLanguage
     ) {}
 
-    public record SaveDraftRequest(String draftCode, String draftLanguage, String conclusionText, Map<String, String> practiceAnswers) {}
+    public record SaveDraftRequest(String draftCode, String draftLanguage, String conclusionText, Map<String, String> practiceAnswers, Map<String, String> observationEntries) {}
 }

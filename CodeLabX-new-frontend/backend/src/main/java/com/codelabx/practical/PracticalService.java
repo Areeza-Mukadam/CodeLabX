@@ -14,6 +14,8 @@ import com.codelabx.viva.VivaQuestionRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,6 +31,7 @@ public class PracticalService {
     private final StudentProgressRepository progress;
     private final UserRepository users;
     private final SubmissionRepository submissions;
+    private final ObjectMapper objectMapper;
 
     public PracticalService(
             PracticalRepository practicals,
@@ -37,7 +40,8 @@ public class PracticalService {
             PracticalAssignmentRepository assignments,
             StudentProgressRepository progress,
             UserRepository users,
-            SubmissionRepository submissions
+            SubmissionRepository submissions,
+            ObjectMapper objectMapper
     ) {
         this.practicals = practicals;
         this.practiceQuestions = practiceQuestions;
@@ -46,6 +50,7 @@ public class PracticalService {
         this.progress = progress;
         this.users = users;
         this.submissions = submissions;
+        this.objectMapper = objectMapper;
     }
 
     @Transactional(readOnly = true)
@@ -82,8 +87,10 @@ public class PracticalService {
                     var prog = progress.findByStudentIdAndPracticalId(student.getId(), p.getId()).orElse(null);
                     int completed = prog == null || prog.getCompletedSteps().isBlank()
                             ? 0
-                            : prog.getCompletedSteps().split(",").length;
-                    int percent = (int) Math.round(completed * 100.0 / 6.0);
+                            : (int) java.util.Arrays.stream(prog.getCompletedSteps().split(","))
+                                    .filter(step -> !Boolean.FALSE.equals(p.getCodeRequired()) || !step.equals("CODE")).count();
+                    int totalSteps = Boolean.FALSE.equals(p.getCodeRequired()) ? 5 : 6;
+                    int percent = (int) Math.round(completed * 100.0 / totalSteps);
                     String progressStatus = prog == null ? "NOT_STARTED" : prog.getStatus().name();
                     var assignment = assignments.findByPracticalIdAndStudentId(p.getId(), student.getId())
                             .orElseGet(() -> classSection(student) == null ? null : assignments.findByPracticalIdAndClassSection(p.getId(), classSection(student)).stream().filter(a -> a.getClassDepartment() == null || Objects.equals(a.getClassDepartment(),student.getDepartment())).findFirst().orElse(null));
@@ -102,7 +109,7 @@ public class PracticalService {
         Practical practical = requireAssignedPublished(id, student);
         PracticalDetail detail=toStudentDetail(practical);
         PracticalAssignment assignment=assignments.findByPracticalIdAndStudentId(id,student.getId()).orElseGet(()->classSection(student)==null?null:assignments.findByPracticalIdAndClassSection(id,classSection(student)).stream().filter(a->a.getClassDepartment()==null||Objects.equals(a.getClassDepartment(),student.getDepartment())).findFirst().orElse(null));
-        return new PracticalDetail(detail.id(),detail.title(),detail.subject(),detail.semester(),detail.description(),detail.aim(),detail.theory(),detail.algorithm(),detail.codeInstructions(),detail.conclusion(),detail.javaStarterCode(),detail.pythonStarterCode(),detail.status(),detail.createdAt(),detail.updatedAt(),detail.practiceQuestions(),detail.vivaQuestions(),assignment==null?practical.getCreatedAt():assignment.getAssignedAt(),assignment==null?null:assignment.getDueAt(),assignment==null?null:assignment.getInstructions(),practical.getCreatedBy().getName(),practical.getExperimentNumber(),practical.getProgrammingLanguage());
+        return new PracticalDetail(detail.id(),detail.title(),detail.subject(),detail.semester(),detail.description(),detail.aim(),detail.theory(),detail.algorithm(),detail.codeInstructions(),detail.conclusion(),detail.javaStarterCode(),detail.pythonStarterCode(),detail.status(),detail.createdAt(),detail.updatedAt(),detail.practiceQuestions(),detail.vivaQuestions(),assignment==null?practical.getCreatedAt():assignment.getAssignedAt(),assignment==null?null:assignment.getDueAt(),assignment==null?null:assignment.getInstructions(),practical.getCreatedBy().getName(),practical.getExperimentNumber(),practical.getProgrammingLanguage(), detail.codeRequired(), detail.observationColumns(), detail.observationRowCount());
     }
 
     @Transactional(readOnly = true)
@@ -227,6 +234,9 @@ public class PracticalService {
         practical.setConclusion(clip(request.conclusion(), 8000));
         practical.setJavaStarterCode(clip(request.javaStarterCode(), 8000));
         practical.setPythonStarterCode(clip(request.pythonStarterCode(), 8000));
+        practical.setCodeRequired(request.codeRequired() == null || request.codeRequired());
+        practical.setObservationColumnsJson(writeColumns(request.observationColumns()));
+        practical.setObservationRowCount(Math.max(1, Math.min(30, request.observationRowCount() == null ? 5 : request.observationRowCount())));
     }
 
     private void replaceQuestions(Practical practical, PracticalUpsertRequest request) {
@@ -271,7 +281,7 @@ public class PracticalService {
                 practical.getId(), practical.getTitle(), practical.getSubject(), practical.getSemester(), practical.getDescription(), practical.getAim(),
                 practical.getTheory(), practical.getAlgorithm(), practical.getCodeInstructions(),
                 practical.getConclusion(), practical.getJavaStarterCode(), practical.getPythonStarterCode(),
-                practical.getStatus(), practical.getCreatedAt(), practical.getUpdatedAt(), questions, viva, practical.getCreatedAt(), null, null, practical.getCreatedBy() != null ? practical.getCreatedBy().getName() : "Faculty", practical.getExperimentNumber(), practical.getProgrammingLanguage()
+                practical.getStatus(), practical.getCreatedAt(), practical.getUpdatedAt(), questions, viva, practical.getCreatedAt(), null, null, practical.getCreatedBy() != null ? practical.getCreatedBy().getName() : "Faculty", practical.getExperimentNumber(), practical.getProgrammingLanguage(), Boolean.FALSE.equals(practical.getCodeRequired()) ? false : true, readColumns(practical), practical.getObservationRowCount() == null ? 5 : practical.getObservationRowCount()
         );
     }
 
@@ -293,8 +303,18 @@ public class PracticalService {
                 practical.getTheory(), practical.getAlgorithm(), practical.getCodeInstructions(),
                 practical.getConclusion(), practical.getJavaStarterCode(), practical.getPythonStarterCode(),
                 practical.getStatus(), practical.getCreatedAt(), practical.getUpdatedAt(), questions, viva, assigned,
-                practical.getExperimentNumber(), practical.getProgrammingLanguage(), practical.getSourcePdfName(), practical.getSourcePdfPath()
+                practical.getExperimentNumber(), practical.getProgrammingLanguage(), practical.getSourcePdfName(), practical.getSourcePdfPath(), Boolean.FALSE.equals(practical.getCodeRequired()) ? false : true, readColumns(practical), practical.getObservationRowCount() == null ? 5 : practical.getObservationRowCount()
         );
+    }
+
+    private String writeColumns(List<String> columns) {
+        try { return objectMapper.writeValueAsString(columns == null ? List.of() : columns.stream().filter(Objects::nonNull).map(String::trim).filter(s -> !s.isBlank()).map(s -> s.length() > 120 ? s.substring(0, 120) : s).limit(12).toList()); }
+        catch (Exception ex) { return "[]"; }
+    }
+
+    private List<String> readColumns(Practical practical) {
+        try { return objectMapper.readValue(practical.getObservationColumnsJson() == null ? "[]" : practical.getObservationColumnsJson(), new TypeReference<>() {}); }
+        catch (Exception ex) { return List.of(); }
     }
 
     @Transactional

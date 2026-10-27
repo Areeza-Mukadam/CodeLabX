@@ -33,14 +33,14 @@ public class SubmissionService {
     public SubmissionView submit(UserAccount student, SubmitRequest request) {
         StudentProgress progress = progressService.load(request.practicalId(), student);
         progressService.assertStepUnlocked(student, request.practicalId(), PracticalStep.CONCLUSION);
-        if (request.code() == null || request.code().isBlank()) {
+        if (!Boolean.FALSE.equals(progress.getPractical().getCodeRequired()) && (request.code() == null || request.code().isBlank())) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Code is required to submit.");
         }
         if (progress.getStatus() == ProgressStatus.EVALUATED) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "This practical has already been evaluated by faculty and cannot be modified.");
         }
 
-        progress.setDraftCode(request.code());
+        progress.setDraftCode(request.code() == null ? "" : request.code());
         progress.setDraftLanguage(request.language().name());
         if (request.conclusionText() != null && !request.conclusionText().isBlank()) {
             progress.setConclusionText(request.conclusionText());
@@ -53,7 +53,7 @@ public class SubmissionService {
         submission.setStudent(student);
         submission.setPractical(progress.getPractical());
         submission.setLanguage(request.language());
-        submission.setCode(request.code());
+        submission.setCode(request.code() == null ? "" : request.code());
         submission.setOutput(request.output() == null ? "" : request.output());
         // Run results are client-submitted and can be forged; keep them informational only.
         submission.setExecutionStatus("UNVERIFIED");

@@ -115,8 +115,17 @@ export function SubmissionReviewPage() {
       </div>
       <div className="review-grid">
         <section className="review-code">
-          <h2>Submitted code</h2>
-          <pre>{s.code}</pre>
+          <h2>{s.code ? "Submitted code" : "Code editor not required"}</h2>
+          {s.code ? <pre>{s.code}</pre> : <p className="muted">Faculty configured this practical without a code editor.</p>}
+          {data.progress?.observationColumns?.length > 0 && <>
+            <h3>Student observations</h3>
+            <div style={{ overflowX: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                <thead><tr><th style={{ padding: 8, border: "1px solid var(--line)" }}>#</th>{data.progress.observationColumns.map((column: string, i: number) => <th key={i} style={{ padding: 8, border: "1px solid var(--line)", textAlign: "left" }}>{column}</th>)}</tr></thead>
+                <tbody>{Array.from({ length: data.progress.observationRowCount || 5 }, (_, row) => <tr key={row}><td style={{ padding: 8, border: "1px solid var(--line)" }}>{row + 1}</td>{data.progress.observationColumns.map((_: string, col: number) => <td key={col} style={{ padding: 8, border: "1px solid var(--line)" }}>{data.progress.observationEntries?.[`${row}:${col}`] || "—"}</td>)}</tr>)}</tbody>
+              </table>
+            </div>
+          </>}
           <h3>Student-reported run output</h3>
           <p className="muted small">This output is not verified for grading. Assess the submitted code independently.</p>
           <pre>{s.output || "No output was recorded."}</pre>

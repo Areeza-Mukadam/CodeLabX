@@ -1151,6 +1151,15 @@ export function PracticalFormPage() {
             </div>
             <section className="form-section">
               <span className="eyebrow">07 · STARTER CODE</span>
+              <label style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+                <input
+                  type="checkbox"
+                  checked={form.codeRequired !== false}
+                  onChange={(e) => update("codeRequired", e.target.checked)}
+                />
+                Include a student code editor in this practical
+              </label>
+              {form.codeRequired !== false && <>
               <label>
                 Java
                 <textarea
@@ -1169,9 +1178,32 @@ export function PracticalFormPage() {
                   onChange={(e) => update("pythonStarterCode", e.target.value)}
                 />
               </label>
+              </>}
             </section>
             <section className="form-section">
-              <span className="eyebrow">08 · PRACTICE QUESTIONS</span>
+              <span className="eyebrow">08 · STUDENT OBSERVATION TABLE</span>
+              <p className="muted">Optional table students can fill in and faculty can review with the submission.</p>
+              {(form.observationColumns || []).length === 0 ? (
+                <button type="button" className="button secondary" onClick={() => update("observationColumns", ["Observation", "Result"])}>
+                  ＋ Add observation table
+                </button>
+              ) : <>
+                {(form.observationColumns || []).map((column, index) => (
+                  <div className="inline-question" key={index}>
+                    <span>Column {index + 1}</span>
+                    <input value={column} onChange={(e) => update("observationColumns", (form.observationColumns || []).map((item, i) => i === index ? e.target.value : item))} placeholder="Column heading" />
+                    <button type="button" className="icon-button" onClick={() => update("observationColumns", (form.observationColumns || []).filter((_, i) => i !== index))}>×</button>
+                  </div>
+                ))}
+                <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                  <button type="button" className="button secondary" disabled={(form.observationColumns || []).length >= 12} onClick={() => update("observationColumns", [...(form.observationColumns || []), `Column ${(form.observationColumns || []).length + 1}`])}>＋ Add column</button>
+                  <button type="button" className="button secondary" onClick={() => update("observationColumns", [])}>Remove table</button>
+                  <label>Student rows <input type="number" min="1" max="30" value={form.observationRowCount || 5} onChange={(e) => update("observationRowCount", Math.max(1, Math.min(30, Number(e.target.value) || 1)))} style={{ width: 80, marginLeft: 8 }} /></label>
+                </div>
+              </>}
+            </section>
+            <section className="form-section">
+              <span className="eyebrow">09 · PRACTICE QUESTIONS</span>
               {form.practiceQuestions.map((q, i) => (
                 <div className="inline-question" key={i}>
                   <span>Q{i + 1}</span>
@@ -1208,7 +1240,7 @@ export function PracticalFormPage() {
               </button>
             </section>
             <section className="form-section">
-              <span className="eyebrow">09 · VIVA QUESTION BANK</span>
+              <span className="eyebrow">10 · VIVA QUESTION BANK</span>
               {form.vivaQuestions.map((q, i) => (
                 <div className="inline-question" key={i}>
                   <span>Q{i + 1}</span>
@@ -1259,7 +1291,7 @@ export function PracticalFormPage() {
               </button>
             </section>
             <section className="form-section">
-              <span className="eyebrow">10 · ASSIGN CLASS</span>
+              <span className="eyebrow">11 · ASSIGN CLASS</span>
               <label>
                 Department
                 <select

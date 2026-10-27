@@ -97,6 +97,7 @@ export function PracticalLabPage() {
     prog = useLoad(() => api<Progress>(`/practicals/${id}/progress`), [id]),
     [step, setStep] = useState("AIM"),
     [answers, setAnswers] = useState<Record<string, string>>({}),
+    [observationEntries, setObservationEntries] = useState<Record<string, string>>({}),
     [code, setCode] = useState(""),
     [language, setLanguage] = useState("JAVA"),
     [stdin, setStdin] = useState(""),
@@ -110,8 +111,9 @@ export function PracticalLabPage() {
   useEffect(() => {
     if (prog.data && p) {
       const initialLanguage = p.semester === 5 ? "PYTHON" : "JAVA";
-      setStep(prog.data.currentStep);
+      setStep(p.codeRequired === false && prog.data.currentStep === "CODE" ? "CONCLUSION" : prog.data.currentStep);
       setAnswers(prog.data.practiceAnswers || {});
+      setObservationEntries(prog.data.observationEntries || {});
       setLanguage(prog.data.draftLanguage || initialLanguage);
       const draft = prog.data.draftCode;
       const isFullSolution = draft && (draft === p.javaStarterCode || draft === p.pythonStarterCode);
@@ -175,13 +177,14 @@ export function PracticalLabPage() {
             draftLanguage: language,
             conclusionText: conclusion,
             practiceAnswers: answers,
+            observationEntries,
             screenshots,
           }),
         }).catch(() => {}),
       550,
     );
     return () => window.clearTimeout(timer);
-  }, [prog.data, code, language, conclusion, answers, screenshots, id]);
+  }, [prog.data, code, language, conclusion, answers, observationEntries, screenshots, id]);
   if (loading || prog.loading) return <Loading />;
   if (error || prog.error)
     return (
@@ -196,11 +199,12 @@ export function PracticalLabPage() {
   if (!p || !prog.data) return null;
   if (prog.data.status === "SUBMITTED" || prog.data.status === "EVALUATED")
     return <SubmittedStatus practical={p} title={p.title} status={prog.data.status} />;
-  const idx = steps.findIndex((x) => x[0] === step),
+  const practicalSteps = p.codeRequired === false ? steps.filter(([key]) => key !== "CODE") : steps;
+  const idx = practicalSteps.findIndex((x) => x[0] === step),
     completed = prog.data.completedSteps || [];
   const selectStep = (key: string) => {
-    const k = steps.findIndex((x) => x[0] === key);
-    if (k <= idx || completed.includes(steps[k - 1]?.[0])) setStep(key);
+    const k = practicalSteps.findIndex((x) => x[0] === key);
+    if (k <= idx || completed.includes(practicalSteps[k - 1]?.[0])) setStep(key);
   };
   const handleScreenshotFile = (files: FileList | null) => {
     if (!files || files.length === 0) return;
@@ -234,6 +238,7 @@ export function PracticalLabPage() {
         step,
         screenshots,
         ...(step === "PRACTICE" ? { practiceAnswers: answers } : {}),
+        observationEntries,
         ...(step === "CONCLUSION" ? { conclusionText: conclusion } : {}),
         ...(step === "CODE"
           ? { draftCode: code, draftLanguage: language }
@@ -315,6 +320,7 @@ export function PracticalLabPage() {
         body: JSON.stringify({
           step: "CONCLUSION",
           conclusionText: conclusion,
+          observationEntries,
           screenshots,
         }),
       });
@@ -504,7 +510,7 @@ export function PracticalLabPage() {
     </div>
   );
 
-  const current = steps[idx];
+  const current = practicalSteps[idx];
   return (
     <div className="lab-page">
       <div className="lab-heading">
@@ -524,7 +530,7 @@ export function PracticalLabPage() {
         </div>
       </div>
       <div className="stepper">
-        {steps.map(([key, label], i) => {
+        {practicalSteps.map(([key, label], i) => {
           const isDone = completed.includes(key),
             locked = i > idx && !isDone,
             isCurrent = key === step;
@@ -539,7 +545,7 @@ export function PracticalLabPage() {
                 {isDone ? "✓" : String(i + 1).padStart(2, "0")}
               </span>
               <span>{label}</span>
-              {i < steps.length - 1 && <i />}
+              {i < practicalSteps.length - 1 && <i />}
             </button>
           );
         })}
@@ -548,7 +554,7 @@ export function PracticalLabPage() {
       <div className="lab-layout">
         <section className="lab-main">
           <div className="section-meta">
-            <span>SECTION {String(idx + 1).padStart(2, "0")} / 06</span>
+            <span>SECTION {String(idx + 1).padStart(2, "0")} / {String(practicalSteps.length).padStart(2, "0")}</span>
             <span>~ {step === "CODE" ? "10" : "3"} MIN</span>
           </div>
           <h2>{current[1]}</h2>
@@ -584,6 +590,17 @@ export function PracticalLabPage() {
               </>
             )}
             {step === "PRACTICE" && (
+              <>
+              {p.observationColumns?.length ? <section style={{ marginBottom: 24, overflowX: "auto" }}>
+                <h3>Observation table</h3>
+                <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 480 }}>
+                  <thead><tr><th style={{ padding: 8, border: "1px solid var(--line)" }}>#</th>{p.observationColumns.map((column, i) => <th key={i} style={{ padding: 8, border: "1px solid var(--line)", textAlign: "left" }}>{column}</th>)}</tr></thead>
+                  <tbody>{Array.from({ length: p.observationRowCount || 5 }, (_, row) => <tr key={row}><td style={{ padding: 8, border: "1px solid var(--line)" }}>{row + 1}</td>{p.observationColumns!.map((_, col) => {
+                    const cell = `${row}:${col}`;
+                    return <td key={col} style={{ padding: 5, border: "1px solid var(--line)" }}><input maxLength={250} aria-label={`Row ${row + 1}, ${p.observationColumns![col]}`} value={observationEntries[cell] || ""} onChange={(e) => setObservationEntries({ ...observationEntries, [cell]: e.target.value })} style={{ width: "100%", minWidth: 120, padding: 7, border: 0, background: "transparent", color: "inherit" }} /></td>;
+                  })}</tr>)}</tbody>
+                </table>
+              </section> : null}
               <div className="question-list">
                 {p.practiceQuestions.map((q, i) => (
                   <label className="question-card" key={q.id}>
@@ -602,6 +619,7 @@ export function PracticalLabPage() {
                   </label>
                 ))}
               </div>
+              </>
             )}
             {step === "CODE" && (
               <>
@@ -734,13 +752,13 @@ export function PracticalLabPage() {
             {idx > 0 && (
               <button
                 className="button secondary"
-                onClick={() => setStep(steps[idx - 1][0])}
+                onClick={() => setStep(practicalSteps[idx - 1][0])}
               >
                 ← Previous
               </button>
             )}
             <span className="muted small">
-              {completed.length} of 6 sections complete
+              {completed.length} of {practicalSteps.length} sections complete
             </span>
             {step === "CONCLUSION" ? (
               <button
@@ -753,7 +771,7 @@ export function PracticalLabPage() {
             ) : (
               <button
                 className="button primary"
-                onClick={() => save(steps[Math.min(idx + 1, 5)][0])}
+                onClick={() => save(practicalSteps[Math.min(idx + 1, practicalSteps.length - 1)][0])}
                 disabled={
                   step === "PRACTICE" &&
                   p.practiceQuestions.some(
@@ -779,7 +797,7 @@ export function PracticalLabPage() {
             <div className="rail-divider" />
             <div className="rail-row">
               <span>Completed</span>
-              <b>{completed.length} / 6</b>
+              <b>{completed.length} / {practicalSteps.length}</b>
             </div>
             <div className="rail-row">
               <span>Current section</span>

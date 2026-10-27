@@ -15,6 +15,9 @@ export const blankForm: Detail = {
     "public class Main {\n    public static void main(String[] args) {\n        // Write your solution\n    }\n}",
   pythonStarterCode:
     'def main():\n    # Write your solution\n    pass\n\nif __name__ == "__main__":\n    main()',
+  codeRequired: true,
+  observationColumns: [],
+  observationRowCount: 5,
   status: "DRAFT",
   updatedAt: "",
   practiceQuestions: [],

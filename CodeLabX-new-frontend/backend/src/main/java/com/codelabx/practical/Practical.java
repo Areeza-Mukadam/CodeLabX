@@ -50,6 +50,14 @@ public class Practical {
     @Column(length = 8000)
     private String pythonStarterCode;
 
+    @Column
+    private Boolean codeRequired = true;
+
+    @Column(length = 4000)
+    private String observationColumnsJson = "[]";
+
+    private Integer observationRowCount = 5;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private PracticalStatus status = PracticalStatus.DRAFT;
@@ -108,6 +116,12 @@ public class Practical {
     public void setJavaStarterCode(String javaStarterCode) { this.javaStarterCode = javaStarterCode; }
     public String getPythonStarterCode() { return pythonStarterCode; }
     public void setPythonStarterCode(String pythonStarterCode) { this.pythonStarterCode = pythonStarterCode; }
+    public Boolean getCodeRequired() { return codeRequired; }
+    public void setCodeRequired(Boolean codeRequired) { this.codeRequired = codeRequired; }
+    public String getObservationColumnsJson() { return observationColumnsJson; }
+    public void setObservationColumnsJson(String observationColumnsJson) { this.observationColumnsJson = observationColumnsJson; }
+    public Integer getObservationRowCount() { return observationRowCount; }
+    public void setObservationRowCount(Integer observationRowCount) { this.observationRowCount = observationRowCount; }
     public PracticalStatus getStatus() { return status; }
     public void setStatus(PracticalStatus status) { this.status = status; }
     public UserAccount getCreatedBy() { return createdBy; }

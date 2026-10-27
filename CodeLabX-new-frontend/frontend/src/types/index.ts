@@ -46,6 +46,9 @@ export type Detail = Practical & {
   conclusion: string;
   javaStarterCode: string;
   pythonStarterCode: string;
+  codeRequired?: boolean;
+  observationColumns?: string[];
+  observationRowCount?: number;
   practiceQuestions: { id: number; question: string; order: number }[];
   vivaQuestions: {
     id: number;
@@ -72,6 +75,7 @@ export type Progress = {
   status: string;
   percent: number;
   practiceAnswers: Record<string, string>;
+  observationEntries?: Record<string, string>;
   conclusionText: string;
   draftCode: string;
   draftLanguage: string;
