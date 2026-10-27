@@ -168,7 +168,22 @@ public class Main {
   },
 ];
 
-function getMockSubmissions(): StoredSubmission[] {
+export function getCustomPracticals(): any[] {
+  try {
+    const raw = localStorage.getItem("codelabx_custom_practicals");
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveCustomPracticals(list: any[]) {
+  try {
+    localStorage.setItem("codelabx_custom_practicals", JSON.stringify(list));
+  } catch {}
+}
+
+export function getMockSubmissions(): StoredSubmission[] {
   try {
     const raw = localStorage.getItem("codelabx_submissions");
     if (raw) {
@@ -184,7 +199,7 @@ function getMockSubmissions(): StoredSubmission[] {
   return [...DEFAULT_SUBMISSIONS];
 }
 
-function saveMockSubmissions(subs: StoredSubmission[]) {
+export function saveMockSubmissions(subs: StoredSubmission[]) {
   try {
     localStorage.setItem("codelabx_submissions", JSON.stringify(subs));
   } catch {}
@@ -269,8 +284,9 @@ function getMockResponse<T>(path: string, init: RequestInit = {}): T | null {
     if (method === "POST") {
       let body: any = {};
       try { body = JSON.parse((init.body as string) || "{}"); } catch {}
-      return {
-        id: Math.floor(Math.random() * 1000) + 100,
+      const custom = getCustomPracticals();
+      const newPractical = {
+        id: Math.floor(Math.random() * 8000) + 1000,
         title: body.title || "Laboratory Experiment",
         subject: body.subject || "Data Structures",
         semester: body.semester || 3,
@@ -284,15 +300,51 @@ function getMockResponse<T>(path: string, init: RequestInit = {}): T | null {
         pythonStarterCode: body.pythonStarterCode || "",
         programmingLanguage: body.programmingLanguage || "JAVA",
         practiceQuestions: body.practiceQuestions || [],
-        vivaQuestions: body.vivaQuestions || [],
-      } as T;
+        vivaQuestions: body.vivaQuestions || [
+          { id: 1, question: "Explain the theoretical foundation of this experiment.", marks: 2, order: 1 },
+          { id: 2, question: "What are the time and space complexity characteristics?", marks: 2, order: 2 },
+        ],
+        updatedAt: new Date().toISOString(),
+      };
+      custom.unshift(newPractical);
+      saveCustomPracticals(custom);
+      return newPractical as T;
     }
-    const allPracticals = [EXPERIMENT_8_NMAP, ...DEMO_PRACTICALS];
+    const custom = getCustomPracticals();
+    const allPracticals = [...custom, EXPERIMENT_8_NMAP, ...DEMO_PRACTICALS];
+    const subs = getMockSubmissions();
+    const currentUser = useAuth.getState().user;
+
+    const mappedPracticals = allPracticals.map((p) => {
+      const userSub = subs.find(
+        (s) => s.practicalId === p.id && (!currentUser || s.studentId === currentUser.id || s.studentEmail.toLowerCase() === currentUser.email.toLowerCase())
+      );
+      if (userSub) {
+        return {
+          ...p,
+          status: userSub.evaluated ? "EVALUATED" : "SUBMITTED",
+          progressPercent: 100,
+        };
+      }
+      try {
+        const savedProg = localStorage.getItem(`codelabx.progress.${p.id}`);
+        if (savedProg) {
+          const parsed = JSON.parse(savedProg);
+          return {
+            ...p,
+            status: parsed.status || p.status,
+            progressPercent: parsed.percent ?? p.progressPercent,
+          };
+        }
+      } catch {}
+      return p;
+    });
+
     const sem = searchParams.get("semester");
     if (sem) {
-      return allPracticals.filter((p) => p.semester === Number(sem)) as T;
+      return mappedPracticals.filter((p) => p.semester === Number(sem)) as T;
     }
-    return allPracticals as T;
+    return mappedPracticals as T;
   }
 
   // /practicals/students
@@ -310,11 +362,26 @@ function getMockResponse<T>(path: string, init: RequestInit = {}): T | null {
 
   // /practicals/:id/publish
   if (cleanPath.endsWith("/publish") && method === "POST") {
+    const pId = Number(cleanPath.replace("/practicals/", "").replace("/publish", ""));
+    const custom = getCustomPracticals();
+    const idx = custom.findIndex((p: any) => p.id === pId);
+    if (idx >= 0) {
+      custom[idx].status = "PUBLISHED";
+      saveCustomPracticals(custom);
+    }
     return { success: true } as T;
   }
 
   // /practicals/:id/assign-class
   if (cleanPath.endsWith("/assign-class") && method === "POST") {
+    const pId = Number(cleanPath.replace("/practicals/", "").replace("/assign-class", ""));
+    const custom = getCustomPracticals();
+    const idx = custom.findIndex((p: any) => p.id === pId);
+    if (idx >= 0) {
+      custom[idx].status = "PUBLISHED";
+      custom[idx].assignedAt = new Date().toISOString();
+      saveCustomPracticals(custom);
+    }
     return { success: true } as T;
   }
 
@@ -322,15 +389,17 @@ function getMockResponse<T>(path: string, init: RequestInit = {}): T | null {
   const practicalMatch = cleanPath.match(/^\/practicals\/(\d+)$/);
   if (practicalMatch) {
     const id = Number(practicalMatch[1]);
+    const custom = getCustomPracticals();
+    const customP = custom.find((p: any) => p.id === id);
     if (method === "PUT" || method === "POST") {
       let body: any = {};
       try { body = JSON.parse((init.body as string) || "{}"); } catch {}
-      return {
+      const updated = {
         id,
-        title: body.title || "Laboratory Experiment",
-        subject: body.subject || "Data Structures",
-        semester: body.semester || 3,
-        status: body.status || "DRAFT",
+        title: body.title || customP?.title || "Laboratory Experiment",
+        subject: body.subject || customP?.subject || "Data Structures",
+        semester: body.semester || customP?.semester || 3,
+        status: body.status || customP?.status || "DRAFT",
         aim: body.aim || "",
         theory: body.theory || "",
         algorithm: body.algorithm || "",
@@ -340,9 +409,19 @@ function getMockResponse<T>(path: string, init: RequestInit = {}): T | null {
         pythonStarterCode: body.pythonStarterCode || "",
         programmingLanguage: body.programmingLanguage || "JAVA",
         practiceQuestions: body.practiceQuestions || [],
-        vivaQuestions: body.vivaQuestions || [],
-      } as T;
+        vivaQuestions: body.vivaQuestions || customP?.vivaQuestions || [],
+        updatedAt: new Date().toISOString(),
+      };
+      if (customP) {
+        const idx = custom.findIndex((p: any) => p.id === id);
+        custom[idx] = updated;
+      } else {
+        custom.unshift(updated);
+      }
+      saveCustomPracticals(custom);
+      return updated as T;
     }
+    if (customP) return customP as T;
     if (id === 8 || id === 808) {
       return EXPERIMENT_8_NMAP as T;
     }
@@ -355,18 +434,62 @@ function getMockResponse<T>(path: string, init: RequestInit = {}): T | null {
   const progressMatch = cleanPath.match(/^\/practicals\/(\d+)\/progress$/);
   if (progressMatch) {
     const id = Number(progressMatch[1]);
+    const currentUser = useAuth.getState().user;
+    const subs = getMockSubmissions();
+    const userSub = subs.find(
+      (s) => s.practicalId === id && (!currentUser || s.studentId === currentUser.id || s.studentEmail.toLowerCase() === currentUser.email.toLowerCase())
+    );
+
     if (method === "PUT" || method === "POST") {
+      let body: any = {};
+      try { body = JSON.parse((init.body as string) || "{}"); } catch {}
       try {
-        const body = JSON.parse((init.body as string) || "{}");
-        if (body.screenshots) {
-          localStorage.setItem(`codelabx.progress.${id}.screenshots`, JSON.stringify(body.screenshots));
-        }
+        const existingRaw = localStorage.getItem(`codelabx.progress.${id}`);
+        const existing = existingRaw ? JSON.parse(existingRaw) : {};
+        const isConclusion = body.step === "CONCLUSION";
+        const merged = {
+          practicalId: id,
+          currentStep: body.step || existing.currentStep || "AIM",
+          completedSteps: Array.from(new Set([...(existing.completedSteps || []), ...(body.step ? [body.step] : [])])),
+          status: isConclusion ? "SUBMITTED" : (existing.status || "IN_PROGRESS"),
+          percent: isConclusion ? 100 : Math.max(existing.percent || 20, 40),
+          practiceAnswers: { ...(existing.practiceAnswers || {}), ...(body.practiceAnswers || {}) },
+          conclusionText: body.conclusionText ?? existing.conclusionText ?? "",
+          draftCode: body.draftCode ?? existing.draftCode ?? "",
+          draftLanguage: body.draftLanguage ?? existing.draftLanguage ?? "JAVA",
+          screenshots: body.screenshots || existing.screenshots || [],
+        };
+        localStorage.setItem(`codelabx.progress.${id}`, JSON.stringify(merged));
       } catch {}
     }
+
+    if (userSub) {
+      return {
+        practicalId: id,
+        currentStep: "CONCLUSION",
+        completedSteps: ["AIM", "THEORY", "ALGORITHM", "CODE", "PRACTICE", "CONCLUSION"],
+        status: userSub.evaluated ? "EVALUATED" : "SUBMITTED",
+        percent: 100,
+        practiceAnswers: {},
+        conclusionText: userSub.conclusionText || "Experiment verified successfully.",
+        draftCode: userSub.code || "",
+        draftLanguage: (userSub.language || "python").toLowerCase(),
+        screenshots: userSub.screenshots || [],
+      } as T;
+    }
+
+    try {
+      const savedRaw = localStorage.getItem(`codelabx.progress.${id}`);
+      if (savedRaw) {
+        return JSON.parse(savedRaw) as T;
+      }
+    } catch {}
+
     let savedScreenshots: string[] = [];
     try {
-      savedScreenshots = JSON.parse(localStorage.getItem(`codelabx.progress.${id}.screenshots`) || "[]");
+      savedScreenshots = JSON.parse(localStorage.getItem(`codelabx.screenshots.${id}`) || "[]");
     } catch {}
+
     return {
       practicalId: id,
       currentStep: "AIM",
@@ -443,7 +566,12 @@ function getMockResponse<T>(path: string, init: RequestInit = {}): T | null {
       let body: any = {};
       try { body = JSON.parse((init.body as string) || "{}"); } catch {}
       const currentUser = useAuth.getState().user || DEMO_USERS["inzamam.khan.te.b@tcetmumbai.in"];
-      const p = DEMO_PRACTICALS.find((item) => item.id === Number(body.practicalId));
+      const custom = getCustomPracticals();
+      const p = custom.find((item: any) => item.id === Number(body.practicalId))
+        || (Number(body.practicalId) === 8 || Number(body.practicalId) === 808 ? EXPERIMENT_8_NMAP : null)
+        || DEMO_PRACTICALS.find((item) => item.id === Number(body.practicalId))
+        || findDepartmentPracticalById(Number(body.practicalId));
+
       const subs = getMockSubmissions();
       const existingIdx = subs.findIndex(
         (s) => s.studentId === currentUser.id && s.practicalId === Number(body.practicalId),
@@ -478,6 +606,22 @@ function getMockResponse<T>(path: string, init: RequestInit = {}): T | null {
         subs.unshift(subRecord);
       }
       saveMockSubmissions(subs);
+
+      // Persist progress to SUBMITTED
+      try {
+        localStorage.setItem(`codelabx.progress.${body.practicalId}`, JSON.stringify({
+          practicalId: Number(body.practicalId),
+          currentStep: "CONCLUSION",
+          completedSteps: ["AIM", "THEORY", "ALGORITHM", "CODE", "PRACTICE", "CONCLUSION"],
+          status: subRecord.evaluated ? "EVALUATED" : "SUBMITTED",
+          percent: 100,
+          conclusionText: subRecord.conclusionText,
+          draftCode: subRecord.code,
+          draftLanguage: subRecord.language.toLowerCase(),
+          screenshots: subRecord.screenshots,
+        }));
+      } catch {}
+
       return {
         id: subRecord.id,
         practicalId: subRecord.practicalId,
@@ -689,7 +833,7 @@ function getMockResponse<T>(path: string, init: RequestInit = {}): T | null {
     }
     if (idx >= 0) {
       subs[idx].codeMarks = Number(body.codeMarks) || 0;
-      subs[idx].feedback = body.feedback || "";
+      subs[idx].feedback = body.feedback || "Good laboratory submission.";
       if (body.entries && Array.isArray(body.entries)) {
         subs[idx].vivaEntries = body.entries;
         subs[idx].vivaMarks = body.entries.reduce((a: number, b: any) => a + (Number(b.awardedMarks) || 0), 0);
@@ -697,6 +841,18 @@ function getMockResponse<T>(path: string, init: RequestInit = {}): T | null {
       subs[idx].totalMarks = (subs[idx].codeMarks || 0) + (subs[idx].vivaMarks || 0);
       subs[idx].evaluated = true;
       saveMockSubmissions(subs);
+
+      // Update student progress in localStorage
+      try {
+        const pId = subs[idx].practicalId;
+        const prevRaw = localStorage.getItem(`codelabx.progress.${pId}`);
+        const prev = prevRaw ? JSON.parse(prevRaw) : {};
+        localStorage.setItem(`codelabx.progress.${pId}`, JSON.stringify({
+          ...prev,
+          status: "EVALUATED",
+          percent: 100,
+        }));
+      } catch {}
     }
     return {
       id: idx >= 0 ? subs[idx].id : 1,
@@ -728,6 +884,17 @@ function getMockResponse<T>(path: string, init: RequestInit = {}): T | null {
       subs[idx].totalMarks = (subs[idx].codeMarks || 0) + vivaSum;
       subs[idx].evaluated = true;
       saveMockSubmissions(subs);
+
+      try {
+        const pId = subs[idx].practicalId;
+        const prevRaw = localStorage.getItem(`codelabx.progress.${pId}`);
+        const prev = prevRaw ? JSON.parse(prevRaw) : {};
+        localStorage.setItem(`codelabx.progress.${pId}`, JSON.stringify({
+          ...prev,
+          status: "EVALUATED",
+          percent: 100,
+        }));
+      } catch {}
     }
     return {
       id: idx >= 0 ? subs[idx].id : 1,
@@ -909,11 +1076,69 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
     if (!text || text.trim() === "") {
       return undefined as T;
     }
+    let parsedData: any;
     try {
-      return JSON.parse(text) as T;
+      parsedData = JSON.parse(text);
     } catch {
-      return text as unknown as T;
+      parsedData = text;
     }
+
+    if (path.startsWith("/execution/run") && parsedData && parsedData.status === "UNAVAILABLE") {
+      const mock = demoMocksEnabled ? getMockResponse<T>(path, init) : null;
+      if (mock !== null) return mock;
+    }
+
+    if (path.startsWith("/teacher/submissions") && Array.isArray(parsedData)) {
+      const mockSubs = getMockSubmissions();
+      const combined = [...parsedData];
+      for (const ms of mockSubs) {
+        if (!combined.some((item: any) => item.id === ms.id || (item.studentId === ms.studentId && item.practicalId === ms.practicalId))) {
+          combined.push({
+            id: ms.id,
+            studentId: ms.studentId,
+            studentName: ms.studentName,
+            studentEmail: ms.studentEmail,
+            rollNo: ms.rollNo,
+            classSection: ms.classSection,
+            practicalId: ms.practicalId,
+            practicalTitle: ms.practicalTitle,
+            language: ms.language.toLowerCase(),
+            executionStatus: ms.executionStatus,
+            submittedAt: ms.submittedAt,
+            evaluated: ms.evaluated,
+            totalMarks: ms.totalMarks,
+          });
+        }
+      }
+      return combined as unknown as T;
+    }
+
+    if ((path === "/results" || path === "/submissions/results") && Array.isArray(parsedData)) {
+      const mockSubs = getMockSubmissions().filter((s) => s.evaluated);
+      const combined = [...parsedData];
+      for (const ms of mockSubs) {
+        if (!combined.some((item: any) => item.submissionId === ms.id)) {
+          combined.push({
+            submissionId: ms.id,
+            practicalTitle: ms.practicalTitle,
+            marks: ms.totalMarks,
+            codeMarks: ms.codeMarks,
+            vivaMarks: ms.vivaMarks,
+            feedback: ms.feedback,
+            reviewedAt: ms.submittedAt,
+            facultyName: "Mr. Sameer Sawant",
+            submittedAt: ms.submittedAt,
+            screenshots: ms.screenshots || [],
+            code: ms.code,
+            output: ms.output,
+            conclusionText: ms.conclusionText,
+          });
+        }
+      }
+      return combined as unknown as T;
+    }
+
+    return parsedData as T;
   } catch (err) {
     // Backend offline / network error / Failed to fetch
     const mock = demoMocksEnabled ? getMockResponse<T>(path, init) : null;
